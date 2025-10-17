@@ -1,7 +1,17 @@
 [package]
 name = "sflow-parser"
 version = "0.1.0"
+license = "MIT"
+readme = "README.md"
+description = "InMon sFlow v5 Parser"
+repository = "https://github.com/nxthdr/sflow-parser"
+homepage = "https://nxthdr.dev"
+keywords = ["sflow", "parser"]
 edition = "2021"
+exclude = [
+    ".github/*",
+    "renovate.json",
+]
 
 [dependencies]
 anyhow = "1.0"
