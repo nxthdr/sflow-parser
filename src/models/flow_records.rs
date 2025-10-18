@@ -33,13 +33,13 @@ pub enum HeaderProtocol {
 pub struct SampledHeader {
     /// Protocol of the sampled packet
     pub protocol: u32,
-    
+
     /// Original length of the packet (before sampling)
     pub frame_length: u32,
-    
+
     /// Number of bytes stripped from the packet before sampling
     pub stripped: u32,
-    
+
     /// Raw header bytes
     pub header: Vec<u8>,
 }
@@ -50,13 +50,13 @@ pub struct SampledHeader {
 pub struct SampledEthernet {
     /// Length of MAC packet in bytes
     pub length: u32,
-    
+
     /// Source MAC address (6 bytes)
     pub src_mac: [u8; 6],
-    
+
     /// Destination MAC address (6 bytes)
     pub dst_mac: [u8; 6],
-    
+
     /// Ethernet type
     pub eth_type: u32,
 }
@@ -67,25 +67,25 @@ pub struct SampledEthernet {
 pub struct SampledIpv4 {
     /// Length of IP packet in bytes
     pub length: u32,
-    
+
     /// IP Protocol (TCP=6, UDP=17, etc.)
     pub protocol: u32,
-    
+
     /// Source IP address
     pub src_ip: Ipv4Addr,
-    
+
     /// Destination IP address
     pub dst_ip: Ipv4Addr,
-    
+
     /// Source port (for TCP/UDP)
     pub src_port: u32,
-    
+
     /// Destination port (for TCP/UDP)
     pub dst_port: u32,
-    
+
     /// TCP flags
     pub tcp_flags: u32,
-    
+
     /// Type of Service
     pub tos: u32,
 }
@@ -96,25 +96,25 @@ pub struct SampledIpv4 {
 pub struct SampledIpv6 {
     /// Length of IP packet in bytes
     pub length: u32,
-    
+
     /// IP Protocol (TCP=6, UDP=17, etc.)
     pub protocol: u32,
-    
+
     /// Source IP address
     pub src_ip: Ipv6Addr,
-    
+
     /// Destination IP address
     pub dst_ip: Ipv6Addr,
-    
+
     /// Source port (for TCP/UDP)
     pub src_port: u32,
-    
+
     /// Destination port (for TCP/UDP)
     pub dst_port: u32,
-    
+
     /// TCP flags
     pub tcp_flags: u32,
-    
+
     /// Priority (traffic class)
     pub priority: u32,
 }
@@ -125,13 +125,13 @@ pub struct SampledIpv6 {
 pub struct ExtendedSwitch {
     /// Source VLAN ID
     pub src_vlan: u32,
-    
+
     /// Source priority (802.1p)
     pub src_priority: u32,
-    
+
     /// Destination VLAN ID
     pub dst_vlan: u32,
-    
+
     /// Destination priority (802.1p)
     pub dst_priority: u32,
 }
@@ -142,10 +142,10 @@ pub struct ExtendedSwitch {
 pub struct ExtendedRouter {
     /// IP address of next hop router
     pub next_hop: crate::models::core::Address,
-    
+
     /// Source subnet mask bits
     pub src_mask_len: u32,
-    
+
     /// Destination subnet mask bits
     pub dst_mask_len: u32,
 }
@@ -171,22 +171,22 @@ pub struct AsPathSegment {
 pub struct ExtendedGateway {
     /// IP address of the border router
     pub next_hop: crate::models::core::Address,
-    
+
     /// Autonomous system number
     pub as_number: u32,
-    
+
     /// Source AS
     pub src_as: u32,
-    
+
     /// Source peer AS
     pub src_peer_as: u32,
-    
+
     /// Number of AS path segments
     pub as_path_segments: Vec<AsPathSegment>,
-    
+
     /// BGP communities
     pub communities: Vec<u32>,
-    
+
     /// Local preference
     pub local_pref: u32,
 }
@@ -197,13 +197,13 @@ pub struct ExtendedGateway {
 pub struct ExtendedUser {
     /// Source character set (MIBEnum)
     pub src_charset: u32,
-    
+
     /// Source user ID
     pub src_user: String,
-    
+
     /// Destination character set (MIBEnum)
     pub dst_charset: u32,
-    
+
     /// Destination user ID
     pub dst_user: String,
 }
@@ -221,10 +221,10 @@ pub enum UrlDirection {
 pub struct ExtendedUrl {
     /// Direction (source or destination)
     pub direction: u32,
-    
+
     /// URL string (HTTP request-line)
     pub url: String,
-    
+
     /// Host header from HTTP request
     pub host: String,
 }
@@ -235,10 +235,10 @@ pub struct ExtendedUrl {
 pub struct ExtendedMpls {
     /// Next hop address
     pub next_hop: crate::models::core::Address,
-    
+
     /// Input label stack
     pub in_label_stack: Vec<u32>,
-    
+
     /// Output label stack
     pub out_label_stack: Vec<u32>,
 }
@@ -249,7 +249,7 @@ pub struct ExtendedMpls {
 pub struct ExtendedNat {
     /// Source address type
     pub src_address: crate::models::core::Address,
-    
+
     /// Destination address type
     pub dst_address: crate::models::core::Address,
 }
@@ -259,10 +259,10 @@ pub struct ExtendedNat {
 pub struct ExtendedMplsTunnel {
     /// Tunnel name
     pub tunnel_name: String,
-    
+
     /// Tunnel ID
     pub tunnel_id: u32,
-    
+
     /// Tunnel cost
     pub tunnel_cos: u32,
 }
@@ -272,13 +272,13 @@ pub struct ExtendedMplsTunnel {
 pub struct ExtendedMplsVc {
     /// VC instance name
     pub vc_instance_name: String,
-    
+
     /// VC ID
     pub vll_vc_id: u32,
-    
+
     /// VC label
     pub vc_label: u32,
-    
+
     /// VC COS
     pub vc_cos: u32,
 }
@@ -288,7 +288,7 @@ pub struct ExtendedMplsVc {
 pub struct ExtendedMplsFec {
     /// FEC address prefix
     pub fec_addr_prefix: crate::models::core::Address,
-    
+
     /// FEC prefix length
     pub fec_prefix_len: u32,
 }
@@ -312,16 +312,16 @@ pub struct ExtendedVlanTunnel {
 pub struct Extended80211Payload {
     /// Cipher suite
     pub cipher_suite: u32,
-    
+
     /// Received signal strength
     pub rssi: u32,
-    
+
     /// Noise level
     pub noise: u32,
-    
+
     /// Channel
     pub channel: u32,
-    
+
     /// Speed (Mbps)
     pub speed: u32,
 }
@@ -331,22 +331,22 @@ pub struct Extended80211Payload {
 pub struct Extended80211Rx {
     /// SSID
     pub ssid: String,
-    
+
     /// BSSID (MAC address)
     pub bssid: [u8; 6],
-    
+
     /// Version
     pub version: u32,
-    
+
     /// Channel
     pub channel: u32,
-    
+
     /// Speed (Mbps)
     pub speed: u64,
-    
+
     /// RSSI
     pub rssi: u32,
-    
+
     /// Noise
     pub noise: u32,
 }
@@ -356,28 +356,28 @@ pub struct Extended80211Rx {
 pub struct Extended80211Tx {
     /// SSID
     pub ssid: String,
-    
+
     /// BSSID (MAC address)
     pub bssid: [u8; 6],
-    
+
     /// Version
     pub version: u32,
-    
+
     /// Transmissions
     pub transmissions: u32,
-    
+
     /// Packet duration (microseconds)
     pub packet_duration: u32,
-    
+
     /// Retransmissions
     pub retrans_duration: u32,
-    
+
     /// Channel
     pub channel: u32,
-    
+
     /// Speed (Mbps)
     pub speed: u64,
-    
+
     /// Power (mW)
     pub power: u32,
 }
