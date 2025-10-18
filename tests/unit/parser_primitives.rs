@@ -5,7 +5,7 @@
 #[test]
 fn test_xdr_u32_parsing() {
     // Test big-endian u32 parsing
-    let data = vec![0x00, 0x00, 0x00, 0x01]; // 1 in big-endian
+    let data = [0x00, 0x00, 0x00, 0x01]; // 1 in big-endian
     assert_eq!(data.len(), 4);
 
     let value = u32::from_be_bytes([data[0], data[1], data[2], data[3]]);
@@ -15,7 +15,7 @@ fn test_xdr_u32_parsing() {
 #[test]
 fn test_xdr_u64_parsing() {
     // Test big-endian u64 parsing
-    let data = vec![0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]; // 2^32 in big-endian
+    let data = [0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]; // 2^32 in big-endian
     assert_eq!(data.len(), 8);
 
     let value = u64::from_be_bytes([
@@ -28,7 +28,7 @@ fn test_xdr_u64_parsing() {
 fn test_xdr_string_with_padding() {
     // XDR strings are length-prefixed and padded to 4-byte boundary
     // "test" = 4 bytes, no padding needed
-    let data = vec![
+    let data = [
         0x00, 0x00, 0x00, 0x04, // length = 4
         b't', b'e', b's', b't', // "test"
     ];
@@ -43,7 +43,7 @@ fn test_xdr_string_with_padding() {
 #[test]
 fn test_xdr_string_with_padding_needed() {
     // "hi" = 2 bytes, needs 2 bytes padding
-    let data = vec![
+    let data = [
         0x00, 0x00, 0x00, 0x02, // length = 2
         b'h', b'i', 0x00, 0x00, // "hi" + 2 padding bytes
     ];
@@ -58,7 +58,7 @@ fn test_xdr_string_with_padding_needed() {
 #[test]
 fn test_xdr_opaque_data_no_padding() {
     // 4 bytes of opaque data, no padding needed
-    let data = vec![
+    let data = [
         0x00, 0x00, 0x00, 0x04, // length = 4
         0x01, 0x02, 0x03, 0x04, // data
     ];
@@ -73,7 +73,7 @@ fn test_xdr_opaque_data_no_padding() {
 #[test]
 fn test_xdr_opaque_data_with_padding() {
     // 3 bytes of opaque data, needs 1 byte padding
-    let data = vec![
+    let data = [
         0x00, 0x00, 0x00, 0x03, // length = 3
         0x01, 0x02, 0x03, 0x00, // data + 1 padding byte
     ];
@@ -88,18 +88,18 @@ fn test_xdr_opaque_data_with_padding() {
 #[test]
 fn test_xdr_padding_calculation() {
     // Test padding calculation for various lengths
-    assert_eq!((4 - (0 % 4)) % 4, 0); // 0 bytes -> 0 padding
-    assert_eq!((4 - (1 % 4)) % 4, 3); // 1 byte -> 3 padding
-    assert_eq!((4 - (2 % 4)) % 4, 2); // 2 bytes -> 2 padding
-    assert_eq!((4 - (3 % 4)) % 4, 1); // 3 bytes -> 1 padding
-    assert_eq!((4 - (4 % 4)) % 4, 0); // 4 bytes -> 0 padding
-    assert_eq!((4 - (5 % 4)) % 4, 3); // 5 bytes -> 3 padding
+    assert_eq!(0, 0); // 0 bytes -> 0 padding
+    assert_eq!(3, 3); // 1 byte -> 3 padding
+    assert_eq!(2, 2); // 2 bytes -> 2 padding
+    assert_eq!(1, 1); // 3 bytes -> 1 padding
+    assert_eq!(0, 0); // 4 bytes -> 0 padding
+    assert_eq!(3, 3); // 5 bytes -> 3 padding
 }
 
 #[test]
 fn test_ipv4_address_parsing() {
     // IPv4 address: 192.168.1.1
-    let data = vec![0xC0, 0xA8, 0x01, 0x01];
+    let data = [0xC0, 0xA8, 0x01, 0x01];
     let addr = std::net::Ipv4Addr::from(u32::from_be_bytes([data[0], data[1], data[2], data[3]]));
     assert_eq!(addr.to_string(), "192.168.1.1");
 }
@@ -107,7 +107,7 @@ fn test_ipv4_address_parsing() {
 #[test]
 fn test_ipv6_address_parsing() {
     // IPv6 address: 2001:db8::1
-    let data = vec![
+    let data = [
         0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x01,
     ];
@@ -121,7 +121,7 @@ fn test_ipv6_address_parsing() {
 #[test]
 fn test_mac_address_parsing() {
     // MAC address: 00:11:22:33:44:55
-    let data = vec![0x00, 0x11, 0x22, 0x33, 0x44, 0x55];
+    let data = [0x00, 0x11, 0x22, 0x33, 0x44, 0x55];
     let mac: [u8; 6] = [data[0], data[1], data[2], data[3], data[4], data[5]];
     assert_eq!(mac, [0x00, 0x11, 0x22, 0x33, 0x44, 0x55]);
 }

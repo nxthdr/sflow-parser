@@ -1,7 +1,7 @@
 //! sFlow v5 data models
 //!
 //! This module contains the data structures representing sFlow v5 datagrams
-//! as defined in https://sflow.org/sflow_version_5.txt
+//! as defined in <https://sflow.org/sflow_version_5.txt>
 
 use std::net::{Ipv4Addr, Ipv6Addr};
 

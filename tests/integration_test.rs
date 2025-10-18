@@ -318,8 +318,8 @@ fn test_datagram_statistics() {
     }
 
     // Assertions
-    assert!(datagrams.len() > 0, "Should have parsed datagrams");
-    assert!(unique_agents.len() > 0, "Should have at least one agent");
+    assert!(!datagrams.is_empty(), "Should have parsed datagrams");
+    assert!(!unique_agents.is_empty(), "Should have at least one agent");
     assert!(
         total_flow_samples + total_counter_samples > 0,
         "Should have samples"
@@ -592,7 +592,7 @@ fn test_sequence_numbers() {
 
         agent_sequences
             .entry(agent_key)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(datagram.sequence_number);
     }
 

@@ -1,11 +1,17 @@
 # InMon sFlow v5 Parser
 
+[![CI Status](https://img.shields.io/github/actions/workflow/status/nxthdr/sflow-parser/ci.yml?logo=github&label=build)](https://github.com/nxthdr/sflow-parser/actions/workflows/ci.yml)
+[![Crates.io](https://img.shields.io/crates/v/sflow-parser?color=blue&logo=rust)](https://crates.io/crates/sflow-parser)
+[![Docs](https://img.shields.io/docsrs/sflow-parser?logo=rust)](https://docs.rs/sflow-parser)
+[![Codecov](https://img.shields.io/codecov/c/github/nxthdr/sflow-parser?logo=codecov)](https://codecov.io/gh/nxthdr/sflow-parser)
+[![License](https://img.shields.io/crates/l/sflow-parser)](LICENSE)
+
 > [!WARNING]
 > Currently in early-stage development.
 
 A Rust library for parsing InMon sFlow version 5 datagrams as specified in [https://sflow.org/sflow_version_5.txt](https://sflow.org/sflow_version_5.txt).
 
-## Core Parsing (✅ Complete)
+## Core Parsing
 
 - ✅ **Datagram structure** - Version, agent, sequence, uptime
 - ✅ **Sample envelopes** - All 4 types (FlowSample, CountersSample, Expanded variants)

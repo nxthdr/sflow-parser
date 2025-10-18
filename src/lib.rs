@@ -1,7 +1,7 @@
 //! sFlow v5 Parser Library
 //!
 //! This library provides parsing functionality for sFlow version 5 datagrams
-//! as specified in https://sflow.org/sflow_version_5.txt
+//! as specified in <https://sflow.org/sflow_version_5.txt>
 //!
 //! # Example
 //!
