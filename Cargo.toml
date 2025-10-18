@@ -13,6 +13,3 @@ exclude = [
     "tests/*",
     "renovate.json",
 ]
-
-[dependencies]
-anyhow = "1.0"

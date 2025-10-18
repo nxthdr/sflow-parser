@@ -18,4 +18,4 @@ pub mod parser;
 
 // Re-export commonly used types
 pub use models::{SFlowDatagram, SampleData, SampleRecord};
-pub use parser::{parse_datagram, parse_datagrams};
+pub use parser::{parse_datagram, parse_datagrams, ParseError};

@@ -4,9 +4,44 @@
 //! All data is in network byte order (big-endian) as per XDR specification.
 
 use crate::models::*;
-use anyhow::{anyhow, Result};
+use std::fmt;
 use std::io::{self, Cursor, Read};
 use std::net::{Ipv4Addr, Ipv6Addr};
+
+/// Parser error type
+#[derive(Debug)]
+pub enum ParseError {
+    /// I/O error
+    Io(io::Error),
+    /// Invalid data format
+    InvalidData(String),
+}
+
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParseError::Io(e) => write!(f, "I/O error: {}", e),
+            ParseError::InvalidData(msg) => write!(f, "Invalid data: {}", msg),
+        }
+    }
+}
+
+impl std::error::Error for ParseError {}
+
+impl From<io::Error> for ParseError {
+    fn from(err: io::Error) -> Self {
+        ParseError::Io(err)
+    }
+}
+
+impl From<std::string::FromUtf8Error> for ParseError {
+    fn from(err: std::string::FromUtf8Error) -> Self {
+        ParseError::InvalidData(format!("Invalid UTF-8 string: {}", err))
+    }
+}
+
+/// Result type for parser operations
+pub type Result<T> = std::result::Result<T, ParseError>;
 
 /// Parser for sFlow v5 datagrams
 pub struct Parser<R: Read> {
@@ -44,7 +79,7 @@ impl<R: Read> Parser<R> {
     /// Read a string (length-prefixed opaque data converted to UTF-8)
     fn read_string(&mut self) -> Result<String> {
         let bytes = self.read_opaque()?;
-        String::from_utf8(bytes).map_err(|e| anyhow!("Invalid UTF-8 string: {}", e))
+        Ok(String::from_utf8(bytes)?)
     }
 
     /// Read an opaque byte array (length-prefixed)
@@ -55,11 +90,10 @@ impl<R: Read> Parser<R> {
         // Valid sFlow packets are typically much smaller
         const MAX_OPAQUE_SIZE: usize = 100 * 1024 * 1024; // 100MB
         if length > MAX_OPAQUE_SIZE {
-            return Err(anyhow!(
+            return Err(ParseError::InvalidData(format!(
                 "Opaque data length {} exceeds maximum {}",
-                length,
-                MAX_OPAQUE_SIZE
-            ));
+                length, MAX_OPAQUE_SIZE
+            )));
         }
 
         let mut data = vec![0u8; length];
@@ -98,7 +132,10 @@ impl<R: Read> Parser<R> {
                 let addr = Ipv6Addr::from(<[u8; 16]>::try_from(bytes).unwrap());
                 Ok(Address::IPv6(addr))
             }
-            _ => Err(anyhow!("Invalid address type: {}", addr_type)),
+            _ => Err(ParseError::InvalidData(format!(
+                "Invalid address type: {}",
+                addr_type
+            ))),
         }
     }
 
@@ -1136,7 +1173,10 @@ impl<R: Read> Parser<R> {
         // Parse version
         let version = self.read_u32()?;
         if version != 5 {
-            return Err(anyhow!("Invalid version: expected 5, got {}", version));
+            return Err(ParseError::InvalidData(format!(
+                "Invalid version: expected 5, got {}",
+                version
+            )));
         }
 
         // Parse agent address
@@ -1191,11 +1231,7 @@ pub fn parse_datagrams(data: &[u8]) -> Result<Vec<SFlowDatagram>> {
 
         match Parser::new(&mut cursor).parse_datagram() {
             Ok(datagram) => datagrams.push(datagram),
-            Err(e)
-                if e.downcast_ref::<io::Error>()
-                    .map(|e| e.kind() == io::ErrorKind::UnexpectedEof)
-                    .unwrap_or(false) =>
-            {
+            Err(ParseError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
                 // End of data
                 break;
             }
