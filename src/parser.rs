@@ -702,6 +702,34 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Radio Utilization - Format (0,1002)
+    fn parse_radio_utilization(
+        &mut self,
+    ) -> Result<crate::models::counter_records::RadioUtilization> {
+        Ok(crate::models::counter_records::RadioUtilization {
+            elapsed_time: self.read_u32()?,
+            on_channel_time: self.read_u32()?,
+            on_channel_busy_time: self.read_u32()?,
+        })
+    }
+
+    /// Parse OpenFlow Port - Format (0,1004)
+    fn parse_openflow_port(&mut self) -> Result<crate::models::counter_records::OpenFlowPort> {
+        Ok(crate::models::counter_records::OpenFlowPort {
+            datapath_id: self.read_u64()?,
+            port_no: self.read_u32()?,
+        })
+    }
+
+    /// Parse OpenFlow Port Name - Format (0,1005)
+    fn parse_openflow_port_name(
+        &mut self,
+    ) -> Result<crate::models::counter_records::OpenFlowPortName> {
+        Ok(crate::models::counter_records::OpenFlowPortName {
+            port_name: self.read_string()?,
+        })
+    }
+
     /// Parse Host Description - Format (0,2000)
     fn parse_host_description(
         &mut self,
@@ -747,6 +775,14 @@ impl<R: Read> Parser<R> {
         }
 
         Ok(crate::models::counter_records::HostAdapters { adapters })
+    }
+
+    /// Parse Host Parent - Format (0,2002)
+    fn parse_host_parent(&mut self) -> Result<crate::models::counter_records::HostParent> {
+        Ok(crate::models::counter_records::HostParent {
+            container_type: self.read_u32()?,
+            container_index: self.read_u32()?,
+        })
     }
 
     /// Parse Host CPU - Format (0,2003)
@@ -818,6 +854,73 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Virtual Node - Format (0,2100)
+    fn parse_virtual_node(&mut self) -> Result<crate::models::counter_records::VirtualNode> {
+        Ok(crate::models::counter_records::VirtualNode {
+            memory: self.read_u64()?,
+            num_cpus: self.read_u32()?,
+            cpu_time: self.read_u32()?,
+        })
+    }
+
+    /// Parse Virtual CPU - Format (0,2101)
+    fn parse_virtual_cpu(&mut self) -> Result<crate::models::counter_records::VirtualCpu> {
+        Ok(crate::models::counter_records::VirtualCpu {
+            state: self.read_u32()?,
+            cpu_time: self.read_u32()?,
+        })
+    }
+
+    /// Parse Virtual Memory - Format (0,2102)
+    fn parse_virtual_memory(&mut self) -> Result<crate::models::counter_records::VirtualMemory> {
+        Ok(crate::models::counter_records::VirtualMemory {
+            memory: self.read_u64()?,
+            max_memory: self.read_u64()?,
+        })
+    }
+
+    /// Parse Virtual Disk I/O - Format (0,2103)
+    fn parse_virtual_disk_io(&mut self) -> Result<crate::models::counter_records::VirtualDiskIo> {
+        Ok(crate::models::counter_records::VirtualDiskIo {
+            capacity: self.read_u64()?,
+            allocation: self.read_u64()?,
+            available: self.read_u64()?,
+            rd_req: self.read_u32()?,
+            rd_bytes: self.read_u64()?,
+            wr_req: self.read_u32()?,
+            wr_bytes: self.read_u64()?,
+            errs: self.read_u32()?,
+        })
+    }
+
+    /// Parse Virtual Network I/O - Format (0,2104)
+    fn parse_virtual_net_io(&mut self) -> Result<crate::models::counter_records::VirtualNetIo> {
+        Ok(crate::models::counter_records::VirtualNetIo {
+            rx_bytes: self.read_u64()?,
+            rx_pkts: self.read_u32()?,
+            rx_errs: self.read_u32()?,
+            rx_drop: self.read_u32()?,
+            tx_bytes: self.read_u64()?,
+            tx_pkts: self.read_u32()?,
+            tx_errs: self.read_u32()?,
+            tx_drop: self.read_u32()?,
+        })
+    }
+
+    /// Parse App Resources - Format (0,2206)
+    fn parse_app_resources(&mut self) -> Result<crate::models::counter_records::AppResources> {
+        Ok(crate::models::counter_records::AppResources {
+            user_time: self.read_u32()?,
+            system_time: self.read_u32()?,
+            mem_used: self.read_u64()?,
+            mem_max: self.read_u64()?,
+            fd_open: self.read_u32()?,
+            fd_max: self.read_u32()?,
+            conn_open: self.read_u32()?,
+            conn_max: self.read_u32()?,
+        })
+    }
+
     /// Parse counter data based on format
     fn parse_counter_data(&mut self, format: DataFormat, data: Vec<u8>) -> Result<CounterData> {
         let mut cursor = Cursor::new(data.clone());
@@ -838,14 +941,28 @@ impl<R: Read> Parser<R> {
                 )),
                 5 => Ok(CounterData::Vlan(parser.parse_vlan_counters()?)),
                 1001 => Ok(CounterData::Processor(parser.parse_processor_counters()?)),
+                1002 => Ok(CounterData::RadioUtilization(
+                    parser.parse_radio_utilization()?,
+                )),
+                1004 => Ok(CounterData::OpenFlowPort(parser.parse_openflow_port()?)),
+                1005 => Ok(CounterData::OpenFlowPortName(
+                    parser.parse_openflow_port_name()?,
+                )),
                 2000 => Ok(CounterData::HostDescription(
                     parser.parse_host_description()?,
                 )),
                 2001 => Ok(CounterData::HostAdapters(parser.parse_host_adapters()?)),
+                2002 => Ok(CounterData::HostParent(parser.parse_host_parent()?)),
                 2003 => Ok(CounterData::HostCpu(parser.parse_host_cpu()?)),
                 2004 => Ok(CounterData::HostMemory(parser.parse_host_memory()?)),
                 2005 => Ok(CounterData::HostDiskIo(parser.parse_host_disk_io()?)),
                 2006 => Ok(CounterData::HostNetIo(parser.parse_host_net_io()?)),
+                2100 => Ok(CounterData::VirtualNode(parser.parse_virtual_node()?)),
+                2101 => Ok(CounterData::VirtualCpu(parser.parse_virtual_cpu()?)),
+                2102 => Ok(CounterData::VirtualMemory(parser.parse_virtual_memory()?)),
+                2103 => Ok(CounterData::VirtualDiskIo(parser.parse_virtual_disk_io()?)),
+                2104 => Ok(CounterData::VirtualNetIo(parser.parse_virtual_net_io()?)),
+                2206 => Ok(CounterData::AppResources(parser.parse_app_resources()?)),
                 _ => Ok(CounterData::Unknown { format, data }),
             }
         } else {

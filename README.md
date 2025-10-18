@@ -6,12 +6,12 @@
 [![Codecov](https://img.shields.io/codecov/c/github/nxthdr/sflow-parser?logo=codecov)](https://codecov.io/gh/nxthdr/sflow-parser)
 [![License](https://img.shields.io/crates/l/sflow-parser)](LICENSE)
 
-> [!WARNING]
-> Currently in early-stage development.
-
 A Rust library for parsing InMon sFlow version 5 datagrams as specified in [https://sflow.org/sflow_version_5.txt](https://sflow.org/sflow_version_5.txt).
 
 ## Implementation Status
+
+The implementation is fully complete. Each flow and counter record type of the RFC is implemented and has a corresponding unit test.
+Fuzz testing does not show any issues.
 
 **Core Features:** ✅ Complete
 - Datagram structure (version, agent, sequence, uptime)
@@ -20,7 +20,7 @@ A Rust library for parsing InMon sFlow version 5 datagrams as specified in [http
 - Address types (IPv4, IPv6, Unknown)
 - Data structures (DataFormat, DataSource, Interface)
 
-### Flow Records (19/19 formats - 100% Complete ✅)
+### Flow Records
 
 | Format | Enterprise | Name | Status |
 |--------|-----------|------|--------|
@@ -44,7 +44,7 @@ A Rust library for parsing InMon sFlow version 5 datagrams as specified in [http
 | 1015 | 0 | Extended 802.11 RX | ✅ Implemented |
 | 1016 | 0 | Extended 802.11 TX | ✅ Implemented |
 
-### Counter Records (12/21 formats - 57% Complete)
+### Counter Records
 
 | Format | Enterprise | Name | Status |
 |--------|-----------|------|--------|
@@ -54,26 +54,22 @@ A Rust library for parsing InMon sFlow version 5 datagrams as specified in [http
 | 4 | 0 | 100BaseVG Interface | ✅ Implemented |
 | 5 | 0 | VLAN | ✅ Implemented |
 | 1001 | 0 | Processor | ✅ Implemented |
-| 1002 | 0 | Radio Utilization | 📦 Model only |
-| 1004 | 0 | OpenFlow Port | 📦 Model only |
-| 1005 | 0 | OpenFlow Port Name | 📦 Model only |
+| 1002 | 0 | Radio Utilization | ✅ Implemented |
+| 1004 | 0 | OpenFlow Port | ✅ Implemented |
+| 1005 | 0 | OpenFlow Port Name | ✅ Implemented |
 | 2000 | 0 | Host Description | ✅ Implemented |
 | 2001 | 0 | Host Adapters | ✅ Implemented |
-| 2002 | 0 | Host Parent | 📦 Model only |
+| 2002 | 0 | Host Parent | ✅ Implemented |
 | 2003 | 0 | Host CPU | ✅ Implemented |
 | 2004 | 0 | Host Memory | ✅ Implemented |
 | 2005 | 0 | Host Disk I/O | ✅ Implemented |
 | 2006 | 0 | Host Network I/O | ✅ Implemented |
-| 2100 | 0 | Virtual Node | 📦 Model only |
-| 2101 | 0 | Virtual CPU | 📦 Model only |
-| 2102 | 0 | Virtual Memory | 📦 Model only |
-| 2103 | 0 | Virtual Disk I/O | 📦 Model only |
-| 2104 | 0 | Virtual Network I/O | 📦 Model only |
-| 2206 | 0 | App Resources | 📦 Model only |
-
-**Legend:**
-- ✅ **Implemented** - Full parser + model + tests
-- 📦 **Model only** - Data structure defined, parser not yet implemented
+| 2100 | 0 | Virtual Node | ✅ Implemented |
+| 2101 | 0 | Virtual CPU | ✅ Implemented |
+| 2102 | 0 | Virtual Memory | ✅ Implemented |
+| 2103 | 0 | Virtual Disk I/O | ✅ Implemented |
+| 2104 | 0 | Virtual Network I/O | ✅ Implemented |
+| 2206 | 0 | App Resources | ✅ Implemented |
 
 ## Testing
 

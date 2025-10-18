@@ -1327,6 +1327,94 @@ fn test_parse_processor_counters() {
 }
 
 #[test]
+fn test_parse_radio_utilization() {
+    // Radio Utilization: elapsed_time(4) + on_channel_time(4) + on_channel_busy_time(4) = 12 bytes
+    let record_data = [
+        0x00, 0x00, 0x03, 0xE8, // elapsed_time = 1000 ms
+        0x00, 0x00, 0x02, 0xBC, // on_channel_time = 700 ms
+        0x00, 0x00, 0x01, 0xF4, // on_channel_busy_time = 500 ms
+    ];
+
+    let data = build_counter_sample_test(0x03EA, &record_data); // record type = 1002
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::RadioUtilization(radio) => {
+                    assert_eq!(radio.elapsed_time, 1000);
+                    assert_eq!(radio.on_channel_time, 700);
+                    assert_eq!(radio.on_channel_busy_time, 500);
+                }
+                _ => panic!("Expected RadioUtilization"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_openflow_port() {
+    // OpenFlow Port: datapath_id(8) + port_no(4) = 12 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, // datapath_id = 1
+        0x00, 0x00, 0x00, 0x05, // port_no = 5
+    ];
+
+    let data = build_counter_sample_test(0x03EC, &record_data); // record type = 1004
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::OpenFlowPort(port) => {
+                    assert_eq!(port.datapath_id, 1);
+                    assert_eq!(port.port_no, 5);
+                }
+                _ => panic!("Expected OpenFlowPort"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_openflow_port_name() {
+    // OpenFlow Port Name: port_name_len(4) + "eth0"(4) = 8 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x04, // port_name length = 4
+        b'e', b't', b'h', b'0', // "eth0"
+    ];
+
+    let data = build_counter_sample_test(0x03ED, &record_data); // record type = 1005
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::OpenFlowPortName(port_name) => {
+                    assert_eq!(port_name.port_name, "eth0");
+                }
+                _ => panic!("Expected OpenFlowPortName"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
 fn test_parse_host_adapters() {
     // Host Adapters: num_adapters(4) + 2 adapters * (if_index(4) + num_macs(4) + mac(6)) = 32 bytes
     let record_data = [
@@ -1366,6 +1454,35 @@ fn test_parse_host_adapters() {
                     );
                 }
                 _ => panic!("Expected HostAdapters"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_host_parent() {
+    // Host Parent: container_type(4) + container_index(4) = 8 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x01, // container_type = 1 (docker)
+        0x00, 0x00, 0x00, 0x0A, // container_index = 10
+    ];
+
+    let data = build_counter_sample_test(0x07D2, &record_data); // record type = 2002
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::HostParent(parent) => {
+                    assert_eq!(parent.container_type, 1);
+                    assert_eq!(parent.container_index, 10);
+                }
+                _ => panic!("Expected HostParent"),
             }
         }
         _ => panic!("Expected CountersSample"),
@@ -1532,6 +1649,218 @@ fn test_parse_host_net_io_counters() {
                     assert_eq!(net.pkts_out, 500_000);
                 }
                 _ => panic!("Expected HostNetIo"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_virtual_node() {
+    // Virtual Node: memory(8) + num_cpus(4) + cpu_time(4) = 16 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, // memory = 4 GB
+        0x00, 0x00, 0x00, 0x04, // num_cpus = 4
+        0x00, 0x00, 0x27, 0x10, // cpu_time = 10000 ms
+    ];
+
+    let data = build_counter_sample_test(0x0834, &record_data); // record type = 2100
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::VirtualNode(node) => {
+                    assert_eq!(node.memory, 4_294_967_296);
+                    assert_eq!(node.num_cpus, 4);
+                    assert_eq!(node.cpu_time, 10000);
+                }
+                _ => panic!("Expected VirtualNode"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_virtual_cpu() {
+    // Virtual CPU: state(4) + cpu_time(4) = 8 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x00, // state = 0 (running)
+        0x00, 0x00, 0x13, 0x88, // cpu_time = 5000 ms
+    ];
+
+    let data = build_counter_sample_test(0x0835, &record_data); // record type = 2101
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::VirtualCpu(cpu) => {
+                    assert_eq!(cpu.state, 0);
+                    assert_eq!(cpu.cpu_time, 5000);
+                }
+                _ => panic!("Expected VirtualCpu"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_virtual_memory() {
+    // Virtual Memory: memory(8) + max_memory(8) = 16 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, // memory = 1 GB
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, // max_memory = 4 GB
+    ];
+
+    let data = build_counter_sample_test(0x0836, &record_data); // record type = 2102
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::VirtualMemory(mem) => {
+                    assert_eq!(mem.memory, 1_073_741_824);
+                    assert_eq!(mem.max_memory, 4_294_967_296);
+                }
+                _ => panic!("Expected VirtualMemory"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_virtual_disk_io() {
+    // Virtual Disk I/O: capacity(8) + allocation(8) + available(8) + rd_req(4) + rd_bytes(8) + wr_req(4) + wr_bytes(8) + errs(4) = 52 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x02, 0x54, 0x0B, 0xE4, 0x00, // capacity = 10 GB
+        0x00, 0x00, 0x00, 0x01, 0x2A, 0x05, 0xF2, 0x00, // allocation = 5 GB
+        0x00, 0x00, 0x00, 0x01, 0x2A, 0x05, 0xF2, 0x00, // available = 5 GB
+        0x00, 0x00, 0x03, 0xE8, // rd_req = 1000
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x98, 0x96, 0x80, // rd_bytes = 10 MB
+        0x00, 0x00, 0x07, 0xD0, // wr_req = 2000
+        0x00, 0x00, 0x00, 0x00, 0x01, 0x31, 0x2D, 0x00, // wr_bytes = 20 MB
+        0x00, 0x00, 0x00, 0x05, // errs = 5
+    ];
+
+    let data = build_counter_sample_test(0x0837, &record_data); // record type = 2103
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::VirtualDiskIo(disk) => {
+                    assert_eq!(disk.capacity, 10_000_000_000);
+                    assert_eq!(disk.allocation, 5_000_000_000);
+                    assert_eq!(disk.available, 5_000_000_000);
+                    assert_eq!(disk.rd_req, 1000);
+                    assert_eq!(disk.rd_bytes, 10_000_000);
+                    assert_eq!(disk.wr_req, 2000);
+                    assert_eq!(disk.wr_bytes, 20_000_000);
+                    assert_eq!(disk.errs, 5);
+                }
+                _ => panic!("Expected VirtualDiskIo"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_virtual_net_io() {
+    // Virtual Network I/O: rx_bytes(8) + rx_pkts(4) + rx_errs(4) + rx_drop(4) + tx_bytes(8) + tx_pkts(4) + tx_errs(4) + tx_drop(4) = 44 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x00, 0x3B, 0x9A, 0xCA, 0x00, // rx_bytes = 1 GB
+        0x00, 0x00, 0x27, 0x10, // rx_pkts = 10000
+        0x00, 0x00, 0x00, 0x02, // rx_errs = 2
+        0x00, 0x00, 0x00, 0x01, // rx_drop = 1
+        0x00, 0x00, 0x00, 0x00, 0x77, 0x35, 0x94, 0x00, // tx_bytes = 2 GB
+        0x00, 0x00, 0x4E, 0x20, // tx_pkts = 20000
+        0x00, 0x00, 0x00, 0x03, // tx_errs = 3
+        0x00, 0x00, 0x00, 0x02, // tx_drop = 2
+    ];
+
+    let data = build_counter_sample_test(0x0838, &record_data); // record type = 2104
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::VirtualNetIo(net) => {
+                    assert_eq!(net.rx_bytes, 1_000_000_000);
+                    assert_eq!(net.rx_pkts, 10000);
+                    assert_eq!(net.rx_errs, 2);
+                    assert_eq!(net.rx_drop, 1);
+                    assert_eq!(net.tx_bytes, 2_000_000_000);
+                    assert_eq!(net.tx_pkts, 20000);
+                    assert_eq!(net.tx_errs, 3);
+                    assert_eq!(net.tx_drop, 2);
+                }
+                _ => panic!("Expected VirtualNetIo"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_app_resources() {
+    // App Resources: user_time(4) + system_time(4) + mem_used(8) + mem_max(8) + fd_open(4) + fd_max(4) + conn_open(4) + conn_max(4) = 40 bytes
+    let record_data = [
+        0x00, 0x00, 0x13, 0x88, // user_time = 5000 ms
+        0x00, 0x00, 0x07, 0xD0, // system_time = 2000 ms
+        0x00, 0x00, 0x00, 0x00, 0x06, 0x40, 0x00, 0x00, // mem_used = 100 MB
+        0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, // mem_max = 1 GB
+        0x00, 0x00, 0x00, 0x32, // fd_open = 50
+        0x00, 0x00, 0x04, 0x00, // fd_max = 1024
+        0x00, 0x00, 0x00, 0x0A, // conn_open = 10
+        0x00, 0x00, 0x00, 0x64, // conn_max = 100
+    ];
+
+    let data = build_counter_sample_test(0x089E, &record_data); // record type = 2206
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::AppResources(app) => {
+                    assert_eq!(app.user_time, 5000);
+                    assert_eq!(app.system_time, 2000);
+                    assert_eq!(app.mem_used, 104_857_600);
+                    assert_eq!(app.mem_max, 1_073_741_824);
+                    assert_eq!(app.fd_open, 50);
+                    assert_eq!(app.fd_max, 1024);
+                    assert_eq!(app.conn_open, 10);
+                    assert_eq!(app.conn_max, 100);
+                }
+                _ => panic!("Expected AppResources"),
             }
         }
         _ => panic!("Expected CountersSample"),
