@@ -468,26 +468,17 @@ impl<R: Read> Parser<R> {
         Ok(crate::models::flow_records::ExtendedVlanTunnel { vlan_stack })
     }
 
-    /// Parse Extended 802.11 Payload - Format (0,1014)
+    /// Parse Extended 802.11 Payload - Format (0,1013)
     fn parse_extended_80211_payload(
         &mut self,
     ) -> Result<crate::models::flow_records::Extended80211Payload> {
         let cipher_suite = self.read_u32()?;
-        let rssi = self.read_u32()?;
-        let noise = self.read_u32()?;
-        let channel = self.read_u32()?;
-        let speed = self.read_u32()?;
+        let data = self.read_opaque()?;
 
-        Ok(crate::models::flow_records::Extended80211Payload {
-            cipher_suite,
-            rssi,
-            noise,
-            channel,
-            speed,
-        })
+        Ok(crate::models::flow_records::Extended80211Payload { cipher_suite, data })
     }
 
-    /// Parse Extended 802.11 RX - Format (0,1015)
+    /// Parse Extended 802.11 RX - Format (0,1014)
     fn parse_extended_80211_rx(&mut self) -> Result<crate::models::flow_records::Extended80211Rx> {
         let ssid = self.read_string()?;
 
@@ -499,8 +490,9 @@ impl<R: Read> Parser<R> {
         let version = self.read_u32()?;
         let channel = self.read_u32()?;
         let speed = self.read_u64()?;
-        let rssi = self.read_u32()?;
-        let noise = self.read_u32()?;
+        let rsni = self.read_u32()?;
+        let rcpi = self.read_u32()?;
+        let packet_duration = self.read_u32()?;
 
         Ok(crate::models::flow_records::Extended80211Rx {
             ssid,
@@ -508,12 +500,13 @@ impl<R: Read> Parser<R> {
             version,
             channel,
             speed,
-            rssi,
-            noise,
+            rsni,
+            rcpi,
+            packet_duration,
         })
     }
 
-    /// Parse Extended 802.11 TX - Format (0,1016)
+    /// Parse Extended 802.11 TX - Format (0,1015)
     fn parse_extended_80211_tx(&mut self) -> Result<crate::models::flow_records::Extended80211Tx> {
         let ssid = self.read_string()?;
 
@@ -543,6 +536,17 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Extended 802.11 Aggregation - Format (0,1016)
+    fn parse_extended_80211_aggregation(
+        &mut self,
+    ) -> Result<crate::models::flow_records::Extended80211Aggregation> {
+        // Simplified implementation - just read PDU count
+        // Full implementation would parse array of PDUs with flow records
+        let pdu_count = self.read_u32()?;
+
+        Ok(crate::models::flow_records::Extended80211Aggregation { pdu_count })
+    }
+
     /// Parse flow data based on format
     fn parse_flow_data(&mut self, format: DataFormat, data: Vec<u8>) -> Result<FlowData> {
         let mut cursor = Cursor::new(data.clone());
@@ -559,6 +563,7 @@ impl<R: Read> Parser<R> {
                 1002 => Ok(FlowData::ExtendedRouter(parser.parse_extended_router()?)),
                 1003 => Ok(FlowData::ExtendedGateway(parser.parse_extended_gateway()?)),
                 1004 => Ok(FlowData::ExtendedUser(parser.parse_extended_user()?)),
+                // Note: Format 1005 is deprecated but kept for backward compatibility
                 1005 => Ok(FlowData::ExtendedUrl(parser.parse_extended_url()?)),
                 1006 => Ok(FlowData::ExtendedMpls(parser.parse_extended_mpls()?)),
                 1007 => Ok(FlowData::ExtendedNat(parser.parse_extended_nat()?)),
@@ -573,11 +578,14 @@ impl<R: Read> Parser<R> {
                 1012 => Ok(FlowData::ExtendedVlanTunnel(
                     parser.parse_extended_vlan_tunnel()?,
                 )),
-                1014 => Ok(FlowData::Extended80211Payload(
+                1013 => Ok(FlowData::Extended80211Payload(
                     parser.parse_extended_80211_payload()?,
                 )),
-                1015 => Ok(FlowData::Extended80211Rx(parser.parse_extended_80211_rx()?)),
-                1016 => Ok(FlowData::Extended80211Tx(parser.parse_extended_80211_tx()?)),
+                1014 => Ok(FlowData::Extended80211Rx(parser.parse_extended_80211_rx()?)),
+                1015 => Ok(FlowData::Extended80211Tx(parser.parse_extended_80211_tx()?)),
+                1016 => Ok(FlowData::Extended80211Aggregation(
+                    parser.parse_extended_80211_aggregation()?,
+                )),
                 _ => Ok(FlowData::Unknown { format, data }),
             }
         } else {
@@ -723,6 +731,34 @@ impl<R: Read> Parser<R> {
             multicast_pkts: self.read_u32()?,
             broadcast_pkts: self.read_u32()?,
             discards: self.read_u32()?,
+        })
+    }
+
+    /// Parse IEEE 802.11 Counters - Format (0,6)
+    fn parse_ieee80211_counters(
+        &mut self,
+    ) -> Result<crate::models::counter_records::Ieee80211Counters> {
+        Ok(crate::models::counter_records::Ieee80211Counters {
+            dot11_transmitted_fragment_count: self.read_u32()?,
+            dot11_multicast_transmitted_frame_count: self.read_u32()?,
+            dot11_failed_count: self.read_u32()?,
+            dot11_retry_count: self.read_u32()?,
+            dot11_multiple_retry_count: self.read_u32()?,
+            dot11_frame_duplicate_count: self.read_u32()?,
+            dot11_rts_success_count: self.read_u32()?,
+            dot11_rts_failure_count: self.read_u32()?,
+            dot11_ack_failure_count: self.read_u32()?,
+            dot11_received_fragment_count: self.read_u32()?,
+            dot11_multicast_received_frame_count: self.read_u32()?,
+            dot11_fcs_error_count: self.read_u32()?,
+            dot11_transmitted_frame_count: self.read_u32()?,
+            dot11_wep_undecryptable_count: self.read_u32()?,
+            dot11_qos_discarded_fragment_count: self.read_u32()?,
+            dot11_associated_station_count: self.read_u32()?,
+            dot11_qos_cf_polls_received_count: self.read_u32()?,
+            dot11_qos_cf_polls_unused_count: self.read_u32()?,
+            dot11_qos_cf_polls_unusable_count: self.read_u32()?,
+            dot11_qos_cf_polls_lost_count: self.read_u32()?,
         })
     }
 
@@ -944,7 +980,25 @@ impl<R: Read> Parser<R> {
         })
     }
 
-    /// Parse App Resources - Format (0,2206)
+    /// Parse App Operations - Format (0,2202)
+    fn parse_app_operations(&mut self) -> Result<crate::models::counter_records::AppOperations> {
+        Ok(crate::models::counter_records::AppOperations {
+            application: self.read_string()?,
+            success: self.read_u32()?,
+            other: self.read_u32()?,
+            timeout: self.read_u32()?,
+            internal_error: self.read_u32()?,
+            bad_request: self.read_u32()?,
+            forbidden: self.read_u32()?,
+            too_large: self.read_u32()?,
+            not_implemented: self.read_u32()?,
+            not_found: self.read_u32()?,
+            unavailable: self.read_u32()?,
+            unauthorized: self.read_u32()?,
+        })
+    }
+
+    /// Parse App Resources - Format (0,2203)
     fn parse_app_resources(&mut self) -> Result<crate::models::counter_records::AppResources> {
         Ok(crate::models::counter_records::AppResources {
             user_time: self.read_u32()?,
@@ -955,6 +1009,17 @@ impl<R: Read> Parser<R> {
             fd_max: self.read_u32()?,
             conn_open: self.read_u32()?,
             conn_max: self.read_u32()?,
+        })
+    }
+
+    /// Parse App Workers - Format (0,2206)
+    fn parse_app_workers(&mut self) -> Result<crate::models::counter_records::AppWorkers> {
+        Ok(crate::models::counter_records::AppWorkers {
+            workers_active: self.read_u32()?,
+            workers_idle: self.read_u32()?,
+            workers_max: self.read_u32()?,
+            req_delayed: self.read_u32()?,
+            req_dropped: self.read_u32()?,
         })
     }
 
@@ -977,6 +1042,7 @@ impl<R: Read> Parser<R> {
                     parser.parse_vg100_interface_counters()?,
                 )),
                 5 => Ok(CounterData::Vlan(parser.parse_vlan_counters()?)),
+                6 => Ok(CounterData::Ieee80211(parser.parse_ieee80211_counters()?)),
                 1001 => Ok(CounterData::Processor(parser.parse_processor_counters()?)),
                 1002 => Ok(CounterData::RadioUtilization(
                     parser.parse_radio_utilization()?,
@@ -999,7 +1065,9 @@ impl<R: Read> Parser<R> {
                 2102 => Ok(CounterData::VirtualMemory(parser.parse_virtual_memory()?)),
                 2103 => Ok(CounterData::VirtualDiskIo(parser.parse_virtual_disk_io()?)),
                 2104 => Ok(CounterData::VirtualNetIo(parser.parse_virtual_net_io()?)),
-                2206 => Ok(CounterData::AppResources(parser.parse_app_resources()?)),
+                2202 => Ok(CounterData::AppOperations(parser.parse_app_operations()?)),
+                2203 => Ok(CounterData::AppResources(parser.parse_app_resources()?)),
+                2206 => Ok(CounterData::AppWorkers(parser.parse_app_workers()?)),
                 _ => Ok(CounterData::Unknown { format, data }),
             }
         } else {

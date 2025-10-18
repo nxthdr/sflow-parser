@@ -116,6 +116,7 @@ pub enum FlowData {
     /// Extended User - Format (0,1004)
     ExtendedUser(crate::models::flow_records::ExtendedUser),
     /// Extended URL - Format (0,1005)
+    /// Note: This format is deprecated but kept for backward compatibility
     ExtendedUrl(crate::models::flow_records::ExtendedUrl),
     /// Extended MPLS - Format (0,1006)
     ExtendedMpls(crate::models::flow_records::ExtendedMpls),
@@ -131,12 +132,14 @@ pub enum FlowData {
     ExtendedMplsLvpFec(crate::models::flow_records::ExtendedMplsLvpFec),
     /// Extended VLAN Tunnel - Format (0,1012)
     ExtendedVlanTunnel(crate::models::flow_records::ExtendedVlanTunnel),
-    /// Extended 802.11 Payload - Format (0,1014)
+    /// Extended 802.11 Payload - Format (0,1013)
     Extended80211Payload(crate::models::flow_records::Extended80211Payload),
-    /// Extended 802.11 RX - Format (0,1015)
+    /// Extended 802.11 RX - Format (0,1014)
     Extended80211Rx(crate::models::flow_records::Extended80211Rx),
-    /// Extended 802.11 TX - Format (0,1016)
+    /// Extended 802.11 TX - Format (0,1015)
     Extended80211Tx(crate::models::flow_records::Extended80211Tx),
+    /// Extended 802.11 Aggregation - Format (0,1016)
+    Extended80211Aggregation(crate::models::flow_records::Extended80211Aggregation),
     /// Unknown or unparsed format
     Unknown { format: DataFormat, data: Vec<u8> },
 }
@@ -161,6 +164,8 @@ pub enum CounterData {
     Vg100Interface(crate::models::counter_records::Vg100InterfaceCounters),
     /// VLAN Counters - Format (0,5)
     Vlan(crate::models::counter_records::VlanCounters),
+    /// IEEE 802.11 Counters - Format (0,6)
+    Ieee80211(crate::models::counter_records::Ieee80211Counters),
     /// Processor Counters - Format (0,1001)
     Processor(crate::models::counter_records::ProcessorCounters),
     /// Radio Utilization - Format (0,1002)
@@ -193,8 +198,12 @@ pub enum CounterData {
     OpenFlowPort(crate::models::counter_records::OpenFlowPort),
     /// OpenFlow Port Name - Format (0,1005)
     OpenFlowPortName(crate::models::counter_records::OpenFlowPortName),
-    /// App Resources - Format (0,2206)
+    /// App Operations - Format (0,2202)
+    AppOperations(crate::models::counter_records::AppOperations),
+    /// App Resources - Format (0,2203)
     AppResources(crate::models::counter_records::AppResources),
+    /// App Workers - Format (0,2206)
+    AppWorkers(crate::models::counter_records::AppWorkers),
     /// Unknown or unparsed format
     Unknown { format: DataFormat, data: Vec<u8> },
 }

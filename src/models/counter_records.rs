@@ -193,6 +193,32 @@ pub struct ProcessorCounters {
     pub free_memory: u64,
 }
 
+/// IEEE 802.11 Counters - Format (0,6)
+/// See IEEE802dot11-MIB
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Ieee80211Counters {
+    pub dot11_transmitted_fragment_count: u32,
+    pub dot11_multicast_transmitted_frame_count: u32,
+    pub dot11_failed_count: u32,
+    pub dot11_retry_count: u32,
+    pub dot11_multiple_retry_count: u32,
+    pub dot11_frame_duplicate_count: u32,
+    pub dot11_rts_success_count: u32,
+    pub dot11_rts_failure_count: u32,
+    pub dot11_ack_failure_count: u32,
+    pub dot11_received_fragment_count: u32,
+    pub dot11_multicast_received_frame_count: u32,
+    pub dot11_fcs_error_count: u32,
+    pub dot11_transmitted_frame_count: u32,
+    pub dot11_wep_undecryptable_count: u32,
+    pub dot11_qos_discarded_fragment_count: u32,
+    pub dot11_associated_station_count: u32,
+    pub dot11_qos_cf_polls_received_count: u32,
+    pub dot11_qos_cf_polls_unused_count: u32,
+    pub dot11_qos_cf_polls_unusable_count: u32,
+    pub dot11_qos_cf_polls_lost_count: u32,
+}
+
 /// Radio Utilization - Format (0,1002)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RadioUtilization {
@@ -507,7 +533,49 @@ pub struct OpenFlowPortName {
     pub port_name: String,
 }
 
-/// App Resources - Format (0,2206)
+/// App Operations - Format (0,2202)
+/// Count of operations by status code
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AppOperations {
+    /// Application identifier
+    pub application: String,
+
+    /// Successful operations
+    pub success: u32,
+
+    /// Other status
+    pub other: u32,
+
+    /// Timeout
+    pub timeout: u32,
+
+    /// Internal error
+    pub internal_error: u32,
+
+    /// Bad request
+    pub bad_request: u32,
+
+    /// Forbidden
+    pub forbidden: u32,
+
+    /// Too large
+    pub too_large: u32,
+
+    /// Not implemented
+    pub not_implemented: u32,
+
+    /// Not found
+    pub not_found: u32,
+
+    /// Unavailable
+    pub unavailable: u32,
+
+    /// Unauthorized
+    pub unauthorized: u32,
+}
+
+/// App Resources - Format (0,2203)
+/// Application resource usage
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AppResources {
     /// User time in milliseconds
@@ -522,15 +590,35 @@ pub struct AppResources {
     /// Maximum memory in bytes
     pub mem_max: u64,
 
-    /// File descriptors
+    /// Number of open file descriptors
     pub fd_open: u32,
 
-    /// Maximum file descriptors
+    /// Maximum number of file descriptors
     pub fd_max: u32,
 
-    /// Connection count
+    /// Number of open connections
     pub conn_open: u32,
 
-    /// Maximum connections
+    /// Maximum number of connections
     pub conn_max: u32,
+}
+
+/// App Workers - Format (0,2206)
+/// Worker thread/process statistics
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AppWorkers {
+    /// Number of active workers
+    pub workers_active: u32,
+
+    /// Number of idle workers
+    pub workers_idle: u32,
+
+    /// Maximum number of workers
+    pub workers_max: u32,
+
+    /// Number of delayed requests
+    pub req_delayed: u32,
+
+    /// Number of dropped requests
+    pub req_dropped: u32,
 }

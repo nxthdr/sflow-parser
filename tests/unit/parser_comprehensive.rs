@@ -989,16 +989,16 @@ fn test_parse_extended_mpls_lvp_fec() {
 
 #[test]
 fn test_parse_extended_80211_payload() {
-    // Extended 802.11 Payload: cipher_suite(4) + rssi(4) + noise(4) + channel(4) + speed(4) = 20 bytes
+    // Extended 802.11 Payload: cipher_suite(4) + data_length(4) + data(8 padded to 12) = 20 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x04, // cipher_suite = 4 (CCMP/AES)
-        0x00, 0x00, 0x00, 0xC8, // rssi = 200 (-55 dBm)
-        0x00, 0x00, 0x00, 0x28, // noise = 40
-        0x00, 0x00, 0x00, 0x06, // channel = 6
-        0x00, 0x00, 0x01, 0xF4, // speed = 500 Mbps
+        0x00, 0x00, 0x00, 0x08, // data length = 8 bytes
+        0x01, 0x02, 0x03, 0x04, // data bytes
+        0x05, 0x06, 0x07, 0x08, // data bytes
+        0x00, 0x00, 0x00, 0x00, // padding to 4-byte boundary
     ];
 
-    let data = build_flow_sample_test(0x03F6, &record_data); // record type = 1014
+    let data = build_flow_sample_test(0x03F5, &record_data); // record type = 1013
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -1010,10 +1010,9 @@ fn test_parse_extended_80211_payload() {
             match &flow.flow_records[0].flow_data {
                 FlowData::Extended80211Payload(wifi) => {
                     assert_eq!(wifi.cipher_suite, 4);
-                    assert_eq!(wifi.rssi, 200);
-                    assert_eq!(wifi.noise, 40);
-                    assert_eq!(wifi.channel, 6);
-                    assert_eq!(wifi.speed, 500);
+                    assert_eq!(wifi.data.len(), 8);
+                    assert_eq!(wifi.data[0], 0x01);
+                    assert_eq!(wifi.data[7], 0x08);
                 }
                 _ => panic!("Expected Extended80211Payload"),
             }
@@ -1025,19 +1024,20 @@ fn test_parse_extended_80211_payload() {
 #[test]
 fn test_parse_extended_80211_rx() {
     // Extended 802.11 RX: ssid_len(4) + "TestNet"(7) + padding(1) + bssid(6) + padding(2) +
-    //                     version(4) + channel(4) + speed(8) + rssi(4) + noise(4) = 40 bytes
+    //                     version(4) + channel(4) + speed(8) + rsni(4) + rcpi(4) + packet_duration(4) = 48 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x07, // ssid length = 7
         b'T', b'e', b's', b't', b'N', b'e', b't', 0x00, // "TestNet" + padding
         0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x00, 0x00, // bssid (6 bytes) + padding (2 bytes)
-        0x00, 0x00, 0x00, 0x02, // version = 802.11n
+        0x00, 0x00, 0x00, 0x04, // version = 4 (802.11n)
         0x00, 0x00, 0x00, 0x24, // channel = 36
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xE8, // speed = 1000 Mbps (u64)
-        0x00, 0x00, 0x00, 0xB4, // rssi = 180
-        0x00, 0x00, 0x00, 0x32, // noise = 50
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xE8, // speed = 1000 (u64)
+        0x00, 0x00, 0x00, 0xB4, // rsni = 180
+        0x00, 0x00, 0x00, 0x5A, // rcpi = 90
+        0x00, 0x00, 0x03, 0xE8, // packet_duration = 1000 microseconds
     ];
 
-    let data = build_flow_sample_test(0x03F7, &record_data); // record type = 1015
+    let data = build_flow_sample_test(0x03F6, &record_data); // record type = 1014
 
     let result = parse_datagram(&data);
     if let Err(e) = &result {
@@ -1053,9 +1053,12 @@ fn test_parse_extended_80211_rx() {
                 FlowData::Extended80211Rx(rx) => {
                     assert_eq!(rx.ssid, "TestNet");
                     assert_eq!(rx.bssid, [0x00, 0x11, 0x22, 0x33, 0x44, 0x55]);
-                    assert_eq!(rx.version, 2);
+                    assert_eq!(rx.version, 4);
                     assert_eq!(rx.channel, 36);
                     assert_eq!(rx.speed, 1000);
+                    assert_eq!(rx.rsni, 180);
+                    assert_eq!(rx.rcpi, 90);
+                    assert_eq!(rx.packet_duration, 1000);
                 }
                 _ => panic!("Expected Extended80211Rx"),
             }
@@ -1082,7 +1085,7 @@ fn test_parse_extended_80211_tx() {
         0x00, 0x00, 0x00, 0x14, // power = 20 dBm
     ];
 
-    let data = build_flow_sample_test(0x03F8, &record_data); // record type = 1016
+    let data = build_flow_sample_test(0x03F7, &record_data); // record type = 1015
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -1102,6 +1105,33 @@ fn test_parse_extended_80211_tx() {
                     assert_eq!(tx.power, 20);
                 }
                 _ => panic!("Expected Extended80211Tx"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_80211_aggregation() {
+    // Extended 802.11 Aggregation: pdu_count(4) = 4 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x05, // pdu_count = 5
+    ];
+
+    let data = build_flow_sample_test(0x03F8, &record_data); // record type = 1016
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::Extended80211Aggregation(agg) => {
+                    assert_eq!(agg.pdu_count, 5);
+                }
+                _ => panic!("Expected Extended80211Aggregation"),
             }
         }
         _ => panic!("Expected FlowSample"),
@@ -1289,6 +1319,59 @@ fn test_parse_vlan_counters() {
 }
 
 #[test]
+fn test_parse_ieee80211_counters() {
+    // IEEE 802.11 Counters: 20 u32 = 80 bytes
+    let record_data = [
+        0x00, 0x00, 0x27, 0x10, // dot11_transmitted_fragment_count = 10000
+        0x00, 0x00, 0x00, 0x0A, // dot11_multicast_transmitted_frame_count = 10
+        0x00, 0x00, 0x00, 0x05, // dot11_failed_count = 5
+        0x00, 0x00, 0x00, 0x03, // dot11_retry_count = 3
+        0x00, 0x00, 0x00, 0x02, // dot11_multiple_retry_count = 2
+        0x00, 0x00, 0x00, 0x01, // dot11_frame_duplicate_count = 1
+        0x00, 0x00, 0x00, 0x00, // dot11_rts_success_count = 0
+        0x00, 0x00, 0x00, 0x00, // dot11_rts_failure_count = 0
+        0x00, 0x00, 0x00, 0x00, // dot11_ack_failure_count = 0
+        0x00, 0x00, 0x1F, 0x40, // dot11_received_fragment_count = 8000
+        0x00, 0x00, 0x00, 0x14, // dot11_multicast_received_frame_count = 20
+        0x00, 0x00, 0x00, 0x00, // dot11_fcs_error_count = 0
+        0x00, 0x00, 0x13, 0x88, // dot11_transmitted_frame_count = 5000
+        0x00, 0x00, 0x00, 0x00, // dot11_wep_undecryptable_count = 0
+        0x00, 0x00, 0x00, 0x00, // dot11_qos_discarded_fragment_count = 0
+        0x00, 0x00, 0x00, 0x0F, // dot11_associated_station_count = 15
+        0x00, 0x00, 0x00, 0x00, // dot11_qos_cf_polls_received_count = 0
+        0x00, 0x00, 0x00, 0x00, // dot11_qos_cf_polls_unused_count = 0
+        0x00, 0x00, 0x00, 0x00, // dot11_qos_cf_polls_unusable_count = 0
+        0x00, 0x00, 0x00, 0x00, // dot11_qos_cf_polls_lost_count = 0
+    ];
+
+    let data = build_counter_sample_test(0x0006, &record_data); // record type = 6
+
+    let result = parse_datagram(&data);
+    if let Err(e) = &result {
+        eprintln!("Parse error: {}", e);
+    }
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::Ieee80211(wifi) => {
+                    assert_eq!(wifi.dot11_transmitted_fragment_count, 10000);
+                    assert_eq!(wifi.dot11_multicast_transmitted_frame_count, 10);
+                    assert_eq!(wifi.dot11_failed_count, 5);
+                    assert_eq!(wifi.dot11_retry_count, 3);
+                    assert_eq!(wifi.dot11_transmitted_frame_count, 5000);
+                }
+                _ => panic!("Expected Ieee80211"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
 fn test_parse_processor_counters() {
     // Processor counters: 3 u32 + 2 u64 = 28 bytes
     let record_data = [
@@ -1380,6 +1463,49 @@ fn test_parse_openflow_port() {
                     assert_eq!(port.port_no, 5);
                 }
                 _ => panic!("Expected OpenFlowPort"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_host_description() {
+    // Host Description: hostname + uuid(16) + machine_type + os_name + os_release
+    let record_data = [
+        0x00, 0x00, 0x00, 0x09, // hostname length = 9
+        b's', b'e', b'r', b'v', b'e', b'r', b'-', b'0', b'1', 0x00, 0x00,
+        0x00, // "server-01" + padding
+        0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0, // uuid (16 bytes)
+        0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x00, 0x00, 0x00,
+        0x06, // machine_type length = 6
+        b'x', b'8', b'6', b'_', b'6', b'4', 0x00, 0x00, // "x86_64" + padding
+        0x00, 0x00, 0x00, 0x05, // os_name length = 5
+        b'L', b'i', b'n', b'u', b'x', 0x00, 0x00, 0x00, // "Linux" + padding
+        0x00, 0x00, 0x00, 0x06, // os_release length = 6
+        b'6', b'.', b'5', b'.', b'1', b'0', 0x00, 0x00, // "6.5.10" + padding
+    ];
+
+    let data = build_counter_sample_test(0x07D0, &record_data); // record type = 2000
+
+    let result = parse_datagram(&data);
+    if let Err(e) = &result {
+        eprintln!("Parse error: {}", e);
+    }
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::HostDescription(host) => {
+                    assert_eq!(host.hostname, "server-01");
+                    assert_eq!(host.machine_type, "x86_64");
+                    assert_eq!(host.os_name, "Linux");
+                    assert_eq!(host.os_release, "6.5.10");
+                }
+                _ => panic!("Expected HostDescription"),
             }
         }
         _ => panic!("Expected CountersSample"),
@@ -1840,7 +1966,7 @@ fn test_parse_app_resources() {
         0x00, 0x00, 0x00, 0x64, // conn_max = 100
     ];
 
-    let data = build_counter_sample_test(0x089E, &record_data); // record type = 2206
+    let data = build_counter_sample_test(0x089B, &record_data); // record type = 2203
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -1860,7 +1986,87 @@ fn test_parse_app_resources() {
                     assert_eq!(app.conn_open, 10);
                     assert_eq!(app.conn_max, 100);
                 }
-                _ => panic!("Expected AppResources"),
+                other => panic!("Expected AppResources, got: {:?}", other),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_app_operations() {
+    // App Operations: application + success + other + timeout + internal_error + bad_request + forbidden + too_large + not_implemented + not_found + unavailable + unauthorized
+    let record_data = [
+        0x00, 0x00, 0x00, 0x05, // application length = 5
+        b'n', b'g', b'i', b'n', b'x', 0x00, 0x00, 0x00, // "nginx" + padding
+        0x00, 0x00, 0x27, 0x10, // success = 10000
+        0x00, 0x00, 0x00, 0x05, // other = 5
+        0x00, 0x00, 0x00, 0x02, // timeout = 2
+        0x00, 0x00, 0x00, 0x01, // internal_error = 1
+        0x00, 0x00, 0x00, 0x03, // bad_request = 3
+        0x00, 0x00, 0x00, 0x00, // forbidden = 0
+        0x00, 0x00, 0x00, 0x00, // too_large = 0
+        0x00, 0x00, 0x00, 0x00, // not_implemented = 0
+        0x00, 0x00, 0x00, 0x04, // not_found = 4
+        0x00, 0x00, 0x00, 0x01, // unavailable = 1
+        0x00, 0x00, 0x00, 0x00, // unauthorized = 0
+    ];
+
+    let data = build_counter_sample_test(0x089A, &record_data); // record type = 2202
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::AppOperations(app) => {
+                    assert_eq!(app.application, "nginx");
+                    assert_eq!(app.success, 10000);
+                    assert_eq!(app.other, 5);
+                    assert_eq!(app.timeout, 2);
+                    assert_eq!(app.internal_error, 1);
+                    assert_eq!(app.bad_request, 3);
+                    assert_eq!(app.not_found, 4);
+                    assert_eq!(app.unavailable, 1);
+                }
+                _ => panic!("Expected AppOperations"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+#[test]
+fn test_parse_app_workers() {
+    // App Workers: workers_active(4) + workers_idle(4) + workers_max(4) + req_delayed(4) + req_dropped(4)
+    let record_data = [
+        0x00, 0x00, 0x00, 0x08, // workers_active = 8
+        0x00, 0x00, 0x00, 0x04, // workers_idle = 4
+        0x00, 0x00, 0x00, 0x10, // workers_max = 16
+        0x00, 0x00, 0x00, 0x05, // req_delayed = 5
+        0x00, 0x00, 0x00, 0x02, // req_dropped = 2
+    ];
+
+    let data = build_counter_sample_test(0x089E, &record_data); // record type = 2206
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::AppWorkers(workers) => {
+                    assert_eq!(workers.workers_active, 8);
+                    assert_eq!(workers.workers_idle, 4);
+                    assert_eq!(workers.workers_max, 16);
+                    assert_eq!(workers.req_delayed, 5);
+                    assert_eq!(workers.req_dropped, 2);
+                }
+                _ => panic!("Expected AppWorkers"),
             }
         }
         _ => panic!("Expected CountersSample"),

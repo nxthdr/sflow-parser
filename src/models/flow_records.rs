@@ -307,77 +307,78 @@ pub struct ExtendedVlanTunnel {
     pub vlan_stack: Vec<u32>,
 }
 
-/// Extended 802.11 Payload - Format (0,1014)
+/// Extended 802.11 Payload - Format (0,1013)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Extended80211Payload {
-    /// Cipher suite
+    /// Cipher suite (OUI + Suite Type)
     pub cipher_suite: u32,
 
-    /// Received signal strength
-    pub rssi: u32,
-
-    /// Noise level
-    pub noise: u32,
-
-    /// Channel
-    pub channel: u32,
-
-    /// Speed (Mbps)
-    pub speed: u32,
+    /// Unencrypted payload data
+    pub data: Vec<u8>,
 }
 
-/// Extended 802.11 RX - Format (0,1015)
+/// Extended 802.11 RX - Format (0,1014)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Extended80211Rx {
-    /// SSID
+    /// SSID string (max 32 bytes)
     pub ssid: String,
 
     /// BSSID (MAC address)
     pub bssid: [u8; 6],
 
-    /// Version
+    /// IEEE 802.11 version (a=1, b=2, g=3, n=4)
     pub version: u32,
 
-    /// Channel
+    /// Channel number
     pub channel: u32,
 
-    /// Speed (Mbps)
+    /// Speed in bits per second
     pub speed: u64,
 
-    /// RSSI
-    pub rssi: u32,
+    /// Received signal to noise ratio (RSNI)
+    pub rsni: u32,
 
-    /// Noise
-    pub noise: u32,
+    /// Received channel power indicator (RCPI)
+    pub rcpi: u32,
+
+    /// Packet duration in microseconds
+    pub packet_duration: u32,
 }
 
-/// Extended 802.11 TX - Format (0,1016)
+/// Extended 802.11 TX - Format (0,1015)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Extended80211Tx {
-    /// SSID
+    /// SSID string (max 32 bytes)
     pub ssid: String,
 
     /// BSSID (MAC address)
     pub bssid: [u8; 6],
 
-    /// Version
+    /// IEEE 802.11 version (a=1, b=2, g=3, n=4)
     pub version: u32,
 
-    /// Transmissions
+    /// Number of transmissions (0=unknown, 1=success on first attempt, n>1 = n-1 retransmissions)
     pub transmissions: u32,
 
-    /// Packet duration (microseconds)
+    /// Packet duration in microseconds (successful transmission)
     pub packet_duration: u32,
 
-    /// Retransmissions
+    /// Retransmission duration in microseconds (failed attempts)
     pub retrans_duration: u32,
 
-    /// Channel
+    /// Channel number
     pub channel: u32,
 
-    /// Speed (Mbps)
+    /// Speed in bits per second
     pub speed: u64,
 
-    /// Power (mW)
+    /// Transmit power in milliwatts
     pub power: u32,
+}
+
+/// Extended 802.11 Aggregation - Format (0,1016)
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Extended80211Aggregation {
+    /// Array of PDUs in the aggregation (simplified - just count for now)
+    pub pdu_count: u32,
 }

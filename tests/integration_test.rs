@@ -149,8 +149,9 @@ fn test_parse_sflow_bin() {
                             }
                             FlowData::Extended80211Payload(wifi) => {
                                 println!(
-                                    "Extended80211Payload(channel={}, speed={})",
-                                    wifi.channel, wifi.speed
+                                    "Extended80211Payload(cipher_suite={}, data_len={})",
+                                    wifi.cipher_suite,
+                                    wifi.data.len()
                                 );
                             }
                             FlowData::Extended80211Rx(rx) => {
@@ -164,6 +165,9 @@ fn test_parse_sflow_bin() {
                                     "Extended80211Tx(ssid={}, channel={})",
                                     tx.ssid, tx.channel
                                 );
+                            }
+                            FlowData::Extended80211Aggregation(agg) => {
+                                println!("Extended80211Aggregation(pdu_count={})", agg.pdu_count);
                             }
                             FlowData::Unknown { format, data } => {
                                 println!(
@@ -774,6 +778,9 @@ fn test_parsed_flow_data() {
                         }
                         FlowData::Extended80211Tx(_) => {
                             extended_80211_tx += 1;
+                        }
+                        FlowData::Extended80211Aggregation(_) => {
+                            // 802.11 aggregation - count but don't track separately
                         }
                         FlowData::Unknown { format, data } => {
                             unknown += 1;

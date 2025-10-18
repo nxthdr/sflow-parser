@@ -384,17 +384,12 @@ fn test_extended_vlan_tunnel_single() {
 #[test]
 fn test_extended_80211_payload() {
     let wifi = Extended80211Payload {
-        cipher_suite: 4, // CCMP (AES)
-        rssi: 200,       // -55 dBm
-        noise: 100,      // -155 dBm
-        channel: 36,     // 5 GHz
-        speed: 866,      // 866 Mbps
+        cipher_suite: 4,              // CCMP (OUI 00-0F-AC, Suite Type 4)
+        data: vec![0x01, 0x02, 0x03], // Unencrypted payload data
     };
 
     assert_eq!(wifi.cipher_suite, 4);
-    assert_eq!(wifi.rssi, 200);
-    assert_eq!(wifi.channel, 36);
-    assert_eq!(wifi.speed, 866);
+    assert_eq!(wifi.data, vec![0x01, 0x02, 0x03]);
 }
 
 #[test]
@@ -402,17 +397,19 @@ fn test_extended_80211_rx() {
     let rx = Extended80211Rx {
         ssid: "MyNetwork".to_string(),
         bssid: [0x00, 0x11, 0x22, 0x33, 0x44, 0x55],
-        version: 2, // 802.11n
+        version: 4, // 802.11n
         channel: 6,
-        speed: 300, // 300 Mbps
-        rssi: 180,
-        noise: 90,
+        speed: 300_000_000, // 300 Mbps in bps
+        rsni: 180,
+        rcpi: 90,
+        packet_duration: 1000, // microseconds
     };
 
     assert_eq!(rx.ssid, "MyNetwork");
     assert_eq!(rx.bssid, [0x00, 0x11, 0x22, 0x33, 0x44, 0x55]);
     assert_eq!(rx.channel, 6);
-    assert_eq!(rx.speed, 300);
+    assert_eq!(rx.rsni, 180);
+    assert_eq!(rx.rcpi, 90);
 }
 
 #[test]
@@ -433,6 +430,15 @@ fn test_extended_80211_tx() {
     assert_eq!(tx.transmissions, 2);
     assert_eq!(tx.channel, 149);
     assert_eq!(tx.power, 20);
+}
+
+#[test]
+fn test_extended_80211_aggregation() {
+    let aggregation = Extended80211Aggregation {
+        pdu_count: 5, // 5 PDUs in the aggregation
+    };
+
+    assert_eq!(aggregation.pdu_count, 5);
 }
 
 // ============================================================================
