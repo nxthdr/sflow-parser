@@ -165,7 +165,7 @@ pub struct AsPathSegment {
     pub path: Vec<u32>,
 }
 
-/// Extended Gateway Data - Format (0,1004)
+/// Extended Gateway Data - Format (0,1003)
 /// BGP routing information
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedGateway {
@@ -191,7 +191,7 @@ pub struct ExtendedGateway {
     pub local_pref: u32,
 }
 
-/// Extended User Data - Format (0,1005)
+/// Extended User Data - Format (0,1004)
 /// Application-level user information
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedUser {
@@ -215,7 +215,7 @@ pub enum UrlDirection {
     Destination = 2,
 }
 
-/// Extended URL Data - Format (0,1006)
+/// Extended URL Data - Format (0,1005)
 /// HTTP request information
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedUrl {
@@ -229,7 +229,7 @@ pub struct ExtendedUrl {
     pub host: String,
 }
 
-/// Extended MPLS Data - Format (0,1007)
+/// Extended MPLS Data - Format (0,1006)
 /// MPLS label stack information
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedMpls {
@@ -243,7 +243,7 @@ pub struct ExtendedMpls {
     pub out_label_stack: Vec<u32>,
 }
 
-/// Extended NAT Data - Format (0,1008)
+/// Extended NAT Data - Format (0,1007)
 /// Network Address Translation information
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedNat {
@@ -254,7 +254,7 @@ pub struct ExtendedNat {
     pub dst_address: crate::models::core::Address,
 }
 
-/// Extended MPLS Tunnel - Format (0,1009)
+/// Extended MPLS Tunnel - Format (0,1008)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedMplsTunnel {
     /// Tunnel name
@@ -267,7 +267,7 @@ pub struct ExtendedMplsTunnel {
     pub tunnel_cos: u32,
 }
 
-/// Extended MPLS VC - Format (0,1010)
+/// Extended MPLS VC - Format (0,1009)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedMplsVc {
     /// VC instance name
@@ -283,7 +283,7 @@ pub struct ExtendedMplsVc {
     pub vc_cos: u32,
 }
 
-/// Extended MPLS FEC - Format (0,1011)
+/// Extended MPLS FEC - Format (0,1010)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedMplsFec {
     /// FEC address prefix
@@ -293,14 +293,14 @@ pub struct ExtendedMplsFec {
     pub fec_prefix_len: u32,
 }
 
-/// Extended MPLS LVP FEC - Format (0,1012)
+/// Extended MPLS LVP FEC - Format (0,1011)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedMplsLvpFec {
     /// FEC address prefix length
     pub fec_addr_prefix_len: u32,
 }
 
-/// Extended VLAN Tunnel - Format (0,1013)
+/// Extended VLAN Tunnel - Format (0,1012)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedVlanTunnel {
     /// Stack of VLAN tags

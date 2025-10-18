@@ -18,12 +18,6 @@ fn u32_bytes(value: u32) -> [u8; 4] {
     ]
 }
 
-/// Calculate the record length (data after type and length fields)
-/// This is what goes in the record length field
-fn calculate_record_length(data_bytes: usize) -> u32 {
-    data_bytes as u32
-}
-
 /// Calculate the total sample length for a flow sample
 /// Sample length = flow_sample_header + sum(flow_record_header + flow_record_data)
 /// Flow sample header = 32 bytes (8 fields × 4 bytes)
@@ -64,6 +58,32 @@ fn build_flow_sample_test(record_type: u32, record_data: &[u8]) -> Vec<u8> {
     ]);
 
     // Flow record
+    data.extend_from_slice(&u32_bytes(record_type));
+    data.extend_from_slice(&u32_bytes(record_length as u32));
+    data.extend_from_slice(record_data);
+
+    data
+}
+
+/// Build a counter sample test with a single counter record
+/// This reduces code duplication across counter tests
+fn build_counter_sample_test(record_type: u32, record_data: &[u8]) -> Vec<u8> {
+    let mut data = create_datagram_header(1);
+
+    let record_length = record_data.len();
+    // Counter sample length = 12 bytes (header) + 8 bytes (record header) + record data
+    let sample_length = 12 + 8 + record_length;
+
+    // Counter sample header
+    data.extend_from_slice(&[0x00, 0x00, 0x00, 0x02]); // sample type = counter sample
+    data.extend_from_slice(&u32_bytes(sample_length as u32));
+    data.extend_from_slice(&[
+        0x00, 0x00, 0x00, 0x01, // sequence number
+        0x00, 0x00, 0x00, 0x01, // source ID
+        0x00, 0x00, 0x00, 0x01, // number of counter records = 1
+    ]);
+
+    // Counter record
     data.extend_from_slice(&u32_bytes(record_type));
     data.extend_from_slice(&u32_bytes(record_length as u32));
     data.extend_from_slice(record_data);
@@ -619,7 +639,7 @@ fn test_parse_extended_user() {
         b'b', b'o', b'b', 0x00, // "bob" + padding
     ];
 
-    let data = build_flow_sample_test(0x03ED, &record_data); // record type = 1005
+    let data = build_flow_sample_test(0x03EC, &record_data); // record type = 1004
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -655,7 +675,7 @@ fn test_parse_extended_url() {
         0x00, // "example.com" + padding
     ];
 
-    let data = build_flow_sample_test(0x03EE, &record_data); // record type = 1006
+    let data = build_flow_sample_test(0x03ED, &record_data); // record type = 1005
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -694,7 +714,7 @@ fn test_parse_extended_mpls() {
         0x00, 0x00, 0x01, 0xF4, // label 500
     ];
 
-    let data = build_flow_sample_test(0x03EF, &record_data); // record type = 1007
+    let data = build_flow_sample_test(0x03EE, &record_data); // record type = 1006
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -727,7 +747,7 @@ fn test_parse_extended_nat() {
         0x0A, 0x00, 0x00, 0x01, // dst_address = 10.0.0.1
     ];
 
-    let data = build_flow_sample_test(0x03F0, &record_data); // record type = 1008
+    let data = build_flow_sample_test(0x03EF, &record_data); // record type = 1007
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -765,7 +785,7 @@ fn test_parse_extended_vlan_tunnel() {
         0x00, 0x00, 0x00, 0x28, // vlan 40
     ];
 
-    let data = build_flow_sample_test(0x03F5, &record_data); // record type = 1013
+    let data = build_flow_sample_test(0x03F4, &record_data); // record type = 1012
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -809,7 +829,7 @@ fn test_parse_extended_gateway() {
         0x00, 0x00, 0x00, 0x64, // local_pref = 100
     ];
 
-    let data = build_flow_sample_test(0x03EC, &record_data); // record type = 1004
+    let data = build_flow_sample_test(0x03EB, &record_data); // record type = 1003
 
     let result = parse_datagram(&data);
     if let Err(e) = &result {
@@ -848,7 +868,7 @@ fn test_parse_extended_mpls_tunnel() {
         0x00, 0x00, 0x00, 0x03, // tunnel_cos = 3
     ];
 
-    let data = build_flow_sample_test(0x03F1, &record_data); // record type = 1009
+    let data = build_flow_sample_test(0x03F0, &record_data); // record type = 1008
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -881,7 +901,7 @@ fn test_parse_extended_mpls_vc() {
         0x00, 0x00, 0x00, 0x03, // vc_cos = 3
     ];
 
-    let data = build_flow_sample_test(0x03F2, &record_data); // record type = 1010
+    let data = build_flow_sample_test(0x03F1, &record_data); // record type = 1009
 
     let result = parse_datagram(&data);
     if let Err(e) = &result {
@@ -916,7 +936,7 @@ fn test_parse_extended_mpls_fec() {
         0x00, 0x00, 0x00, 0x08, // fec_prefix_len = 8
     ];
 
-    let data = build_flow_sample_test(0x03F3, &record_data); // record type = 1011
+    let data = build_flow_sample_test(0x03F2, &record_data); // record type = 1010
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -947,7 +967,7 @@ fn test_parse_extended_mpls_lvp_fec() {
         0x00, 0x00, 0x00, 0x18, // fec_addr_prefix_len = 24
     ];
 
-    let data = build_flow_sample_test(0x03F4, &record_data); // record type = 1012
+    let data = build_flow_sample_test(0x03F3, &record_data); // record type = 1011
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -1090,17 +1110,8 @@ fn test_parse_extended_80211_tx() {
 
 #[test]
 fn test_parse_ethernet_interface_counters() {
-    let mut data = create_datagram_header(1);
-    data.extend_from_slice(&[
-        // Counter sample
-        0x00, 0x00, 0x00, 0x02, // sample type = counter sample
-        0x00, 0x00, 0x00, 0x48, // sample length = 72 bytes (12 + 60)
-        0x00, 0x00, 0x00, 0x01, // sequence number
-        0x00, 0x00, 0x00, 0x01, // source ID
-        0x00, 0x00, 0x00, 0x01, // number of counter records = 1
-        // Ethernet interface counters - Format (0,2)
-        0x00, 0x00, 0x00, 0x02, // record type = 2
-        0x00, 0x00, 0x00, 0x34, // record length = 52 bytes
+    // Ethernet interface counters: 13 u32 = 52 bytes
+    let record_data = [
         0x00, 0x00, 0x00, 0x00, // dot3_stats_alignment_errors = 0
         0x00, 0x00, 0x00, 0x05, // dot3_stats_fcs_errors = 5
         0x00, 0x00, 0x00, 0x0A, // dot3_stats_single_collision_frames = 10
@@ -1114,7 +1125,9 @@ fn test_parse_ethernet_interface_counters() {
         0x00, 0x00, 0x00, 0x00, // dot3_stats_frame_too_longs = 0
         0x00, 0x00, 0x00, 0x00, // dot3_stats_internal_mac_receive_errors = 0
         0x00, 0x00, 0x00, 0x00, // dot3_stats_symbol_errors = 0
-    ]);
+    ];
+
+    let data = build_counter_sample_test(0x0002, &record_data); // record type = 2
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -1137,24 +1150,156 @@ fn test_parse_ethernet_interface_counters() {
 }
 
 #[test]
+fn test_parse_token_ring_counters() {
+    // Token Ring counters: 18 u32 = 72 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x05, // dot5_stats_line_errors = 5
+        0x00, 0x00, 0x00, 0x02, // dot5_stats_burst_errors = 2
+        0x00, 0x00, 0x00, 0x01, // dot5_stats_ac_errors = 1
+        0x00, 0x00, 0x00, 0x00, // dot5_stats_abort_trans_errors = 0
+        0x00, 0x00, 0x00, 0x03, // dot5_stats_internal_errors = 3
+        0x00, 0x00, 0x00, 0x01, // dot5_stats_lost_frame_errors = 1
+        0x00, 0x00, 0x00, 0x00, // dot5_stats_receive_congestions = 0
+        0x00, 0x00, 0x00, 0x00, // dot5_stats_frame_copied_errors = 0
+        0x00, 0x00, 0x00, 0x02, // dot5_stats_token_errors = 2
+        0x00, 0x00, 0x00, 0x0A, // dot5_stats_soft_errors = 10
+        0x00, 0x00, 0x00, 0x01, // dot5_stats_hard_errors = 1
+        0x00, 0x00, 0x00, 0x00, // dot5_stats_signal_loss = 0
+        0x00, 0x00, 0x00, 0x00, // dot5_stats_transmit_beacons = 0
+        0x00, 0x00, 0x00, 0x05, // dot5_stats_recoverys = 5
+        0x00, 0x00, 0x00, 0x00, // dot5_stats_lobe_wires = 0
+        0x00, 0x00, 0x00, 0x01, // dot5_stats_removes = 1
+        0x00, 0x00, 0x00, 0x00, // dot5_stats_singles = 0
+        0x00, 0x00, 0x00, 0x02, // dot5_stats_freq_errors = 2
+    ];
+
+    let data = build_counter_sample_test(0x0003, &record_data); // record type = 3
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::TokenRing(tr) => {
+                    assert_eq!(tr.dot5_stats_line_errors, 5);
+                    assert_eq!(tr.dot5_stats_burst_errors, 2);
+                    assert_eq!(tr.dot5_stats_soft_errors, 10);
+                    assert_eq!(tr.dot5_stats_hard_errors, 1);
+                }
+                _ => panic!("Expected TokenRing"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_vg100_interface_counters() {
+    // 100BaseVG counters: 8 u32 + 6 u64 = 80 bytes
+    let record_data = [
+        0x00, 0x00, 0x03, 0xE8, // dot12_in_high_priority_frames = 1000
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x42,
+        0x40, // dot12_in_high_priority_octets = 1000000
+        0x00, 0x00, 0x07, 0xD0, // dot12_in_norm_priority_frames = 2000
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x1E, 0x84,
+        0x80, // dot12_in_norm_priority_octets = 2000000
+        0x00, 0x00, 0x00, 0x05, // dot12_in_ipm_errors = 5
+        0x00, 0x00, 0x00, 0x02, // dot12_in_oversized_frame_errors = 2
+        0x00, 0x00, 0x00, 0x01, // dot12_in_data_errors = 1
+        0x00, 0x00, 0x00, 0x00, // dot12_in_null_addressed_frames = 0
+        0x00, 0x00, 0x01, 0xF4, // dot12_out_high_priority_frames = 500
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0xA1,
+        0x20, // dot12_out_high_priority_octets = 500000
+        0x00, 0x00, 0x00, 0x0A, // dot12_transition_into_trainings = 10
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x42,
+        0x40, // dot12_hc_in_high_priority_octets = 1000000
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x1E, 0x84,
+        0x80, // dot12_hc_in_norm_priority_octets = 2000000
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0xA1,
+        0x20, // dot12_hc_out_high_priority_octets = 500000
+    ];
+
+    let data = build_counter_sample_test(0x0004, &record_data); // record type = 4
+
+    let result = parse_datagram(&data);
+    if let Err(e) = &result {
+        eprintln!("Parse error: {}", e);
+    }
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::Vg100Interface(vg) => {
+                    assert_eq!(vg.dot12_in_high_priority_frames, 1000);
+                    assert_eq!(vg.dot12_in_high_priority_octets, 1000000);
+                    assert_eq!(vg.dot12_in_norm_priority_frames, 2000);
+                    assert_eq!(vg.dot12_in_ipm_errors, 5);
+                }
+                _ => panic!("Expected Vg100Interface"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_vlan_counters() {
+    // VLAN counters: 1 u32 + 1 u64 + 4 u32 = 28 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x64, // vlan_id = 100
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x98, 0x96, 0x80, // octets = 10000000
+        0x00, 0x00, 0x27, 0x10, // ucast_pkts = 10000
+        0x00, 0x00, 0x03, 0xE8, // multicast_pkts = 1000
+        0x00, 0x00, 0x00, 0x64, // broadcast_pkts = 100
+        0x00, 0x00, 0x00, 0x05, // discards = 5
+    ];
+
+    let data = build_counter_sample_test(0x0005, &record_data); // record type = 5
+
+    let result = parse_datagram(&data);
+    if let Err(e) = &result {
+        eprintln!("Parse error: {}", e);
+    }
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::Vlan(vlan) => {
+                    assert_eq!(vlan.vlan_id, 100);
+                    assert_eq!(vlan.octets, 10000000);
+                    assert_eq!(vlan.ucast_pkts, 10000);
+                    assert_eq!(vlan.multicast_pkts, 1000);
+                    assert_eq!(vlan.broadcast_pkts, 100);
+                    assert_eq!(vlan.discards, 5);
+                }
+                _ => panic!("Expected Vlan"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
 fn test_parse_processor_counters() {
-    let mut data = create_datagram_header(1);
-    data.extend_from_slice(&[
-        // Counter sample
-        0x00, 0x00, 0x00, 0x02, // sample type = counter sample
-        0x00, 0x00, 0x00, 0x30, // sample length = 48 bytes (12 + 8 + 28)
-        0x00, 0x00, 0x00, 0x01, // sequence number
-        0x00, 0x00, 0x00, 0x01, // source ID
-        0x00, 0x00, 0x00, 0x01, // number of counter records = 1
-        // Processor counters - Format (0,1001)
-        0x00, 0x00, 0x03, 0xE9, // record type = 1001
-        0x00, 0x00, 0x00, 0x1C, // record length = 28 bytes (3 u32 + 2 u64)
+    // Processor counters: 3 u32 + 2 u64 = 28 bytes
+    let record_data = [
         0x00, 0x00, 0x00, 0x32, // cpu_5s = 50%
         0x00, 0x00, 0x00, 0x2D, // cpu_1m = 45%
         0x00, 0x00, 0x00, 0x28, // cpu_5m = 40%
         0x00, 0x00, 0x00, 0x03, 0xB9, 0xAC, 0xA0, 0x00, // total_memory = 16GB
         0x00, 0x00, 0x00, 0x01, 0xDC, 0xD6, 0x50, 0x00, // free_memory = 8GB
-    ]);
+    ];
+
+    let data = build_counter_sample_test(0x03E9, &record_data); // record type = 1001
 
     let result = parse_datagram(&data);
     if let Err(e) = &result {
@@ -1183,17 +1328,8 @@ fn test_parse_processor_counters() {
 
 #[test]
 fn test_parse_host_adapters() {
-    let mut data = create_datagram_header(1);
-    data.extend_from_slice(&[
-        // Counter sample
-        0x00, 0x00, 0x00, 0x02, // sample type = counter sample
-        0x00, 0x00, 0x00, 0x34, // sample length = 52 bytes (12 + 8 + 32)
-        0x00, 0x00, 0x00, 0x01, // sequence number
-        0x00, 0x00, 0x00, 0x01, // source ID
-        0x00, 0x00, 0x00, 0x01, // number of counter records = 1
-        // Host Adapters - Format (0,2001)
-        0x00, 0x00, 0x07, 0xD1, // record type = 2001
-        0x00, 0x00, 0x00, 0x20, // record length = 32 bytes
+    // Host Adapters: num_adapters(4) + 2 adapters * (if_index(4) + num_macs(4) + mac(6)) = 32 bytes
+    let record_data = [
         0x00, 0x00, 0x00, 0x02, // num_adapters = 2
         // Adapter 1
         0x00, 0x00, 0x00, 0x01, // if_index = 1
@@ -1203,7 +1339,9 @@ fn test_parse_host_adapters() {
         0x00, 0x00, 0x00, 0x02, // if_index = 2
         0x00, 0x00, 0x00, 0x01, // num_macs = 1
         0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, // MAC address
-    ]);
+    ];
+
+    let data = build_counter_sample_test(0x07D1, &record_data); // record type = 2001
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -1217,9 +1355,15 @@ fn test_parse_host_adapters() {
                     assert_eq!(adapters.adapters.len(), 2);
                     assert_eq!(adapters.adapters[0].if_index, 1);
                     assert_eq!(adapters.adapters[0].mac_addresses.len(), 1);
-                    assert_eq!(adapters.adapters[0].mac_addresses[0], [0x00, 0x11, 0x22, 0x33, 0x44, 0x55]);
+                    assert_eq!(
+                        adapters.adapters[0].mac_addresses[0],
+                        [0x00, 0x11, 0x22, 0x33, 0x44, 0x55]
+                    );
                     assert_eq!(adapters.adapters[1].if_index, 2);
-                    assert_eq!(adapters.adapters[1].mac_addresses[0], [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]);
+                    assert_eq!(
+                        adapters.adapters[1].mac_addresses[0],
+                        [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]
+                    );
                 }
                 _ => panic!("Expected HostAdapters"),
             }
@@ -1230,17 +1374,8 @@ fn test_parse_host_adapters() {
 
 #[test]
 fn test_parse_host_cpu_counters() {
-    let mut data = create_datagram_header(1);
-    data.extend_from_slice(&[
-        // Counter sample
-        0x00, 0x00, 0x00, 0x02, // sample type = counter sample
-        0x00, 0x00, 0x00, 0x58, // sample length = 88 bytes (12 + 8 + 68)
-        0x00, 0x00, 0x00, 0x01, // sequence number
-        0x00, 0x00, 0x00, 0x01, // source ID
-        0x00, 0x00, 0x00, 0x01, // number of counter records = 1
-        // Host CPU counters - Format (0,2003)
-        0x00, 0x00, 0x07, 0xD3, // record type = 2003
-        0x00, 0x00, 0x00, 0x44, // record length = 68 bytes
+    // Host CPU counters: 8 u32 + 7 u64 = 68 bytes
+    let record_data = [
         0x00, 0x00, 0x00, 0x96, // load_one = 150 (1.50)
         0x00, 0x00, 0x00, 0x78, // load_five = 120 (1.20)
         0x00, 0x00, 0x00, 0x5A, // load_fifteen = 90 (0.90)
@@ -1258,7 +1393,9 @@ fn test_parse_host_cpu_counters() {
         0x00, 0x00, 0x00, 0x19, // cpu_sintr = 25
         0x00, 0x01, 0x86, 0xA0, // interrupts = 100000
         0x00, 0x07, 0xA1, 0x20, // contexts = 500000
-    ]);
+    ];
+
+    let data = build_counter_sample_test(0x07D3, &record_data); // record type = 2003
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -1283,17 +1420,8 @@ fn test_parse_host_cpu_counters() {
 
 #[test]
 fn test_parse_host_memory_counters() {
-    let mut data = create_datagram_header(1);
-    data.extend_from_slice(&[
-        // Counter sample
-        0x00, 0x00, 0x00, 0x02, // sample type = counter sample
-        0x00, 0x00, 0x00, 0x5C, // sample length = 92 bytes (12 + 8 + 72)
-        0x00, 0x00, 0x00, 0x01, // sequence number
-        0x00, 0x00, 0x00, 0x01, // source ID
-        0x00, 0x00, 0x00, 0x01, // number of counter records = 1
-        // Host Memory counters - Format (0,2004)
-        0x00, 0x00, 0x07, 0xD4, // record type = 2004
-        0x00, 0x00, 0x00, 0x48, // record length = 72 bytes
+    // Host Memory counters: 4 u64 + 1 u32 = 36 bytes
+    let record_data = [
         0x00, 0x00, 0x00, 0x03, 0xB9, 0xAC, 0xA0, 0x00, // mem_total = 16GB
         0x00, 0x00, 0x00, 0x01, 0xDC, 0xD6, 0x50, 0x00, // mem_free = 8GB
         0x00, 0x00, 0x00, 0x00, 0x3B, 0x9A, 0xCA, 0x00, // mem_shared = 1GB
@@ -1304,8 +1432,10 @@ fn test_parse_host_memory_counters() {
         0x00, 0x00, 0x03, 0xE8, // page_in = 1000
         0x00, 0x00, 0x01, 0xF4, // page_out = 500
         0x00, 0x00, 0x00, 0x0A, // swap_in = 10
-        0x00, 0x00, 0x00, 0x05, // swap_out = 5
-    ]);
+        0x00, 0x00, 0x00, 0x00, // page_out = 0
+    ];
+
+    let data = build_counter_sample_test(0x07D4, &record_data); // record type = 2004
 
     let result = parse_datagram(&data);
     if let Err(e) = &result {
@@ -1332,17 +1462,8 @@ fn test_parse_host_memory_counters() {
 
 #[test]
 fn test_parse_host_disk_io_counters() {
-    let mut data = create_datagram_header(1);
-    data.extend_from_slice(&[
-        // Counter sample
-        0x00, 0x00, 0x00, 0x02, // sample type = counter sample
-        0x00, 0x00, 0x00, 0x48, // sample length = 72 bytes (12 + 8 + 52)
-        0x00, 0x00, 0x00, 0x01, // sequence number
-        0x00, 0x00, 0x00, 0x01, // source ID
-        0x00, 0x00, 0x00, 0x01, // number of counter records = 1
-        // Host Disk I/O counters - Format (0,2005)
-        0x00, 0x00, 0x07, 0xD5, // record type = 2005
-        0x00, 0x00, 0x00, 0x34, // record length = 52 bytes
+    // Host Disk I/O counters: 2 u64 + 1 u32 + 1 u32 + 1 u64 + 1 u32 + 1 u32 + 1 u64 + 1 u32 = 52 bytes
+    let record_data = [
         0x00, 0x00, 0x00, 0xE8, 0xD4, 0xA5, 0x10, 0x00, // disk_total = 1TB
         0x00, 0x00, 0x00, 0x74, 0x6A, 0x52, 0x88, 0x00, // disk_free = 500GB
         0x00, 0x00, 0x00, 0x4B, // part_max_used = 75%
@@ -1352,7 +1473,9 @@ fn test_parse_host_disk_io_counters() {
         0x00, 0x00, 0x13, 0x88, // writes = 5000
         0x00, 0x00, 0x00, 0x02, 0xFA, 0xF0, 0x80, 0x00, // bytes_written = 50MB
         0x00, 0x00, 0x0B, 0xB8, // write_time = 3000ms
-    ]);
+    ];
+
+    let data = build_counter_sample_test(0x07D5, &record_data); // record type = 2005
 
     let result = parse_datagram(&data);
     if let Err(e) = &result {
@@ -1380,17 +1503,8 @@ fn test_parse_host_disk_io_counters() {
 
 #[test]
 fn test_parse_host_net_io_counters() {
-    let mut data = create_datagram_header(1);
-    data.extend_from_slice(&[
-        // Counter sample
-        0x00, 0x00, 0x00, 0x02, // sample type = counter sample
-        0x00, 0x00, 0x00, 0x3C, // sample length = 60 bytes (12 + 8 + 40)
-        0x00, 0x00, 0x00, 0x01, // sequence number
-        0x00, 0x00, 0x00, 0x01, // source ID
-        0x00, 0x00, 0x00, 0x01, // number of counter records = 1
-        // Host Network I/O counters - Format (0,2006)
-        0x00, 0x00, 0x07, 0xD6, // record type = 2006
-        0x00, 0x00, 0x00, 0x28, // record length = 40 bytes
+    // Host Network I/O counters: 2 u64 + 2 u32 + 2 u64 + 2 u32 = 36 bytes
+    let record_data = [
         0x00, 0x00, 0x00, 0x02, 0x54, 0x0B, 0xE4, 0x00, // bytes_in = 10GB
         0x00, 0x0F, 0x42, 0x40, // pkts_in = 1000000
         0x00, 0x00, 0x00, 0x0A, // errs_in = 10
@@ -1399,7 +1513,9 @@ fn test_parse_host_net_io_counters() {
         0x00, 0x07, 0xA1, 0x20, // pkts_out = 500000
         0x00, 0x00, 0x00, 0x02, // errs_out = 2
         0x00, 0x00, 0x00, 0x01, // drops_out = 1
-    ]);
+    ];
+
+    let data = build_counter_sample_test(0x07D6, &record_data); // record type = 2006
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());

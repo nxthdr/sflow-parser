@@ -11,66 +11,69 @@
 
 A Rust library for parsing InMon sFlow version 5 datagrams as specified in [https://sflow.org/sflow_version_5.txt](https://sflow.org/sflow_version_5.txt).
 
-## Core Parsing
+## Implementation Status
 
-- ✅ **Datagram structure** - Version, agent, sequence, uptime
-- ✅ **Sample envelopes** - All 4 types (FlowSample, CountersSample, Expanded variants)
-- ✅ **XDR encoding** - Big-endian, 4-byte alignment, opaque data
-- ✅ **Address types** - IPv4, IPv6, Unknown
-- ✅ **Data structures** - DataFormat, DataSource, Interface
+**Core Features:** ✅ Complete
+- Datagram structure (version, agent, sequence, uptime)
+- All 4 sample envelope types (FlowSample, CountersSample, Expanded variants)
+- XDR encoding (big-endian, 4-byte alignment, opaque data)
+- Address types (IPv4, IPv6, Unknown)
+- Data structures (DataFormat, DataSource, Interface)
 
-## Flow Record Parsing
-
-### ✅ Implemented (17 formats - 100% of standard formats)
-
-| Format | Enterprise | Name | Status |
-|--------|-----------|------|--------|
-| 1 | 0 | Sampled Header | ✅ Fully parsed |
-| 2 | 0 | Sampled Ethernet | ✅ Fully parsed |
-| 3 | 0 | Sampled IPv4 | ✅ Fully parsed |
-| 4 | 0 | Sampled IPv6 | ✅ Fully parsed |
-| 1001 | 0 | Extended Switch | ✅ Fully parsed |
-| 1002 | 0 | Extended Router | ✅ Fully parsed |
-| 1004 | 0 | Extended Gateway (BGP) | ✅ Fully parsed |
-| 1005 | 0 | Extended User | ✅ Fully parsed |
-| 1006 | 0 | Extended URL | ✅ Fully parsed |
-| 1007 | 0 | Extended MPLS | ✅ Fully parsed |
-| 1008 | 0 | Extended NAT | ✅ Fully parsed |
-| 1009 | 0 | Extended MPLS Tunnel | ✅ Fully parsed |
-| 1010 | 0 | Extended MPLS VC | ✅ Fully parsed |
-| 1011 | 0 | Extended MPLS FEC | ✅ Fully parsed |
-| 1012 | 0 | Extended MPLS LVP FEC | ✅ Fully parsed |
-| 1013 | 0 | Extended VLAN Tunnel | ✅ Fully parsed |
-| 1014 | 0 | Extended 802.11 Payload | ✅ Fully parsed |
-| 1015 | 0 | Extended 802.11 RX | ✅ Fully parsed |
-| 1016 | 0 | Extended 802.11 TX | ✅ Fully parsed |
-
-## Counter Record Parsing
-
-### ✅ Implemented (9 formats - Most Common Formats)
+### Flow Records (19/19 formats - 100% Complete ✅)
 
 | Format | Enterprise | Name | Status |
 |--------|-----------|------|--------|
-| 1 | 0 | Generic Interface Counters | ✅ Fully parsed |
-| 2 | 0 | Ethernet Interface Counters | ✅ Fully parsed |
-| 1001 | 0 | Processor Counters | ✅ Fully parsed |
-| 2000 | 0 | Host Description | ✅ Fully parsed |
-| 2001 | 0 | Host Adapters | ✅ Fully parsed |
-| 2003 | 0 | Host CPU | ✅ Fully parsed |
-| 2004 | 0 | Host Memory | ✅ Fully parsed |
-| 2005 | 0 | Host Disk I/O | ✅ Fully parsed |
-| 2006 | 0 | Host Network I/O | ✅ Fully parsed |
+| 1 | 0 | Sampled Header | ✅ Implemented |
+| 2 | 0 | Sampled Ethernet | ✅ Implemented |
+| 3 | 0 | Sampled IPv4 | ✅ Implemented |
+| 4 | 0 | Sampled IPv6 | ✅ Implemented |
+| 1001 | 0 | Extended Switch | ✅ Implemented |
+| 1002 | 0 | Extended Router | ✅ Implemented |
+| 1003 | 0 | Extended Gateway (BGP) | ✅ Implemented |
+| 1004 | 0 | Extended User | ✅ Implemented |
+| 1005 | 0 | Extended URL | ✅ Implemented |
+| 1006 | 0 | Extended MPLS | ✅ Implemented |
+| 1007 | 0 | Extended NAT | ✅ Implemented |
+| 1008 | 0 | Extended MPLS Tunnel | ✅ Implemented |
+| 1009 | 0 | Extended MPLS VC | ✅ Implemented |
+| 1010 | 0 | Extended MPLS FEC | ✅ Implemented |
+| 1011 | 0 | Extended MPLS LVP FEC | ✅ Implemented |
+| 1012 | 0 | Extended VLAN Tunnel | ✅ Implemented |
+| 1014 | 0 | Extended 802.11 Payload | ✅ Implemented |
+| 1015 | 0 | Extended 802.11 RX | ✅ Implemented |
+| 1016 | 0 | Extended 802.11 TX | ✅ Implemented |
 
-### 📦 Models Defined, Parsers TODO (19 formats)
+### Counter Records (12/21 formats - 57% Complete)
 
-Less common formats with models defined but parsers not yet implemented:
-- Token Ring, 100BaseVG, VLAN counters
-- Radio Utilization
-- Host Parent
-- Virtual machine counters (5 formats)
-- OpenFlow counters (2 formats)
-- App Resources
-- And others...
+| Format | Enterprise | Name | Status |
+|--------|-----------|------|--------|
+| 1 | 0 | Generic Interface | ✅ Implemented |
+| 2 | 0 | Ethernet Interface | ✅ Implemented |
+| 3 | 0 | Token Ring | ✅ Implemented |
+| 4 | 0 | 100BaseVG Interface | ✅ Implemented |
+| 5 | 0 | VLAN | ✅ Implemented |
+| 1001 | 0 | Processor | ✅ Implemented |
+| 1002 | 0 | Radio Utilization | 📦 Model only |
+| 1004 | 0 | OpenFlow Port | 📦 Model only |
+| 1005 | 0 | OpenFlow Port Name | 📦 Model only |
+| 2000 | 0 | Host Description | ✅ Implemented |
+| 2001 | 0 | Host Adapters | ✅ Implemented |
+| 2002 | 0 | Host Parent | 📦 Model only |
+| 2003 | 0 | Host CPU | ✅ Implemented |
+| 2004 | 0 | Host Memory | ✅ Implemented |
+| 2005 | 0 | Host Disk I/O | ✅ Implemented |
+| 2006 | 0 | Host Network I/O | ✅ Implemented |
+| 2100 | 0 | Virtual Node | 📦 Model only |
+| 2101 | 0 | Virtual CPU | 📦 Model only |
+| 2102 | 0 | Virtual Memory | 📦 Model only |
+| 2103 | 0 | Virtual Disk I/O | 📦 Model only |
+| 2104 | 0 | Virtual Network I/O | 📦 Model only |
+| 2206 | 0 | App Resources | 📦 Model only |
+
+**Legend:**
+- ✅ **Implemented** - Full parser + model + tests
+- 📦 **Model only** - Data structure defined, parser not yet implemented
 
 ## Testing
 

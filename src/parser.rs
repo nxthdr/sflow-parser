@@ -50,7 +50,7 @@ impl<R: Read> Parser<R> {
     /// Read an opaque byte array (length-prefixed)
     fn read_opaque(&mut self) -> Result<Vec<u8>> {
         let length = self.read_u32()? as usize;
-        
+
         // Sanity check: reject unreasonably large allocations (> 100MB)
         // Valid sFlow packets are typically much smaller
         const MAX_OPAQUE_SIZE: usize = 100 * 1024 * 1024; // 100MB
@@ -61,7 +61,7 @@ impl<R: Read> Parser<R> {
                 MAX_OPAQUE_SIZE
             ));
         }
-        
+
         let mut data = vec![0u8; length];
         self.reader.read_exact(&mut data)?;
 
@@ -254,7 +254,7 @@ impl<R: Read> Parser<R> {
         })
     }
 
-    /// Parse Extended Gateway - Format (0,1004)
+    /// Parse Extended Gateway - Format (0,1003)
     fn parse_extended_gateway(&mut self) -> Result<crate::models::flow_records::ExtendedGateway> {
         let next_hop = self.parse_address()?;
         let as_number = self.read_u32()?;
@@ -301,7 +301,7 @@ impl<R: Read> Parser<R> {
         })
     }
 
-    /// Parse Extended User - Format (0,1005)
+    /// Parse Extended User - Format (0,1004)
     fn parse_extended_user(&mut self) -> Result<crate::models::flow_records::ExtendedUser> {
         let src_charset = self.read_u32()?;
         let src_user = self.read_string()?;
@@ -316,7 +316,7 @@ impl<R: Read> Parser<R> {
         })
     }
 
-    /// Parse Extended URL - Format (0,1006)
+    /// Parse Extended URL - Format (0,1005)
     fn parse_extended_url(&mut self) -> Result<crate::models::flow_records::ExtendedUrl> {
         let direction = self.read_u32()?;
         let url = self.read_string()?;
@@ -329,7 +329,7 @@ impl<R: Read> Parser<R> {
         })
     }
 
-    /// Parse Extended MPLS - Format (0,1007)
+    /// Parse Extended MPLS - Format (0,1006)
     fn parse_extended_mpls(&mut self) -> Result<crate::models::flow_records::ExtendedMpls> {
         let next_hop = self.parse_address()?;
 
@@ -354,7 +354,7 @@ impl<R: Read> Parser<R> {
         })
     }
 
-    /// Parse Extended NAT - Format (0,1008)
+    /// Parse Extended NAT - Format (0,1007)
     fn parse_extended_nat(&mut self) -> Result<crate::models::flow_records::ExtendedNat> {
         let src_address = self.parse_address()?;
         let dst_address = self.parse_address()?;
@@ -365,7 +365,7 @@ impl<R: Read> Parser<R> {
         })
     }
 
-    /// Parse Extended MPLS Tunnel - Format (0,1009)
+    /// Parse Extended MPLS Tunnel - Format (0,1008)
     fn parse_extended_mpls_tunnel(
         &mut self,
     ) -> Result<crate::models::flow_records::ExtendedMplsTunnel> {
@@ -380,7 +380,7 @@ impl<R: Read> Parser<R> {
         })
     }
 
-    /// Parse Extended MPLS VC - Format (0,1010)
+    /// Parse Extended MPLS VC - Format (0,1009)
     fn parse_extended_mpls_vc(&mut self) -> Result<crate::models::flow_records::ExtendedMplsVc> {
         let vc_instance_name = self.read_string()?;
         let vll_vc_id = self.read_u32()?;
@@ -395,7 +395,7 @@ impl<R: Read> Parser<R> {
         })
     }
 
-    /// Parse Extended MPLS FEC - Format (0,1011)
+    /// Parse Extended MPLS FEC - Format (0,1010)
     fn parse_extended_mpls_fec(&mut self) -> Result<crate::models::flow_records::ExtendedMplsFec> {
         let fec_addr_prefix = self.parse_address()?;
         let fec_prefix_len = self.read_u32()?;
@@ -406,7 +406,7 @@ impl<R: Read> Parser<R> {
         })
     }
 
-    /// Parse Extended MPLS LVP FEC - Format (0,1012)
+    /// Parse Extended MPLS LVP FEC - Format (0,1011)
     fn parse_extended_mpls_lvp_fec(
         &mut self,
     ) -> Result<crate::models::flow_records::ExtendedMplsLvpFec> {
@@ -417,7 +417,7 @@ impl<R: Read> Parser<R> {
         })
     }
 
-    /// Parse Extended VLAN Tunnel - Format (0,1013)
+    /// Parse Extended VLAN Tunnel - Format (0,1012)
     fn parse_extended_vlan_tunnel(
         &mut self,
     ) -> Result<crate::models::flow_records::ExtendedVlanTunnel> {
@@ -520,20 +520,20 @@ impl<R: Read> Parser<R> {
                 4 => Ok(FlowData::SampledIpv6(parser.parse_sampled_ipv6()?)),
                 1001 => Ok(FlowData::ExtendedSwitch(parser.parse_extended_switch()?)),
                 1002 => Ok(FlowData::ExtendedRouter(parser.parse_extended_router()?)),
-                1004 => Ok(FlowData::ExtendedGateway(parser.parse_extended_gateway()?)),
-                1005 => Ok(FlowData::ExtendedUser(parser.parse_extended_user()?)),
-                1006 => Ok(FlowData::ExtendedUrl(parser.parse_extended_url()?)),
-                1007 => Ok(FlowData::ExtendedMpls(parser.parse_extended_mpls()?)),
-                1008 => Ok(FlowData::ExtendedNat(parser.parse_extended_nat()?)),
-                1009 => Ok(FlowData::ExtendedMplsTunnel(
+                1003 => Ok(FlowData::ExtendedGateway(parser.parse_extended_gateway()?)),
+                1004 => Ok(FlowData::ExtendedUser(parser.parse_extended_user()?)),
+                1005 => Ok(FlowData::ExtendedUrl(parser.parse_extended_url()?)),
+                1006 => Ok(FlowData::ExtendedMpls(parser.parse_extended_mpls()?)),
+                1007 => Ok(FlowData::ExtendedNat(parser.parse_extended_nat()?)),
+                1008 => Ok(FlowData::ExtendedMplsTunnel(
                     parser.parse_extended_mpls_tunnel()?,
                 )),
-                1010 => Ok(FlowData::ExtendedMplsVc(parser.parse_extended_mpls_vc()?)),
-                1011 => Ok(FlowData::ExtendedMplsFec(parser.parse_extended_mpls_fec()?)),
-                1012 => Ok(FlowData::ExtendedMplsLvpFec(
+                1009 => Ok(FlowData::ExtendedMplsVc(parser.parse_extended_mpls_vc()?)),
+                1010 => Ok(FlowData::ExtendedMplsFec(parser.parse_extended_mpls_fec()?)),
+                1011 => Ok(FlowData::ExtendedMplsLvpFec(
                     parser.parse_extended_mpls_lvp_fec()?,
                 )),
-                1013 => Ok(FlowData::ExtendedVlanTunnel(
+                1012 => Ok(FlowData::ExtendedVlanTunnel(
                     parser.parse_extended_vlan_tunnel()?,
                 )),
                 1014 => Ok(FlowData::Extended80211Payload(
@@ -626,6 +626,66 @@ impl<R: Read> Parser<R> {
             dot3_stats_frame_too_longs: self.read_u32()?,
             dot3_stats_internal_mac_receive_errors: self.read_u32()?,
             dot3_stats_symbol_errors: self.read_u32()?,
+        })
+    }
+
+    /// Parse Token Ring Counters - Format (0,3)
+    fn parse_token_ring_counters(
+        &mut self,
+    ) -> Result<crate::models::counter_records::TokenRingCounters> {
+        Ok(crate::models::counter_records::TokenRingCounters {
+            dot5_stats_line_errors: self.read_u32()?,
+            dot5_stats_burst_errors: self.read_u32()?,
+            dot5_stats_ac_errors: self.read_u32()?,
+            dot5_stats_abort_trans_errors: self.read_u32()?,
+            dot5_stats_internal_errors: self.read_u32()?,
+            dot5_stats_lost_frame_errors: self.read_u32()?,
+            dot5_stats_receive_congestions: self.read_u32()?,
+            dot5_stats_frame_copied_errors: self.read_u32()?,
+            dot5_stats_token_errors: self.read_u32()?,
+            dot5_stats_soft_errors: self.read_u32()?,
+            dot5_stats_hard_errors: self.read_u32()?,
+            dot5_stats_signal_loss: self.read_u32()?,
+            dot5_stats_transmit_beacons: self.read_u32()?,
+            dot5_stats_recoverys: self.read_u32()?,
+            dot5_stats_lobe_wires: self.read_u32()?,
+            dot5_stats_removes: self.read_u32()?,
+            dot5_stats_singles: self.read_u32()?,
+            dot5_stats_freq_errors: self.read_u32()?,
+        })
+    }
+
+    /// Parse 100BaseVG Interface Counters - Format (0,4)
+    fn parse_vg100_interface_counters(
+        &mut self,
+    ) -> Result<crate::models::counter_records::Vg100InterfaceCounters> {
+        Ok(crate::models::counter_records::Vg100InterfaceCounters {
+            dot12_in_high_priority_frames: self.read_u32()?,
+            dot12_in_high_priority_octets: self.read_u64()?,
+            dot12_in_norm_priority_frames: self.read_u32()?,
+            dot12_in_norm_priority_octets: self.read_u64()?,
+            dot12_in_ipm_errors: self.read_u32()?,
+            dot12_in_oversized_frame_errors: self.read_u32()?,
+            dot12_in_data_errors: self.read_u32()?,
+            dot12_in_null_addressed_frames: self.read_u32()?,
+            dot12_out_high_priority_frames: self.read_u32()?,
+            dot12_out_high_priority_octets: self.read_u64()?,
+            dot12_transition_into_trainings: self.read_u32()?,
+            dot12_hc_in_high_priority_octets: self.read_u64()?,
+            dot12_hc_in_norm_priority_octets: self.read_u64()?,
+            dot12_hc_out_high_priority_octets: self.read_u64()?,
+        })
+    }
+
+    /// Parse VLAN Counters - Format (0,5)
+    fn parse_vlan_counters(&mut self) -> Result<crate::models::counter_records::VlanCounters> {
+        Ok(crate::models::counter_records::VlanCounters {
+            vlan_id: self.read_u32()?,
+            octets: self.read_u64()?,
+            ucast_pkts: self.read_u32()?,
+            multicast_pkts: self.read_u32()?,
+            broadcast_pkts: self.read_u32()?,
+            discards: self.read_u32()?,
         })
     }
 
@@ -772,6 +832,11 @@ impl<R: Read> Parser<R> {
                 2 => Ok(CounterData::EthernetInterface(
                     parser.parse_ethernet_interface_counters()?,
                 )),
+                3 => Ok(CounterData::TokenRing(parser.parse_token_ring_counters()?)),
+                4 => Ok(CounterData::Vg100Interface(
+                    parser.parse_vg100_interface_counters()?,
+                )),
+                5 => Ok(CounterData::Vlan(parser.parse_vlan_counters()?)),
                 1001 => Ok(CounterData::Processor(parser.parse_processor_counters()?)),
                 2000 => Ok(CounterData::HostDescription(
                     parser.parse_host_description()?,

@@ -111,25 +111,25 @@ pub enum FlowData {
     ExtendedSwitch(crate::models::flow_records::ExtendedSwitch),
     /// Extended Router - Format (0,1002)
     ExtendedRouter(crate::models::flow_records::ExtendedRouter),
-    /// Extended Gateway - Format (0,1004)
+    /// Extended Gateway - Format (0,1003)
     ExtendedGateway(crate::models::flow_records::ExtendedGateway),
-    /// Extended User - Format (0,1005)
+    /// Extended User - Format (0,1004)
     ExtendedUser(crate::models::flow_records::ExtendedUser),
-    /// Extended URL - Format (0,1006)
+    /// Extended URL - Format (0,1005)
     ExtendedUrl(crate::models::flow_records::ExtendedUrl),
-    /// Extended MPLS - Format (0,1007)
+    /// Extended MPLS - Format (0,1006)
     ExtendedMpls(crate::models::flow_records::ExtendedMpls),
-    /// Extended NAT - Format (0,1008)
+    /// Extended NAT - Format (0,1007)
     ExtendedNat(crate::models::flow_records::ExtendedNat),
-    /// Extended MPLS Tunnel - Format (0,1009)
+    /// Extended MPLS Tunnel - Format (0,1008)
     ExtendedMplsTunnel(crate::models::flow_records::ExtendedMplsTunnel),
-    /// Extended MPLS VC - Format (0,1010)
+    /// Extended MPLS VC - Format (0,1009)
     ExtendedMplsVc(crate::models::flow_records::ExtendedMplsVc),
-    /// Extended MPLS FEC - Format (0,1011)
+    /// Extended MPLS FEC - Format (0,1010)
     ExtendedMplsFec(crate::models::flow_records::ExtendedMplsFec),
-    /// Extended MPLS LVP FEC - Format (0,1012)
+    /// Extended MPLS LVP FEC - Format (0,1011)
     ExtendedMplsLvpFec(crate::models::flow_records::ExtendedMplsLvpFec),
-    /// Extended VLAN Tunnel - Format (0,1013)
+    /// Extended VLAN Tunnel - Format (0,1012)
     ExtendedVlanTunnel(crate::models::flow_records::ExtendedVlanTunnel),
     /// Extended 802.11 Payload - Format (0,1014)
     Extended80211Payload(crate::models::flow_records::Extended80211Payload),
