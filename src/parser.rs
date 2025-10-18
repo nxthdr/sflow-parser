@@ -152,6 +152,25 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Sampled Ethernet - Format (0,2)
+    fn parse_sampled_ethernet(&mut self) -> Result<crate::models::flow_records::SampledEthernet> {
+        let length = self.read_u32()?;
+
+        let mut src_mac = [0u8; 6];
+        self.reader.read_exact(&mut src_mac)?;
+        let mut dst_mac = [0u8; 6];
+        self.reader.read_exact(&mut dst_mac)?;
+
+        let eth_type = self.read_u32()?;
+
+        Ok(crate::models::flow_records::SampledEthernet {
+            length,
+            src_mac,
+            dst_mac,
+            eth_type,
+        })
+    }
+
     /// Parse Sampled IPv4 - Format (0,3)
     fn parse_sampled_ipv4(&mut self) -> Result<crate::models::flow_records::SampledIpv4> {
         let length = self.read_u32()?;
@@ -279,25 +298,6 @@ impl<R: Read> Parser<R> {
             as_path_segments,
             communities,
             local_pref,
-        })
-    }
-
-    /// Parse Sampled Ethernet - Format (0,2)
-    fn parse_sampled_ethernet(&mut self) -> Result<crate::models::flow_records::SampledEthernet> {
-        let length = self.read_u32()?;
-
-        let mut src_mac = [0u8; 6];
-        self.reader.read_exact(&mut src_mac)?;
-        let mut dst_mac = [0u8; 6];
-        self.reader.read_exact(&mut dst_mac)?;
-
-        let eth_type = self.read_u32()?;
-
-        Ok(crate::models::flow_records::SampledEthernet {
-            length,
-            src_mac,
-            dst_mac,
-            eth_type,
         })
     }
 
@@ -456,6 +456,8 @@ impl<R: Read> Parser<R> {
 
         let mut bssid = [0u8; 6];
         self.reader.read_exact(&mut bssid)?;
+        // Skip 2 bytes of padding to maintain 4-byte alignment
+        self.reader.read_exact(&mut [0u8; 2])?;
 
         let version = self.read_u32()?;
         let channel = self.read_u32()?;
@@ -480,6 +482,8 @@ impl<R: Read> Parser<R> {
 
         let mut bssid = [0u8; 6];
         self.reader.read_exact(&mut bssid)?;
+        // Skip 2 bytes of padding to maintain 4-byte alignment
+        self.reader.read_exact(&mut [0u8; 2])?;
 
         let version = self.read_u32()?;
         let transmissions = self.read_u32()?;
