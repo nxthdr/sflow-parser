@@ -1,0 +1,36 @@
+[package]
+name = "sflow-parser-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+arbitrary = { version = "1", features = ["derive"] }
+
+[dependencies.sflow-parser]
+path = "../.."
+
+[[bin]]
+name = "fuzz_single"
+path = "fuzz_targets/fuzz_single.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_multiple"
+path = "fuzz_targets/fuzz_multiple.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_structured"
+path = "fuzz_targets/fuzz_structured.rs"
+test = false
+doc = false
+bench = false

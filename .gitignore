@@ -1,1 +1,7 @@
 /target
+
+# Fuzz testing artifacts
+/tests/fuzz/target
+/tests/fuzz/corpus
+/tests/fuzz/artifacts
+/tests/fuzz/coverage

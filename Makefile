@@ -168,3 +168,45 @@ outdated:
 	@echo "Checking for outdated dependencies..."
 	@command -v cargo-outdated >/dev/null 2>&1 || { echo "cargo-outdated not found. Run 'make install-tools' first."; exit 1; }
 	cargo outdated
+
+# Fuzzing targets
+fuzz-install:
+	@echo "Installing cargo-fuzz and nightly toolchain..."
+	rustup toolchain install nightly
+	cargo +nightly install cargo-fuzz
+
+fuzz-single:
+	@echo "Running single datagram fuzzer..."
+	@command -v cargo-fuzz >/dev/null 2>&1 || { echo "cargo-fuzz not found. Run 'make fuzz-install' first."; exit 1; }
+	cargo +nightly fuzz run --fuzz-dir tests/fuzz fuzz_single -- -max_total_time=60 -rss_limit_mb=2048
+
+fuzz-multiple:
+	@echo "Running multiple datagrams fuzzer..."
+	@command -v cargo-fuzz >/dev/null 2>&1 || { echo "cargo-fuzz not found. Run 'make fuzz-install' first."; exit 1; }
+	cargo +nightly fuzz run --fuzz-dir tests/fuzz fuzz_multiple -- -max_total_time=60 -rss_limit_mb=2048
+
+fuzz-structured:
+	@echo "Running structured fuzzer..."
+	@command -v cargo-fuzz >/dev/null 2>&1 || { echo "cargo-fuzz not found. Run 'make fuzz-install' first."; exit 1; }
+	cargo +nightly fuzz run --fuzz-dir tests/fuzz fuzz_structured -- -max_total_time=60 -rss_limit_mb=2048
+
+fuzz-all:
+	@echo "Running all fuzzers (5 minutes each)..."
+	@command -v cargo-fuzz >/dev/null 2>&1 || { echo "cargo-fuzz not found. Run 'make fuzz-install' first."; exit 1; }
+	cargo +nightly fuzz run --fuzz-dir tests/fuzz fuzz_single -- -max_total_time=300 -rss_limit_mb=2048
+	cargo +nightly fuzz run --fuzz-dir tests/fuzz fuzz_multiple -- -max_total_time=300 -rss_limit_mb=2048
+	cargo +nightly fuzz run --fuzz-dir tests/fuzz fuzz_structured -- -max_total_time=300 -rss_limit_mb=2048
+
+fuzz-list:
+	@echo "Available fuzz targets:"
+	@command -v cargo-fuzz >/dev/null 2>&1 || { echo "cargo-fuzz not found. Run 'make fuzz-install' first."; exit 1; }
+	cargo +nightly fuzz list --fuzz-dir tests/fuzz
+
+fuzz-coverage:
+	@echo "Generating coverage for fuzz corpus..."
+	@command -v cargo-fuzz >/dev/null 2>&1 || { echo "cargo-fuzz not found. Run 'make fuzz-install' first."; exit 1; }
+	cargo +nightly fuzz coverage --fuzz-dir tests/fuzz fuzz_single
+
+fuzz-clean:
+	@echo "Cleaning fuzz artifacts..."
+	rm -rf tests/fuzz/corpus tests/fuzz/artifacts

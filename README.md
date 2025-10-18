@@ -72,6 +72,29 @@ Less common formats with models defined but parsers not yet implemented:
 - App Resources
 - And others...
 
+## Testing
+
+### Unit & Integration Tests
+
+Run the comprehensive test suite:
+```bash
+make test              # Run all tests
+make test-unit         # Run unit tests only
+make test-integration  # Run integration tests only
+```
+
+### Fuzz Testing
+
+The project includes comprehensive fuzz testing using `cargo-fuzz`:
+
+```bash
+make fuzz-install    # Install fuzzing tools (requires nightly Rust)
+make fuzz-single     # Fuzz single datagram parsing (60s)
+make fuzz-multiple   # Fuzz multiple datagrams parsing (60s)
+make fuzz-structured # Fuzz with structured inputs (60s)
+make fuzz-all        # Run all fuzzers (5 minutes each)
+```
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).

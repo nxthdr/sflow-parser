@@ -50,6 +50,18 @@ impl<R: Read> Parser<R> {
     /// Read an opaque byte array (length-prefixed)
     fn read_opaque(&mut self) -> Result<Vec<u8>> {
         let length = self.read_u32()? as usize;
+        
+        // Sanity check: reject unreasonably large allocations (> 100MB)
+        // Valid sFlow packets are typically much smaller
+        const MAX_OPAQUE_SIZE: usize = 100 * 1024 * 1024; // 100MB
+        if length > MAX_OPAQUE_SIZE {
+            return Err(anyhow!(
+                "Opaque data length {} exceeds maximum {}",
+                length,
+                MAX_OPAQUE_SIZE
+            ));
+        }
+        
         let mut data = vec![0u8; length];
         self.reader.read_exact(&mut data)?;
 
@@ -232,11 +244,13 @@ impl<R: Read> Parser<R> {
 
         // Parse AS path segments
         let num_segments = self.read_u32()?;
-        let mut as_path_segments = Vec::with_capacity(num_segments as usize);
+        let capacity_segments = num_segments.min(1024) as usize;
+        let mut as_path_segments = Vec::with_capacity(capacity_segments);
         for _ in 0..num_segments {
             let path_type = self.read_u32()?;
             let path_length = self.read_u32()?;
-            let mut path = Vec::with_capacity(path_length as usize);
+            let capacity_path = path_length.min(1024) as usize;
+            let mut path = Vec::with_capacity(capacity_path);
             for _ in 0..path_length {
                 path.push(self.read_u32()?);
             }
@@ -249,7 +263,8 @@ impl<R: Read> Parser<R> {
 
         // Parse communities
         let num_communities = self.read_u32()?;
-        let mut communities = Vec::with_capacity(num_communities as usize);
+        let capacity_communities = num_communities.min(1024) as usize;
+        let mut communities = Vec::with_capacity(capacity_communities);
         for _ in 0..num_communities {
             communities.push(self.read_u32()?);
         }
@@ -319,13 +334,15 @@ impl<R: Read> Parser<R> {
         let next_hop = self.parse_address()?;
 
         let in_label_stack_len = self.read_u32()?;
-        let mut in_label_stack = Vec::with_capacity(in_label_stack_len as usize);
+        let capacity_in = in_label_stack_len.min(1024) as usize;
+        let mut in_label_stack = Vec::with_capacity(capacity_in);
         for _ in 0..in_label_stack_len {
             in_label_stack.push(self.read_u32()?);
         }
 
         let out_label_stack_len = self.read_u32()?;
-        let mut out_label_stack = Vec::with_capacity(out_label_stack_len as usize);
+        let capacity_out = out_label_stack_len.min(1024) as usize;
+        let mut out_label_stack = Vec::with_capacity(capacity_out);
         for _ in 0..out_label_stack_len {
             out_label_stack.push(self.read_u32()?);
         }
@@ -405,7 +422,8 @@ impl<R: Read> Parser<R> {
         &mut self,
     ) -> Result<crate::models::flow_records::ExtendedVlanTunnel> {
         let num_vlans = self.read_u32()?;
-        let mut vlan_stack = Vec::with_capacity(num_vlans as usize);
+        let capacity = num_vlans.min(1024) as usize;
+        let mut vlan_stack = Vec::with_capacity(capacity);
         for _ in 0..num_vlans {
             vlan_stack.push(self.read_u32()?);
         }
@@ -643,12 +661,14 @@ impl<R: Read> Parser<R> {
     /// Parse Host Adapters - Format (0,2001)
     fn parse_host_adapters(&mut self) -> Result<crate::models::counter_records::HostAdapters> {
         let num_adapters = self.read_u32()?;
-        let mut adapters = Vec::with_capacity(num_adapters as usize);
+        let capacity_adapters = num_adapters.min(1024) as usize;
+        let mut adapters = Vec::with_capacity(capacity_adapters);
 
         for _ in 0..num_adapters {
             let if_index = self.read_u32()?;
             let num_macs = self.read_u32()?;
-            let mut mac_addresses = Vec::with_capacity(num_macs as usize);
+            let capacity_macs = num_macs.min(1024) as usize;
+            let mut mac_addresses = Vec::with_capacity(capacity_macs);
 
             for _ in 0..num_macs {
                 let mut mac = [0u8; 6];
@@ -789,7 +809,9 @@ impl<R: Read> Parser<R> {
 
         // Parse flow records array
         let num_records = self.read_u32()?;
-        let mut flow_records = Vec::with_capacity(num_records as usize);
+        // Limit capacity to prevent OOM attacks - allocate conservatively
+        let capacity = num_records.min(1024) as usize;
+        let mut flow_records = Vec::with_capacity(capacity);
         for _ in 0..num_records {
             flow_records.push(self.parse_flow_record()?);
         }
@@ -813,7 +835,9 @@ impl<R: Read> Parser<R> {
 
         // Parse counter records array
         let num_records = self.read_u32()?;
-        let mut counters = Vec::with_capacity(num_records as usize);
+        // Limit capacity to prevent OOM attacks - allocate conservatively
+        let capacity = num_records.min(1024) as usize;
+        let mut counters = Vec::with_capacity(capacity);
         for _ in 0..num_records {
             counters.push(self.parse_counter_record()?);
         }
@@ -837,7 +861,9 @@ impl<R: Read> Parser<R> {
 
         // Parse flow records array
         let num_records = self.read_u32()?;
-        let mut flow_records = Vec::with_capacity(num_records as usize);
+        // Limit capacity to prevent OOM attacks - allocate conservatively
+        let capacity = num_records.min(1024) as usize;
+        let mut flow_records = Vec::with_capacity(capacity);
         for _ in 0..num_records {
             flow_records.push(self.parse_flow_record()?);
         }
@@ -861,7 +887,9 @@ impl<R: Read> Parser<R> {
 
         // Parse counter records array
         let num_records = self.read_u32()?;
-        let mut counters = Vec::with_capacity(num_records as usize);
+        // Limit capacity to prevent OOM attacks - allocate conservatively
+        let capacity = num_records.min(1024) as usize;
+        let mut counters = Vec::with_capacity(capacity);
         for _ in 0..num_records {
             counters.push(self.parse_counter_record()?);
         }
@@ -939,7 +967,9 @@ impl<R: Read> Parser<R> {
 
         // Parse samples array
         let num_samples = self.read_u32()?;
-        let mut samples = Vec::with_capacity(num_samples as usize);
+        // Limit capacity to prevent OOM attacks - allocate conservatively
+        let capacity = num_samples.min(1024) as usize;
+        let mut samples = Vec::with_capacity(capacity);
         for _ in 0..num_samples {
             samples.push(self.parse_sample_record()?);
         }
