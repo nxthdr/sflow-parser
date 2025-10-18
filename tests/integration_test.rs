@@ -619,11 +619,24 @@ fn test_parsed_flow_data() {
     let datagrams = parse_datagrams(&data).expect("Failed to parse");
 
     let mut sampled_headers = 0;
+    let mut sampled_ethernet = 0;
     let mut sampled_ipv4 = 0;
     let mut sampled_ipv6 = 0;
     let mut extended_switch = 0;
     let mut extended_router = 0;
     let mut extended_gateway = 0;
+    let mut extended_user = 0;
+    let mut extended_url = 0;
+    let mut extended_mpls = 0;
+    let mut extended_nat = 0;
+    let mut extended_mpls_tunnel = 0;
+    let mut extended_mpls_vc = 0;
+    let mut extended_mpls_fec = 0;
+    let mut extended_mpls_lvp_fec = 0;
+    let mut extended_vlan_tunnel = 0;
+    let mut extended_80211_payload = 0;
+    let mut extended_80211_rx = 0;
+    let mut extended_80211_tx = 0;
     let mut unknown = 0;
 
     println!("\n=== Parsed Flow Data Analysis ===");
@@ -723,21 +736,44 @@ fn test_parsed_flow_data() {
                                 println!("  Local pref: {}", gw.local_pref);
                             }
                         }
-                        FlowData::SampledEthernet(_)
-                        | FlowData::ExtendedUser(_)
-                        | FlowData::ExtendedUrl(_)
-                        | FlowData::ExtendedMpls(_)
-                        | FlowData::ExtendedNat(_)
-                        | FlowData::ExtendedMplsTunnel(_)
-                        | FlowData::ExtendedMplsVc(_)
-                        | FlowData::ExtendedMplsFec(_)
-                        | FlowData::ExtendedMplsLvpFec(_)
-                        | FlowData::ExtendedVlanTunnel(_)
-                        | FlowData::Extended80211Payload(_)
-                        | FlowData::Extended80211Rx(_)
-                        | FlowData::Extended80211Tx(_) => {
-                            // Other parsed formats - count as unknown for this test
-                            unknown += 1;
+                        FlowData::SampledEthernet(_) => {
+                            sampled_ethernet += 1;
+                        }
+                        FlowData::ExtendedUser(_) => {
+                            extended_user += 1;
+                        }
+                        FlowData::ExtendedUrl(_) => {
+                            extended_url += 1;
+                        }
+                        FlowData::ExtendedMpls(_) => {
+                            extended_mpls += 1;
+                        }
+                        FlowData::ExtendedNat(_) => {
+                            extended_nat += 1;
+                        }
+                        FlowData::ExtendedMplsTunnel(_) => {
+                            extended_mpls_tunnel += 1;
+                        }
+                        FlowData::ExtendedMplsVc(_) => {
+                            extended_mpls_vc += 1;
+                        }
+                        FlowData::ExtendedMplsFec(_) => {
+                            extended_mpls_fec += 1;
+                        }
+                        FlowData::ExtendedMplsLvpFec(_) => {
+                            extended_mpls_lvp_fec += 1;
+                        }
+                        FlowData::ExtendedVlanTunnel(_) => {
+                            extended_vlan_tunnel += 1;
+                        }
+                        FlowData::Extended80211Payload(_) => {
+                            extended_80211_payload += 1;
+                        }
+                        FlowData::Extended80211Rx(_) => {
+                            extended_80211_rx += 1;
+                        }
+                        FlowData::Extended80211Tx(_) => {
+                            extended_80211_tx += 1;
                         }
                         FlowData::Unknown { format, data } => {
                             unknown += 1;
@@ -758,26 +794,55 @@ fn test_parsed_flow_data() {
     }
 
     println!("\n=== Flow Data Summary ===");
-    println!("Sampled Headers: {}", sampled_headers);
-    println!("Sampled IPv4: {}", sampled_ipv4);
-    println!("Sampled IPv6: {}", sampled_ipv6);
-    println!("Extended Switch: {}", extended_switch);
-    println!("Extended Router: {}", extended_router);
-    println!("Extended Gateway: {}", extended_gateway);
-    println!("Unknown: {}", unknown);
+    println!("Sampled Records:");
+    println!("  Headers: {}", sampled_headers);
+    println!("  Ethernet: {}", sampled_ethernet);
+    println!("  IPv4: {}", sampled_ipv4);
+    println!("  IPv6: {}", sampled_ipv6);
+    println!("\nExtended Records:");
+    println!("  Switch: {}", extended_switch);
+    println!("  Router: {}", extended_router);
+    println!("  Gateway (BGP): {}", extended_gateway);
+    println!("  User: {}", extended_user);
+    println!("  URL: {}", extended_url);
+    println!("  MPLS: {}", extended_mpls);
+    println!("  NAT: {}", extended_nat);
+    println!("  MPLS Tunnel: {}", extended_mpls_tunnel);
+    println!("  MPLS VC: {}", extended_mpls_vc);
+    println!("  MPLS FEC: {}", extended_mpls_fec);
+    println!("  MPLS LVP FEC: {}", extended_mpls_lvp_fec);
+    println!("  VLAN Tunnel: {}", extended_vlan_tunnel);
+    println!("  802.11 Payload: {}", extended_80211_payload);
+    println!("  802.11 RX: {}", extended_80211_rx);
+    println!("  802.11 TX: {}", extended_80211_tx);
+    println!("\nUnknown: {}", unknown);
 
-    // Assertions
-    assert!(
-        sampled_headers > 0,
-        "Should have parsed at least one sampled header"
-    );
     let total = sampled_headers
+        + sampled_ethernet
         + sampled_ipv4
         + sampled_ipv6
         + extended_switch
         + extended_router
         + extended_gateway
+        + extended_user
+        + extended_url
+        + extended_mpls
+        + extended_nat
+        + extended_mpls_tunnel
+        + extended_mpls_vc
+        + extended_mpls_fec
+        + extended_mpls_lvp_fec
+        + extended_vlan_tunnel
+        + extended_80211_payload
+        + extended_80211_rx
+        + extended_80211_tx
         + unknown;
     println!("\nTotal flow records parsed: {}", total);
+
+    // Assertions
     assert!(total > 0, "Should have parsed flow records");
+    assert!(
+        sampled_headers > 0,
+        "Should have parsed at least one sampled header"
+    );
 }

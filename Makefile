@@ -1,14 +1,16 @@
-.PHONY: help test test-unit test-integration test-all test-verbose test-lib coverage coverage-html coverage-open coverage-lcov coverage-unit coverage-integration clean build build-release build-all check fmt fmt-check clippy clippy-strict doc doc-open doc-all install-tools audit outdated
+.PHONY: help test test-unit test-integration test-unit-verbose test-integration-verbose test-all test-verbose test-lib coverage coverage-html coverage-open coverage-lcov coverage-unit coverage-integration clean build build-release build-all check fmt fmt-check clippy clippy-strict doc doc-open doc-all install-tools audit outdated
 
 # Default target
 help:
 	@echo "sFlow Parser - Available targets:"
 	@echo ""
 	@echo "Testing:"
-	@echo "  make test              - Run all tests"
-	@echo "  make test-unit         - Run unit tests only"
-	@echo "  make test-integration  - Run integration tests only"
-	@echo "  make test-verbose      - Run tests with verbose output"
+	@echo "  make test                     - Run all tests"
+	@echo "  make test-unit                - Run unit tests only"
+	@echo "  make test-integration         - Run integration tests only"
+	@echo "  make test-unit-verbose        - Run unit tests with output"
+	@echo "  make test-integration-verbose - Run integration tests with output"
+	@echo "  make test-verbose             - Run all tests with verbose output"
 	@echo ""
 	@echo "Coverage:"
 	@echo "  make coverage          - Generate coverage report (text)"
@@ -47,6 +49,14 @@ test-unit:
 test-integration:
 	@echo "Running integration tests..."
 	cargo test --test integration_test
+
+test-unit-verbose:
+	@echo "Running unit tests with output..."
+	cargo test --test unit_tests -- --nocapture
+
+test-integration-verbose:
+	@echo "Running integration tests with output..."
+	cargo test --test integration_test -- --nocapture
 
 test-all: test
 	@echo "All tests completed!"
