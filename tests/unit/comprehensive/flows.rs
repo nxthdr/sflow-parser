@@ -3,6 +3,7 @@
 //! Tests for parsing all flow record types: sampled and extended flow records.
 
 use super::helpers::*;
+use sflow_parser::models::AppStatus;
 use sflow_parser::parser::parse_datagram;
 
 #[test]
@@ -695,6 +696,171 @@ fn test_parse_extended_80211_aggregation() {
                     assert_eq!(agg.pdus[1].flow_records.len(), 0);
                 }
                 _ => panic!("Expected Extended80211Aggregation"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_socket_ipv4() {
+    // Extended Socket IPv4: protocol(4) + local_ip(4) + remote_ip(4) + local_port(4) + remote_port(4) = 20 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x06, // protocol = 6 (TCP)
+        0xC0, 0xA8, 0x01, 0x64, // local_ip = 192.168.1.100
+        0x0A, 0x00, 0x00, 0x01, // remote_ip = 10.0.0.1
+        0x00, 0x00, 0x1F, 0x90, // local_port = 8080
+        0x00, 0x00, 0x01, 0xBB, // remote_port = 443
+    ];
+
+    let data = build_flow_sample_test(0x0834, &record_data); // record type = 2100
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedSocketIpv4(sock) => {
+                    assert_eq!(sock.protocol, 6);
+                    assert_eq!(sock.local_ip.to_string(), "192.168.1.100");
+                    assert_eq!(sock.remote_ip.to_string(), "10.0.0.1");
+                    assert_eq!(sock.local_port, 8080);
+                    assert_eq!(sock.remote_port, 443);
+                }
+                _ => panic!("Expected ExtendedSocketIpv4"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_socket_ipv6() {
+    // Extended Socket IPv6: protocol(4) + local_ip(16) + remote_ip(16) + local_port(4) + remote_port(4) = 44 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x11, // protocol = 17 (UDP)
+        // local_ip = 2001:db8::1
+        0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+        // remote_ip = 2001:db8::2
+        0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
+        0x00, 0x00, 0x14, 0xE9, // local_port = 5353
+        0x00, 0x00, 0x00, 0x35, // remote_port = 53
+    ];
+
+    let data = build_flow_sample_test(0x0835, &record_data); // record type = 2101
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedSocketIpv6(sock) => {
+                    assert_eq!(sock.protocol, 17);
+                    assert_eq!(sock.local_ip.to_string(), "2001:db8::1");
+                    assert_eq!(sock.remote_ip.to_string(), "2001:db8::2");
+                    assert_eq!(sock.local_port, 5353);
+                    assert_eq!(sock.remote_port, 53);
+                }
+                _ => panic!("Expected ExtendedSocketIpv6"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_app_operation() {
+    // Application Operation: context + status_descr + req_bytes(8) + resp_bytes(8) + duration_us(4) + status(4)
+    // context: application_len(4) + "payment"(7) + padding(1) + operation_len(4) + "process"(7) + padding(1) + attributes_len(4) + "cc=visa"(7) + padding(1)
+    let record_data = [
+        // application = "payment"
+        0x00, 0x00, 0x00, 0x07, // length = 7
+        b'p', b'a', b'y', b'm', b'e', b'n', b't', 0x00, // "payment" + padding
+        // operation = "process"
+        0x00, 0x00, 0x00, 0x07, // length = 7
+        b'p', b'r', b'o', b'c', b'e', b's', b's', 0x00, // "process" + padding
+        // attributes = "cc=visa"
+        0x00, 0x00, 0x00, 0x07, // length = 7
+        b'c', b'c', b'=', b'v', b'i', b's', b'a', 0x00, // "cc=visa" + padding
+        // status_descr = "OK"
+        0x00, 0x00, 0x00, 0x02, // length = 2
+        b'O', b'K', 0x00, 0x00, // "OK" + padding
+        // req_bytes = 1024
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00,
+        // resp_bytes = 512
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00,
+        // duration_us = 150000
+        0x00, 0x02, 0x49, 0xF0,
+        // status = 0 (SUCCESS)
+        0x00, 0x00, 0x00, 0x00,
+    ];
+
+    let data = build_flow_sample_test(0x089A, &record_data); // record type = 2202
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::AppOperation(app) => {
+                    assert_eq!(app.context.application, "payment");
+                    assert_eq!(app.context.operation, "process");
+                    assert_eq!(app.context.attributes, "cc=visa");
+                    assert_eq!(app.status_descr, "OK");
+                    assert_eq!(app.req_bytes, 1024);
+                    assert_eq!(app.resp_bytes, 512);
+                    assert_eq!(app.duration_us, 150000);
+                    assert_eq!(app.status, AppStatus::Success);
+                }
+                _ => panic!("Expected AppOperation"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_app_parent_context() {
+    // Application Parent Context: context only
+    // context: application_len(4) + "mail"(4) + operation_len(4) + "send"(4) + attributes_len(4) + ""(0)
+    let record_data = [
+        // application = "mail"
+        0x00, 0x00, 0x00, 0x04, // length = 4
+        b'm', b'a', b'i', b'l', // "mail"
+        // operation = "send"
+        0x00, 0x00, 0x00, 0x04, // length = 4
+        b's', b'e', b'n', b'd', // "send"
+        // attributes = "" (empty)
+        0x00, 0x00, 0x00, 0x00, // length = 0
+    ];
+
+    let data = build_flow_sample_test(0x089B, &record_data); // record type = 2203
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::AppParentContext(parent) => {
+                    assert_eq!(parent.context.application, "mail");
+                    assert_eq!(parent.context.operation, "send");
+                    assert_eq!(parent.context.attributes, "");
+                }
+                _ => panic!("Expected AppParentContext"),
             }
         }
         _ => panic!("Expected FlowSample"),

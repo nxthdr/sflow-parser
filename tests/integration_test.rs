@@ -169,6 +169,41 @@ fn test_parse_sflow_bin() {
                             FlowData::Extended80211Aggregation(agg) => {
                                 println!("Extended80211Aggregation(pdu_count={})", agg.pdus.len());
                             }
+                            FlowData::ExtendedSocketIpv4(sock) => {
+                                println!(
+                                    "ExtendedSocketIpv4(proto={}, {}:{} -> {}:{})",
+                                    sock.protocol,
+                                    sock.local_ip,
+                                    sock.local_port,
+                                    sock.remote_ip,
+                                    sock.remote_port
+                                );
+                            }
+                            FlowData::ExtendedSocketIpv6(sock) => {
+                                println!(
+                                    "ExtendedSocketIpv6(proto={}, {}:{} -> {}:{})",
+                                    sock.protocol,
+                                    sock.local_ip,
+                                    sock.local_port,
+                                    sock.remote_ip,
+                                    sock.remote_port
+                                );
+                            }
+                            FlowData::AppOperation(app) => {
+                                println!(
+                                    "AppOperation(app={}, op={}, status={:?}, duration={}us)",
+                                    app.context.application,
+                                    app.context.operation,
+                                    app.status,
+                                    app.duration_us
+                                );
+                            }
+                            FlowData::AppParentContext(parent) => {
+                                println!(
+                                    "AppParentContext(app={}, op={})",
+                                    parent.context.application, parent.context.operation
+                                );
+                            }
                             FlowData::Unknown { format, data } => {
                                 println!(
                                     "Unknown(enterprise={}, format={}, data_len={})",
@@ -781,6 +816,18 @@ fn test_parsed_flow_data() {
                         }
                         FlowData::Extended80211Aggregation(_) => {
                             // 802.11 aggregation - count but don't track separately
+                        }
+                        FlowData::ExtendedSocketIpv4(_) => {
+                            // Extended socket IPv4 - count but don't track separately
+                        }
+                        FlowData::ExtendedSocketIpv6(_) => {
+                            // Extended socket IPv6 - count but don't track separately
+                        }
+                        FlowData::AppOperation(_) => {
+                            // Application operation - count but don't track separately
+                        }
+                        FlowData::AppParentContext(_) => {
+                            // Application parent context - count but don't track separately
                         }
                         FlowData::Unknown { format, data } => {
                             unknown += 1;

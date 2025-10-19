@@ -195,6 +195,14 @@ pub enum FlowData {
     Extended80211Tx(crate::models::record_flows::Extended80211Tx),
     /// Extended 802.11 Aggregation - Format (0,1016)
     Extended80211Aggregation(crate::models::record_flows::Extended80211Aggregation),
+    /// Extended Socket IPv4 - Format (0,2100)
+    ExtendedSocketIpv4(crate::models::record_flows::ExtendedSocketIpv4),
+    /// Extended Socket IPv6 - Format (0,2101)
+    ExtendedSocketIpv6(crate::models::record_flows::ExtendedSocketIpv6),
+    /// Application Operation - Format (0,2202)
+    AppOperation(crate::models::record_flows::AppOperation),
+    /// Application Parent Context - Format (0,2203)
+    AppParentContext(crate::models::record_flows::AppParentContext),
     /// Unknown or unparsed format
     Unknown { format: DataFormat, data: Vec<u8> },
 }

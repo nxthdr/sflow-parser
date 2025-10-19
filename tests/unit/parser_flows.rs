@@ -458,6 +458,77 @@ fn test_extended_80211_aggregation() {
     assert_eq!(aggregation.pdus.len(), 3);
 }
 
+#[test]
+fn test_extended_socket_ipv4() {
+    use std::net::Ipv4Addr;
+    
+    let socket = ExtendedSocketIpv4 {
+        protocol: 6, // TCP
+        local_ip: Ipv4Addr::new(192, 168, 1, 100),
+        remote_ip: Ipv4Addr::new(10, 0, 0, 1),
+        local_port: 8080,
+        remote_port: 443,
+    };
+
+    assert_eq!(socket.protocol, 6);
+    assert_eq!(socket.local_ip, Ipv4Addr::new(192, 168, 1, 100));
+    assert_eq!(socket.remote_ip, Ipv4Addr::new(10, 0, 0, 1));
+    assert_eq!(socket.local_port, 8080);
+    assert_eq!(socket.remote_port, 443);
+}
+
+#[test]
+fn test_extended_socket_ipv6() {
+    use std::net::Ipv6Addr;
+    
+    let socket = ExtendedSocketIpv6 {
+        protocol: 17, // UDP
+        local_ip: Ipv6Addr::new(0x2001, 0xdb8, 0, 0, 0, 0, 0, 1),
+        remote_ip: Ipv6Addr::new(0x2001, 0xdb8, 0, 0, 0, 0, 0, 2),
+        local_port: 5353,
+        remote_port: 53,
+    };
+
+    assert_eq!(socket.protocol, 17);
+    assert_eq!(socket.local_port, 5353);
+    assert_eq!(socket.remote_port, 53);
+}
+
+#[test]
+fn test_app_operation() {
+    let app_op = AppOperation {
+        context: AppContext {
+            application: "payment".to_string(),
+            operation: "process.transaction".to_string(),
+            attributes: "cc=visa&loc=mobile".to_string(),
+        },
+        status_descr: "Success".to_string(),
+        req_bytes: 1024,
+        resp_bytes: 512,
+        duration_us: 150000, // 150ms
+        status: AppStatus::Success,
+    };
+
+    assert_eq!(app_op.context.application, "payment");
+    assert_eq!(app_op.context.operation, "process.transaction");
+    assert_eq!(app_op.status, AppStatus::Success);
+    assert_eq!(app_op.duration_us, 150000);
+}
+
+#[test]
+fn test_app_parent_context() {
+    let parent = AppParentContext {
+        context: AppContext {
+            application: "mail.smtp".to_string(),
+            operation: "send.email".to_string(),
+            attributes: "priority=high".to_string(),
+        },
+    };
+
+    assert_eq!(parent.context.application, "mail.smtp");
+    assert_eq!(parent.context.operation, "send.email");
+}
+
 // ============================================================================
 // Edge Cases and Special Values
 // ============================================================================

@@ -434,6 +434,100 @@ impl<R: Read> Parser<R> {
         Ok(crate::models::record_flows::Extended80211Aggregation { pdus })
     }
 
+    /// Parse Extended Socket IPv4 - Format (0,2100)
+    pub(super) fn parse_extended_socket_ipv4(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedSocketIpv4> {
+        use std::net::Ipv4Addr;
+        
+        let protocol = self.read_u32()?;
+        let local_ip = Ipv4Addr::from(self.read_u32()?);
+        let remote_ip = Ipv4Addr::from(self.read_u32()?);
+        let local_port = self.read_u32()?;
+        let remote_port = self.read_u32()?;
+
+        Ok(crate::models::record_flows::ExtendedSocketIpv4 {
+            protocol,
+            local_ip,
+            remote_ip,
+            local_port,
+            remote_port,
+        })
+    }
+
+    /// Parse Extended Socket IPv6 - Format (0,2101)
+    pub(super) fn parse_extended_socket_ipv6(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedSocketIpv6> {
+        use std::net::Ipv6Addr;
+        
+        let protocol = self.read_u32()?;
+        
+        // Read 16 bytes for local IPv6
+        let mut local_bytes = [0u8; 16];
+        self.reader.read_exact(&mut local_bytes)?;
+        let local_ip = Ipv6Addr::from(local_bytes);
+        
+        // Read 16 bytes for remote IPv6
+        let mut remote_bytes = [0u8; 16];
+        self.reader.read_exact(&mut remote_bytes)?;
+        let remote_ip = Ipv6Addr::from(remote_bytes);
+        
+        let local_port = self.read_u32()?;
+        let remote_port = self.read_u32()?;
+
+        Ok(crate::models::record_flows::ExtendedSocketIpv6 {
+            protocol,
+            local_ip,
+            remote_ip,
+            local_port,
+            remote_port,
+        })
+    }
+
+    /// Parse Application Context
+    fn parse_app_context(&mut self) -> Result<crate::models::record_flows::AppContext> {
+        let application = self.read_string()?;
+        let operation = self.read_string()?;
+        let attributes = self.read_string()?;
+
+        Ok(crate::models::record_flows::AppContext {
+            application,
+            operation,
+            attributes,
+        })
+    }
+
+    /// Parse Application Operation - Format (0,2202)
+    pub(super) fn parse_app_operation(
+        &mut self,
+    ) -> Result<crate::models::record_flows::AppOperation> {
+        let context = self.parse_app_context()?;
+        let status_descr = self.read_string()?;
+        let req_bytes = self.read_u64()?;
+        let resp_bytes = self.read_u64()?;
+        let duration_us = self.read_u32()?;
+        let status = crate::models::record_flows::AppStatus::from(self.read_u32()?);
+
+        Ok(crate::models::record_flows::AppOperation {
+            context,
+            status_descr,
+            req_bytes,
+            resp_bytes,
+            duration_us,
+            status,
+        })
+    }
+
+    /// Parse Application Parent Context - Format (0,2203)
+    pub(super) fn parse_app_parent_context(
+        &mut self,
+    ) -> Result<crate::models::record_flows::AppParentContext> {
+        let context = self.parse_app_context()?;
+
+        Ok(crate::models::record_flows::AppParentContext { context })
+    }
+
     /// Parse flow data based on format
     pub(super) fn parse_flow_data(
         &mut self,
@@ -476,6 +570,16 @@ impl<R: Read> Parser<R> {
                 1015 => Ok(FlowData::Extended80211Tx(parser.parse_extended_80211_tx()?)),
                 1016 => Ok(FlowData::Extended80211Aggregation(
                     parser.parse_extended_80211_aggregation()?,
+                )),
+                2100 => Ok(FlowData::ExtendedSocketIpv4(
+                    parser.parse_extended_socket_ipv4()?,
+                )),
+                2101 => Ok(FlowData::ExtendedSocketIpv6(
+                    parser.parse_extended_socket_ipv6()?,
+                )),
+                2202 => Ok(FlowData::AppOperation(parser.parse_app_operation()?)),
+                2203 => Ok(FlowData::AppParentContext(
+                    parser.parse_app_parent_context()?,
                 )),
                 _ => Ok(FlowData::Unknown { format, data }),
             }

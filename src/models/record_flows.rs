@@ -758,3 +758,196 @@ pub struct Extended80211Aggregation {
     /// Array of PDUs in the aggregation
     pub pdus: Vec<Pdu>,
 }
+
+/// Extended Socket IPv4 - Format (0,2100)
+///
+/// IPv4 socket information for application transactions
+///
+/// # XDR Definition ([sFlow Host](https://sflow.org/sflow_host.txt))
+///
+/// ```text
+/// /* IPv4 Socket */
+/// /* opaque = flow_data; enterprise = 0; format = 2100 */
+///
+/// struct extended_socket_ipv4 {
+///     unsigned int protocol;     /* IP Protocol type (e.g., TCP = 6, UDP = 17) */
+///     ip_v4 local_ip;            /* local IP address */
+///     ip_v4 remote_ip;           /* remote IP address */
+///     unsigned int local_port;   /* TCP/UDP local port number or equivalent */
+///     unsigned int remote_port;  /* TCP/UDP remote port number or equivalent */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedSocketIpv4 {
+    /// IP Protocol type (e.g., TCP = 6, UDP = 17)
+    pub protocol: u32,
+
+    /// Local IP address
+    pub local_ip: std::net::Ipv4Addr,
+
+    /// Remote IP address
+    pub remote_ip: std::net::Ipv4Addr,
+
+    /// TCP/UDP local port number
+    pub local_port: u32,
+
+    /// TCP/UDP remote port number
+    pub remote_port: u32,
+}
+
+/// Extended Socket IPv6 - Format (0,2101)
+///
+/// IPv6 socket information for application transactions
+///
+/// # XDR Definition ([sFlow Host](https://sflow.org/sflow_host.txt))
+///
+/// ```text
+/// /* IPv6 Socket */
+/// /* opaque = flow_data; enterprise = 0; format = 2101 */
+///
+/// struct extended_socket_ipv6 {
+///     unsigned int protocol;     /* IP Protocol type (e.g., TCP = 6, UDP = 17) */
+///     ip_v6 local_ip;            /* local IP address */
+///     ip_v6 remote_ip;           /* remote IP address */
+///     unsigned int local_port;   /* TCP/UDP local port number or equivalent */
+///     unsigned int remote_port;  /* TCP/UDP remote port number or equivalent */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedSocketIpv6 {
+    /// IP Protocol type (e.g., TCP = 6, UDP = 17)
+    pub protocol: u32,
+
+    /// Local IP address
+    pub local_ip: std::net::Ipv6Addr,
+
+    /// Remote IP address
+    pub remote_ip: std::net::Ipv6Addr,
+
+    /// TCP/UDP local port number
+    pub local_port: u32,
+
+    /// TCP/UDP remote port number
+    pub remote_port: u32,
+}
+
+/// Application operation context
+///
+/// # XDR Definition ([sFlow Application](https://sflow.org/sflow_application.txt))
+///
+/// ```text
+/// struct context {
+///     application application;
+///     operation operation;
+///     attributes attributes;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AppContext {
+    /// Application name (e.g., "payment", "mail.smtp", "db.oracle")
+    pub application: String,
+
+    /// Operation name (e.g., "get.customer.name", "upload.photo")
+    pub operation: String,
+
+    /// Operation attributes as name=value pairs (e.g., "cc=visa&loc=mobile")
+    pub attributes: String,
+}
+
+/// Application operation status
+///
+/// # XDR Definition ([sFlow Application](https://sflow.org/sflow_application.txt))
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u32)]
+pub enum AppStatus {
+    Success = 0,
+    Other = 1,
+    Timeout = 2,
+    InternalError = 3,
+    BadRequest = 4,
+    Forbidden = 5,
+    TooLarge = 6,
+    NotImplemented = 7,
+    NotFound = 8,
+    Unavailable = 9,
+    Unauthorized = 10,
+}
+
+impl From<u32> for AppStatus {
+    fn from(value: u32) -> Self {
+        match value {
+            0 => AppStatus::Success,
+            1 => AppStatus::Other,
+            2 => AppStatus::Timeout,
+            3 => AppStatus::InternalError,
+            4 => AppStatus::BadRequest,
+            5 => AppStatus::Forbidden,
+            6 => AppStatus::TooLarge,
+            7 => AppStatus::NotImplemented,
+            8 => AppStatus::NotFound,
+            9 => AppStatus::Unavailable,
+            10 => AppStatus::Unauthorized,
+            _ => AppStatus::Other,
+        }
+    }
+}
+
+/// Application Operation - Format (0,2202)
+///
+/// Sampled application operation information
+///
+/// # XDR Definition ([sFlow Application](https://sflow.org/sflow_application.txt))
+///
+/// ```text
+/// /* Sampled Application Operation */
+/// /* opaque = flow_data; enterprise = 0; format = 2202 */
+///
+/// struct app_operation {
+///     context context;             /* attributes describing the operation */
+///     utf8string<64> status_descr; /* additional text describing status */
+///     unsigned hyper req_bytes;    /* size of request body (exclude headers) */
+///     unsigned hyper resp_bytes;   /* size of response body (exclude headers) */
+///     unsigned int uS;             /* duration of the operation (microseconds) */
+///     status status;               /* status code */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AppOperation {
+    /// Operation context
+    pub context: AppContext,
+
+    /// Additional status description
+    pub status_descr: String,
+
+    /// Size of request body in bytes (excluding headers)
+    pub req_bytes: u64,
+
+    /// Size of response body in bytes (excluding headers)
+    pub resp_bytes: u64,
+
+    /// Duration of the operation in microseconds
+    pub duration_us: u32,
+
+    /// Operation status code
+    pub status: AppStatus,
+}
+
+/// Application Parent Context - Format (0,2203)
+///
+/// Parent context for sampled client operations
+///
+/// # XDR Definition ([sFlow Application](https://sflow.org/sflow_application.txt))
+///
+/// ```text
+/// /* Optional parent context information for sampled client operation */
+/// /* opaque = flow_data; enterprise = 0; format = 2203 */
+///
+/// struct app_parent_context {
+///     context context;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AppParentContext {
+    /// Parent operation context
+    pub context: AppContext,
+}
