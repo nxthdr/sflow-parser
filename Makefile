@@ -11,7 +11,6 @@ help:
 	@echo "  make test-unit-verbose        - Run unit tests with output"
 	@echo "  make test-integration-verbose - Run integration tests with output"
 	@echo "  make test-verbose             - Run all tests with verbose output"
-	@echo "  make test-validate-sflowtool  - Validate against sflowtool sflow.h (requires network)"
 	@echo "  make test-validate-specs      - Validate against official sFlow specs (requires network)"
 	@echo "  make bench                    - Run performance benchmarks"
 	@echo ""
