@@ -11,13 +11,13 @@ use std::net::{Ipv4Addr, Ipv6Addr};
 #[test]
 fn test_sampled_header_complete() {
     let header = SampledHeader {
-        protocol: 1,             // Ethernet
-        frame_length: 1500,      // Standard MTU
-        stripped: 4,             // VLAN tag stripped
-        header: vec![0xAA; 128], // 128 bytes captured
+        protocol: HeaderProtocol::EthernetIso88023, // Ethernet
+        frame_length: 1500,                         // Standard MTU
+        stripped: 4,                                // VLAN tag stripped
+        header: vec![0xAA; 128],                    // 128 bytes captured
     };
 
-    assert_eq!(header.protocol, 1);
+    assert_eq!(header.protocol, HeaderProtocol::EthernetIso88023);
     assert_eq!(header.frame_length, 1500);
     assert_eq!(header.stripped, 4);
     assert_eq!(header.header.len(), 128);
@@ -27,7 +27,7 @@ fn test_sampled_header_complete() {
 #[test]
 fn test_sampled_header_minimal() {
     let header = SampledHeader {
-        protocol: 1,
+        protocol: HeaderProtocol::EthernetIso88023,
         frame_length: 64, // Minimum Ethernet frame
         stripped: 0,
         header: vec![0xFF; 64],
@@ -448,7 +448,7 @@ fn test_extended_80211_aggregation() {
 #[test]
 fn test_sampled_header_max_size() {
     let header = SampledHeader {
-        protocol: 1,
+        protocol: HeaderProtocol::EthernetIso88023,
         frame_length: 9000, // Jumbo frame
         stripped: 0,
         header: vec![0; 256], // Max capture size

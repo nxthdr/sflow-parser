@@ -57,10 +57,17 @@ The flows and counters types tables below list all sFlow structure numbers as de
 - Multiple samples per datagram
 
 **Sample Types:**
-- Flow Sample (format 1) - compact format for ifIndex < 2^24
-- Counters Sample (format 2) - compact format for ifIndex < 2^24
-- Flow Sample Expanded (format 3) - for ifIndex >= 2^24
-- Counters Sample Expanded (format 4) - for ifIndex >= 2^24
+
+sFlow datagrams contain sample records. Each sample record has a format type that determines its structure:
+
+| Enterprise | Format | Name | Description | Status |
+|-----------|--------|------|-------------|--------|
+| 0 | 1 | Flow Sample | Compact format for ifIndex < 2^24 | ✅ |
+| 0 | 2 | Counters Sample | Compact format for ifIndex < 2^24 | ✅ |
+| 0 | 3 | Flow Sample Expanded | Extended format for ifIndex >= 2^24 | ✅ |
+| 0 | 4 | Counters Sample Expanded | Extended format for ifIndex >= 2^24 | ✅ |
+
+Each sample contains one or more flow records (for flow samples) or counter records (for counter samples).
 
 **Data Encoding:**
 - XDR (External Data Representation)

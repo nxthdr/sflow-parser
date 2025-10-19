@@ -176,7 +176,11 @@ impl<R: Read> Parser<R> {
 
     /// Parse Sampled Header - Format (0,1)
     fn parse_sampled_header(&mut self) -> Result<crate::models::flow_records::SampledHeader> {
-        let protocol = self.read_u32()?;
+        let protocol_value = self.read_u32()?;
+        let protocol = crate::models::flow_records::HeaderProtocol::from_u32(protocol_value)
+            .ok_or_else(|| {
+                ParseError::InvalidData(format!("Unknown header protocol: {}", protocol_value))
+            })?;
         let frame_length = self.read_u32()?;
         let stripped = self.read_u32()?;
         let header = self.read_opaque()?;

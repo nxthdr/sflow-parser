@@ -160,3 +160,101 @@ fn test_unknown_agent_address() {
         _ => panic!("Expected Unknown address"),
     }
 }
+
+#[test]
+fn test_unknown_header_protocol() {
+    // Test that HeaderProtocol::from_u32 rejects invalid values
+    use sflow_parser::models::flow_records::HeaderProtocol;
+
+    // Valid protocols (1-17) should return Some
+    for protocol in 1..=17 {
+        assert!(
+            HeaderProtocol::from_u32(protocol).is_some(),
+            "Protocol {} should be valid",
+            protocol
+        );
+    }
+
+    // Invalid protocols should return None
+    let invalid_protocols = vec![0, 18, 100, 255, 1000, u32::MAX];
+    for protocol in invalid_protocols {
+        assert!(
+            HeaderProtocol::from_u32(protocol).is_none(),
+            "Protocol {} should be invalid",
+            protocol
+        );
+    }
+}
+
+#[test]
+fn test_valid_header_protocol_values() {
+    // Test that all valid header protocol values (1-17) are accepted
+    let valid_protocols: Vec<u32> = vec![
+        1,  // ETHERNET-ISO88023
+        2,  // ISO88024-TOKENBUS
+        3,  // ISO88025-TOKENRING
+        4,  // FDDI
+        5,  // FRAME-RELAY
+        6,  // X25
+        7,  // PPP
+        8,  // SMDS
+        9,  // AAL5
+        10, // AAL5-IP
+        11, // IPv4
+        12, // IPv6
+        13, // MPLS
+        14, // POS
+        15, // IEEE80211MAC
+        16, // IEEE80211AMPDU
+        17, // IEEE80211AMSDU
+    ];
+
+    for protocol in valid_protocols.iter() {
+        let mut data = vec![
+            0x00, 0x00, 0x00, 0x05, // version = 5
+            0x00, 0x00, 0x00, 0x01, // agent address type = IPv4
+            0xC0, 0xA8, 0x01, 0x01, // agent address = 192.168.1.1
+            0x00, 0x00, 0x00, 0x00, // sub agent ID
+            0x00, 0x00, 0x00, 0x01, // sequence number
+            0x00, 0x00, 0x00, 0x64, // uptime = 100ms
+            0x00, 0x00, 0x00, 0x01, // number of samples = 1
+            // Flow sample
+            0x00, 0x00, 0x00, 0x01, // sample type = flow sample
+        ];
+
+        // Calculate sample length: 32 (flow sample header) + 12 (flow record header) + 20 (flow data)
+        let sample_length: u32 = 32 + 12 + 20;
+        data.extend_from_slice(&sample_length.to_be_bytes());
+
+        data.extend_from_slice(&[
+            0x00, 0x00, 0x00, 0x01, // sequence number
+            0x00, 0x00, 0x00, 0x01, // source ID
+            0x00, 0x00, 0x03, 0xE8, // sampling rate = 1000
+            0x00, 0x00, 0x00, 0x64, // sample pool = 100
+            0x00, 0x00, 0x00, 0x00, // drops = 0
+            0x00, 0x00, 0x00, 0x01, // input interface = 1
+            0x00, 0x00, 0x00, 0x02, // output interface = 2
+            0x00, 0x00, 0x00, 0x01, // number of flow records = 1
+            // Flow record: sampled_header
+            0x00, 0x00, 0x00, 0x00, // enterprise = 0
+            0x00, 0x00, 0x00, 0x01, // format = 1 (sampled_header)
+            0x00, 0x00, 0x00, 0x14, // flow data length = 20 bytes (16 + 4 header bytes)
+        ]);
+
+        data.extend_from_slice(&(*protocol).to_be_bytes()); // protocol (valid value)
+        data.extend_from_slice(&[
+            0x00, 0x00, 0x00, 0x40, // frame_length = 64
+            0x00, 0x00, 0x00, 0x00, // stripped = 0
+            0x00, 0x00, 0x00, 0x04, // header length = 4
+            0xAA, 0xBB, 0xCC, 0xDD, // header bytes
+        ]);
+
+        let result = parse_datagram(&data);
+        assert!(
+            result.is_ok(),
+            "Protocol {} should be valid but got error: {:?}",
+            protocol,
+            result.err()
+        );
+    }
+}

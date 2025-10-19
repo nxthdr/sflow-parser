@@ -7,12 +7,12 @@ use std::net::{Ipv4Addr, Ipv6Addr};
 #[test]
 fn test_sampled_header() {
     let header = SampledHeader {
-        protocol: 1,
+        protocol: HeaderProtocol::EthernetIso88023,
         frame_length: 64,
         stripped: 0,
         header: vec![0xff; 64],
     };
-    assert_eq!(header.protocol, 1);
+    assert_eq!(header.protocol, HeaderProtocol::EthernetIso88023);
     assert_eq!(header.frame_length, 64);
     assert_eq!(header.stripped, 0);
     assert_eq!(header.header.len(), 64);
