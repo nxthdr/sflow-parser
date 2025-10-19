@@ -17,3 +17,8 @@ exclude = [
 [dev-dependencies]
 regex = "1"
 ureq = "2"
+criterion = "0.5"
+
+[[bench]]
+name = "parser_benchmark"
+harness = false

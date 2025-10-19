@@ -231,6 +231,16 @@ make fuzz-structured # Fuzz with structured inputs (60s)
 make fuzz-all        # Run all fuzzers (5 minutes each)
 ```
 
+### Benchmarks
+
+Performance benchmarks using Criterion:
+
+```bash
+make bench  # Run performance benchmarks
+```
+
+**Results:** ~330ns per datagram (~3M datagrams/sec) on typical hardware. The parser is not zero-copy (at least for now) and does not use any unsafe code, but it is fast enough for most use cases.
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
