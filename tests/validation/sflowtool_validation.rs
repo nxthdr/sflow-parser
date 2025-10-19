@@ -6,7 +6,9 @@
 use super::sflowtool_parser_spec::{
     c_type_to_rust, parse_format_definitions, parse_sflow_header, CStruct,
 };
+use super::specs_parser_lib_ast::{build_registry_from_source, StructRegistry};
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 const SFLOW_H_URL: &str =
     "https://raw.githubusercontent.com/sflow/sflowtool/refs/heads/master/src/sflow.h";
@@ -93,29 +95,106 @@ fn build_format_to_struct_map(sflow_content: &str) -> HashMap<(u32, u32, String)
     map
 }
 
-/// Check if a format is implemented in our Rust code
-fn is_format_implemented(enterprise: u32, format: u32, data_type: &str) -> bool {
-    if enterprise != 0 {
-        return false;
+/// Check if a format is implemented using AST-parsed registry
+fn is_format_implemented(
+    registry: &StructRegistry,
+    enterprise: u32,
+    format: u32,
+    data_type: &str,
+) -> bool {
+    registry.contains_key(&(enterprise, format, data_type.to_string()))
+}
+
+/// Convert sflowtool name to comparable format
+fn normalize_sflowtool_name(name: &str) -> String {
+    name.to_lowercase()
+        .replace("sfl", "") // Remove SFL prefix
+        .replace("extended_", "") // Remove extended_ prefix
+        .replace("_counters", "") // Remove _counters suffix
+        .replace("wifi", "80211") // wifi -> 80211
+        .replace("vrt", "virtual") // vrt -> virtual
+        .replace("dsk", "disk") // dsk -> disk
+        .replace("nio", "netio") // nio -> netio
+        .replace("ovsdp", "openflow") // ovsdp -> openflow
+        .replace("jvm", "") // Remove jvm
+        .replace("_id", "") // Remove _id suffix
+        .replace("_", "") // Remove all underscores
+}
+
+/// Convert our implementation name to comparable format
+fn normalize_our_name(name: &str) -> String {
+    // Convert CamelCase to lowercase without separators
+    let mut result = String::new();
+    for ch in name.chars() {
+        if ch.is_uppercase() {
+            result.push_str(&ch.to_lowercase().to_string());
+        } else {
+            result.push(ch);
+        }
+    }
+    result
+}
+
+/// Check if sflowtool name matches our implementation name
+/// Handles naming convention differences between sflowtool and official specs
+fn names_match_sflowtool(sflowtool_name: &str, our_name: &str) -> bool {
+    let sfl_normalized = normalize_sflowtool_name(sflowtool_name);
+    let our_normalized = normalize_our_name(our_name);
+
+    // Check if they match after normalization
+    if sfl_normalized == our_normalized {
+        return true;
     }
 
-    if data_type == "flow_data" {
-        // Flow formats we've implemented
-        let flow_formats = [
-            1, 2, 3, 4, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012,
-            1013, 1014, 1015, 1016,
-        ];
-        flow_formats.contains(&format)
-    } else if data_type == "counter_data" {
-        // Counter formats we've implemented
-        let counter_formats = [
-            1, 2, 3, 4, 5, 6, 1001, 1002, 1004, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2100,
-            2101, 2102, 2103, 2104, 2105, 2106, 2200, 2201, 3000,
-        ];
-        counter_formats.contains(&format)
-    } else {
-        false
+    // Check if one contains the other (for partial matches)
+    if sfl_normalized.contains(&our_normalized) || our_normalized.contains(&sfl_normalized) {
+        return true;
     }
+
+    // Special cases for known mappings
+    let special_mappings = [
+        ("host_vrt_node", "virtualnode"),
+        ("host_vrt_cpu", "virtualcpu"),
+        ("host_vrt_mem", "virtualmemory"),
+        ("host_vrt_dsk", "virtualdiskio"),
+        ("host_vrt_nio", "virtualnetio"),
+        ("aggregation", "80211aggregation"),
+        ("socket_ipv4", "socketipv4"),
+        ("socket_ipv6", "socketipv6"),
+        ("virtualmem", "virtualmemory"),  // vrt_mem -> VirtualMemory
+        ("virtualdisk", "virtualdiskio"), // vrt_dsk -> VirtualDiskIo
+    ];
+
+    for (sfl_pattern, our_pattern) in &special_mappings {
+        if sfl_normalized.contains(sfl_pattern) && our_normalized.contains(our_pattern) {
+            return true;
+        }
+        // Also check reverse
+        if our_normalized.contains(sfl_pattern) && sfl_normalized.contains(our_pattern) {
+            return true;
+        }
+    }
+
+    // Check if normalized names are very similar (allow for minor differences)
+    let similarity = if sfl_normalized.len() > our_normalized.len() {
+        our_normalized.len() as f32 / sfl_normalized.len() as f32
+    } else {
+        sfl_normalized.len() as f32 / our_normalized.len() as f32
+    };
+
+    // If lengths are similar and one contains most of the other, consider it a match
+    if similarity > 0.7 {
+        let common_chars = sfl_normalized
+            .chars()
+            .filter(|c| our_normalized.contains(*c))
+            .count();
+        let max_len = sfl_normalized.len().max(our_normalized.len());
+        if common_chars as f32 / max_len as f32 > 0.8 {
+            return true;
+        }
+    }
+
+    false
 }
 
 /// Validate all formats from sflow.h
@@ -125,6 +204,10 @@ pub fn validate_all_formats(
     let structs = parse_sflow_header(sflow_content);
     let formats = parse_format_definitions(sflow_content);
     let format_map = build_format_to_struct_map(sflow_content);
+
+    // Build registry from source files
+    let src_dir = PathBuf::from("src");
+    let registry = build_registry_from_source(&src_dir)?;
 
     let mut validations = Vec::new();
 
@@ -139,6 +222,7 @@ pub fn validate_all_formats(
             .cloned();
 
         let implemented = is_format_implemented(
+            &registry,
             format_def.enterprise,
             format_def.format,
             &format_def.description,
@@ -214,22 +298,81 @@ mod tests {
         let mut implemented_count = 0;
         let mut total_count = 0;
         let mut field_validated_count = 0;
+        let mut format_conflicts = Vec::new();
+
+        // Build registry to check for naming mismatches
+        let src_dir = PathBuf::from("src");
+        let registry = build_registry_from_source(&src_dir).expect("Failed to build registry");
+
+        // Track format numbers to detect duplicates
+        let mut format_tracker: std::collections::HashMap<(u32, u32), Vec<String>> =
+            std::collections::HashMap::new();
 
         for validation in &validations {
             total_count += 1;
 
+            // Track format numbers for conflict detection
+            format_tracker
+                .entry((validation.enterprise, validation.format))
+                .or_default()
+                .push(validation.name.clone());
+
             if validation.implemented {
                 implemented_count += 1;
 
+                // Check if there's a naming mismatch with our implementation
+                let our_struct = registry.get(&(
+                    validation.enterprise,
+                    validation.format,
+                    if validation.name.contains("counter") || validation.name.contains("Counter") {
+                        "counter_data"
+                    } else {
+                        "flow_data"
+                    }
+                    .to_string(),
+                ));
+
+                let has_naming_conflict = if let Some(our_impl) = our_struct {
+                    // Use proper name matching to avoid false positives from naming conventions
+                    !names_match_sflowtool(&validation.name, &our_impl.name)
+                } else {
+                    false
+                };
+
                 if let Some(ref field_val) = validation.field_validation {
                     field_validated_count += 1;
+
+                    let marker = if has_naming_conflict {
+                        "⚠️ "
+                    } else {
+                        "✅"
+                    };
                     println!(
-                        "✅ ({},{:4}) {} - {} fields validated",
+                        "{} ({},{:4}) {} - {} fields validated{}",
+                        marker,
                         validation.enterprise,
                         validation.format,
                         validation.name,
-                        field_val.expected_fields.len()
+                        field_val.expected_fields.len(),
+                        if has_naming_conflict {
+                            " [NAMING CONFLICT]"
+                        } else {
+                            ""
+                        }
                     );
+
+                    if has_naming_conflict {
+                        if let Some(our_impl) = our_struct {
+                            println!("   ℹ️  Our implementation: {}", our_impl.name);
+                            format_conflicts.push(format!(
+                                "({},{:4}) sflowtool='{}' vs our='{}'",
+                                validation.enterprise,
+                                validation.format,
+                                validation.name,
+                                our_impl.name
+                            ));
+                        }
+                    }
 
                     if !field_val.issues.is_empty() {
                         for issue in &field_val.issues {
@@ -250,6 +393,19 @@ mod tests {
             }
         }
 
+        // Check for duplicate format numbers
+        let mut duplicate_formats = Vec::new();
+        for ((ent, fmt), names) in &format_tracker {
+            if names.len() > 1 {
+                duplicate_formats.push(format!(
+                    "({},{:4}) used by: {}",
+                    ent,
+                    fmt,
+                    names.join(", ")
+                ));
+            }
+        }
+
         println!("\n=== Summary ===");
         println!("Total formats found: {}", total_count);
         println!("Implemented: {}", implemented_count);
@@ -258,6 +414,25 @@ mod tests {
             "Coverage: {:.1}%",
             (implemented_count as f64 / total_count as f64) * 100.0
         );
+
+        if !duplicate_formats.is_empty() {
+            println!(
+                "\n⚠️  FORMAT NUMBER CONFLICTS IN SFLOWTOOL ({}):",
+                duplicate_formats.len()
+            );
+            for conflict in &duplicate_formats {
+                println!("   {}", conflict);
+            }
+        }
+
+        if !format_conflicts.is_empty() {
+            println!("\n⚠️  NAMING INCONSISTENCIES ({}):", format_conflicts.len());
+            for conflict in &format_conflicts {
+                println!("   {}", conflict);
+            }
+            println!("\nNote: These are inconsistencies in sflowtool's sflow.h.");
+            println!("Our implementation follows the official sFlow specifications.");
+        }
 
         assert!(total_count > 0, "Should find formats in sflow.h");
         assert!(
@@ -370,10 +545,15 @@ typedef struct _SFLExtended_socket_ipv4 {
         assert_eq!(eth_fields[1].rust_type, "MacAddress");
         assert_eq!(eth_fields[2].rust_type, "MacAddress");
 
-        // Check format 2100 (ExtendedSocketIPv4) is NOT implemented
+        // Check format 2100 (ExtendedSocketIPv4) is NOW implemented
         let socket = validations.iter().find(|v| v.format == 2100).unwrap();
-        assert!(!socket.implemented);
+        assert!(socket.implemented);
         assert_eq!(socket.name, "SFLExtended_socket_ipv4");
+        assert!(socket.field_validation.is_some());
+        let socket_fields = &socket.field_validation.as_ref().unwrap().expected_fields;
+        assert_eq!(socket_fields.len(), 5);
+        assert_eq!(socket_fields[0].name, "protocol");
+        assert_eq!(socket_fields[0].rust_type, "u32");
     }
 
     #[test]
@@ -410,23 +590,5 @@ typedef struct _SFLIf_counters {
             Some(&"SFLIf_counters".to_string())
         );
         assert_eq!(map.get(&(0, 9999, "flow_data".to_string())), None);
-    }
-
-    #[test]
-    fn test_is_format_implemented() {
-        // Flow formats
-        assert!(is_format_implemented(0, 1, "flow_data")); // SampledHeader
-        assert!(is_format_implemented(0, 2, "flow_data")); // SampledEthernet
-        assert!(is_format_implemented(0, 1001, "flow_data")); // ExtendedSwitch
-        assert!(is_format_implemented(0, 1014, "flow_data")); // Extended80211Rx
-
-        // Counter formats
-        assert!(is_format_implemented(0, 1, "counter_data")); // GenericInterface
-        assert!(is_format_implemented(0, 2000, "counter_data")); // HostDescription
-
-        // Not implemented
-        assert!(!is_format_implemented(0, 2100, "flow_data")); // ExtendedSocketIPv4 (flow)
-        assert!(!is_format_implemented(0, 2209, "flow_data")); // ExtendedTcpInfo
-        assert!(!is_format_implemented(1, 1, "flow_data")); // Wrong enterprise
     }
 }

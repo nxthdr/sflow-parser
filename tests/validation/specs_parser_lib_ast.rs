@@ -27,6 +27,9 @@ pub struct FieldMetadata {
     pub type_name: String,
 }
 
+/// Type alias for the registry map
+pub type StructRegistry = HashMap<(u32, u32, String), StructMetadata>;
+
 /// Extract format number from doc comment
 /// Looks for: "/// ... - Format (0,1)"
 fn extract_format_from_attrs(attrs: &[Attribute]) -> Option<(u32, u32)> {
@@ -158,7 +161,7 @@ pub fn parse_source_file(
 /// Build a registry of all implemented formats by parsing source files
 pub fn build_registry_from_source(
     src_dir: &Path,
-) -> Result<HashMap<(u32, u32, String), StructMetadata>, Box<dyn std::error::Error>> {
+) -> Result<StructRegistry, Box<dyn std::error::Error>> {
     let mut registry = HashMap::new();
 
     // Parse flow records

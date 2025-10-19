@@ -3,7 +3,7 @@
 //! This module downloads official sFlow spec documents and validates
 //! our Rust implementation against the XDR definitions in the specs.
 
-use super::specs_parser_lib_ast::{build_registry_from_source, FieldMetadata, StructMetadata};
+use super::specs_parser_lib_ast::{build_registry_from_source, FieldMetadata, StructRegistry};
 use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
@@ -367,7 +367,7 @@ pub struct StructureValidation {
 
 /// Check if a format is implemented using AST-parsed registry
 pub fn is_format_implemented(
-    registry: &HashMap<(u32, u32, String), StructMetadata>,
+    registry: &StructRegistry,
     enterprise: u32,
     format: u32,
     data_type: &str,
@@ -437,7 +437,6 @@ fn names_match(xdr_name: &str, rust_name: &str) -> bool {
         return true;
     }
 
-
     // Handle Rust reserved keywords
     // "type" is a reserved keyword in Rust, so it's renamed to "eth_type", "packet_type", etc.
     if xdr_name == "type" && (rust_name == "eth_type" || rust_name == "packet_type") {
@@ -478,96 +477,96 @@ fn validate_fields(xdr_fields: &[XdrField], rust_fields: &[FieldMetadata]) -> (b
 
     // Special case: ExtendedMplsFec (0,1010) - XDR spec uses string mplsFTNDescr and unsigned int mplsFTNMask
     // but the actual wire format uses an Address and prefix length, which is more semantically correct
-    if xdr_fields.len() == 2 && rust_fields.len() == 2 {
-        if xdr_fields.iter().any(|f| f.name == "mplsFTNDescr")
-            && xdr_fields.iter().any(|f| f.name == "mplsFTNMask")
-            && rust_fields.iter().any(|f| f.name == "fec_addr_prefix")
-            && rust_fields.iter().any(|f| f.name == "fec_prefix_len")
-        {
-            // This is correct - implementation uses Address type which matches wire format better
-            return (true, Vec::new());
-        }
+    if xdr_fields.len() == 2
+        && rust_fields.len() == 2
+        && xdr_fields.iter().any(|f| f.name == "mplsFTNDescr")
+        && xdr_fields.iter().any(|f| f.name == "mplsFTNMask")
+        && rust_fields.iter().any(|f| f.name == "fec_addr_prefix")
+        && rust_fields.iter().any(|f| f.name == "fec_prefix_len")
+    {
+        // This is correct - implementation uses Address type which matches wire format better
+        return (true, Vec::new());
     }
 
     // Special case: ExtendedGateway (0,1003) - XDR has dst_as_path as array, implementation uses structured segments
     // The implementation also splits out communities and local_pref as separate fields for better usability
-    if xdr_fields.len() == 6 && rust_fields.len() == 7 {
-        if xdr_fields.iter().any(|f| f.name == "dst_as_path")
-            && rust_fields.iter().any(|f| f.name == "as_path_segments")
-            && rust_fields.iter().any(|f| f.name == "communities")
-            && rust_fields.iter().any(|f| f.name == "local_pref")
-        {
-            // This is correct - implementation provides better structured access to BGP path attributes
-            return (true, Vec::new());
-        }
+    if xdr_fields.len() == 6
+        && rust_fields.len() == 7
+        && xdr_fields.iter().any(|f| f.name == "dst_as_path")
+        && rust_fields.iter().any(|f| f.name == "as_path_segments")
+        && rust_fields.iter().any(|f| f.name == "communities")
+        && rust_fields.iter().any(|f| f.name == "local_pref")
+    {
+        // This is correct - implementation provides better structured access to BGP path attributes
+        return (true, Vec::new());
     }
 
     // Special case: ExtendedMplsVc (0,1009) - XDR has vc_label_cos as single field
     // but implementation splits into vc_label and vc_cos for better usability
-    if xdr_fields.len() == 3 && rust_fields.len() == 4 {
-        if xdr_fields.iter().any(|f| f.name == "vc_label_cos")
-            && rust_fields.iter().any(|f| f.name == "vc_label")
-            && rust_fields.iter().any(|f| f.name == "vc_cos")
-        {
-            // This is correct - implementation separates label and COS for easier access
-            return (true, Vec::new());
-        }
+    if xdr_fields.len() == 3
+        && rust_fields.len() == 4
+        && xdr_fields.iter().any(|f| f.name == "vc_label_cos")
+        && rust_fields.iter().any(|f| f.name == "vc_label")
+        && rust_fields.iter().any(|f| f.name == "vc_cos")
+    {
+        // This is correct - implementation separates label and COS for easier access
+        return (true, Vec::new());
     }
 
     // Special case: Extended80211Rx (0,1014) - Implementation adds packet_duration field
     // This is an extension to the spec for additional metrics
-    if xdr_fields.len() == 7 && rust_fields.len() == 8 {
-        if rust_fields.iter().any(|f| f.name == "packet_duration")
-            && rust_fields.iter().any(|f| f.name == "ssid")
-            && rust_fields.iter().any(|f| f.name == "bssid")
-        {
-            // This is correct - implementation adds useful timing information
-            return (true, Vec::new());
-        }
+    if xdr_fields.len() == 7
+        && rust_fields.len() == 8
+        && rust_fields.iter().any(|f| f.name == "packet_duration")
+        && rust_fields.iter().any(|f| f.name == "ssid")
+        && rust_fields.iter().any(|f| f.name == "bssid")
+    {
+        // This is correct - implementation adds useful timing information
+        return (true, Vec::new());
     }
 
     // Special case: ProcessorCounters (0,1001) - Implementation adds total_memory and free_memory fields
     // These are useful extensions to the base spec
-    if xdr_fields.len() == 3 && rust_fields.len() == 5 {
-        if rust_fields.iter().any(|f| f.name == "total_memory")
-            && rust_fields.iter().any(|f| f.name == "free_memory")
-            && rust_fields.iter().any(|f| f.name == "cpu_5s")
-        {
-            // This is correct - implementation provides additional memory metrics
-            return (true, Vec::new());
-        }
+    if xdr_fields.len() == 3
+        && rust_fields.len() == 5
+        && rust_fields.iter().any(|f| f.name == "total_memory")
+        && rust_fields.iter().any(|f| f.name == "free_memory")
+        && rust_fields.iter().any(|f| f.name == "cpu_5s")
+    {
+        // This is correct - implementation provides additional memory metrics
+        return (true, Vec::new());
     }
 
     // Special case: OpenFlowPortName (0,1005) - XDR parser finds 0 fields (likely empty struct in spec)
     // but implementation correctly has the port_name field
-    if xdr_fields.is_empty() && rust_fields.len() == 1 {
-        if rust_fields[0].name == "port_name" {
-            // This is correct - the XDR spec likely has formatting issues, implementation is correct
-            return (true, Vec::new());
-        }
-    }
-    
-    // Special case: AppOperation (0,2202) - XDR parser doesn't fully parse nested context struct
-    // Implementation correctly expands context into AppContext with application, operation, attributes
-    if xdr_fields.len() == 5 && rust_fields.len() == 6 {
-        if xdr_fields.iter().any(|f| f.name == "context") &&
-           rust_fields.iter().any(|f| f.name == "context") &&
-           rust_fields.iter().any(|f| f.name == "status_descr") &&
-           rust_fields.iter().any(|f| f.name == "duration_us") {
-            // This is correct - implementation uses AppContext struct for the context field
-            return (true, Vec::new());
-        }
-    }
-    
-    // Special case: AppParentContext (0,2203) - XDR parser doesn't fully parse nested context struct
-    // Implementation correctly uses AppContext with application, operation, attributes
-    if xdr_fields.len() == 1 && rust_fields.len() == 1 {
-        if xdr_fields[0].name == "context" && rust_fields[0].name == "context" {
-            // This is correct - implementation uses AppContext struct
-            return (true, Vec::new());
-        }
+    if xdr_fields.is_empty() && rust_fields.len() == 1 && rust_fields[0].name == "port_name" {
+        // This is correct - the XDR spec likely has formatting issues, implementation is correct
+        return (true, Vec::new());
     }
 
+    // Special case: AppOperation (0,2202) - XDR parser doesn't fully parse nested context struct
+    // Implementation correctly expands context into AppContext with application, operation, attributes
+    if xdr_fields.len() == 5
+        && rust_fields.len() == 6
+        && xdr_fields.iter().any(|f| f.name == "context")
+        && rust_fields.iter().any(|f| f.name == "context")
+        && rust_fields.iter().any(|f| f.name == "status_descr")
+        && rust_fields.iter().any(|f| f.name == "duration_us")
+    {
+        // This is correct - implementation uses AppContext struct for the context field
+        return (true, Vec::new());
+    }
+
+    // Special case: AppParentContext (0,2203) - XDR parser doesn't fully parse nested context struct
+    // Implementation correctly uses AppContext with application, operation, attributes
+    if xdr_fields.len() == 1
+        && rust_fields.len() == 1
+        && xdr_fields[0].name == "context"
+        && rust_fields[0].name == "context"
+    {
+        // This is correct - implementation uses AppContext struct
+        return (true, Vec::new());
+    }
 
     // Check field count
     if xdr_fields.len() != rust_fields.len() {
@@ -610,11 +609,11 @@ fn validate_fields(xdr_fields: &[XdrField], rust_fields: &[FieldMetadata]) -> (b
 
     // Check for extra fields in Rust
     if rust_fields.len() > xdr_fields.len() {
-        for i in xdr_fields.len()..rust_fields.len() {
+        for rust_field in rust_fields.iter().skip(xdr_fields.len()) {
             all_match = false;
             issues.push(format!(
                 "Extra field in Rust: '{}' ({})",
-                rust_fields[i].name, rust_fields[i].type_name
+                rust_field.name, rust_field.type_name
             ));
         }
     }
@@ -631,9 +630,8 @@ fn types_compatible(xdr_type: &str, rust_type: &str) -> bool {
 
     // === Enum Types ===
     // XDR enums are represented as u32 in Rust, but may have enum type names in either direction
-    let is_enum_name = |t: &str| {
-        t.ends_with("Protocol") || t.ends_with("Version") || t.ends_with("Direction")
-    };
+    let is_enum_name =
+        |t: &str| t.ends_with("Protocol") || t.ends_with("Version") || t.ends_with("Direction");
     if (is_enum_name(xdr_type) && rust_type == "u32")
         || (xdr_type == "u32" && is_enum_name(rust_type))
     {

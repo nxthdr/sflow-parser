@@ -121,7 +121,7 @@ fn test_virtual_node() {
     let counters = VirtualNode {
         mhz: 2400,
         cpus: 4,
-        memory: 8_589_934_592, // 8 GB
+        memory: 8_589_934_592,      // 8 GB
         memory_free: 4_294_967_296, // 4 GB
         num_domains: 2,
     };

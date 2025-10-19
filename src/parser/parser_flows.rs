@@ -439,7 +439,7 @@ impl<R: Read> Parser<R> {
         &mut self,
     ) -> Result<crate::models::record_flows::ExtendedSocketIpv4> {
         use std::net::Ipv4Addr;
-        
+
         let protocol = self.read_u32()?;
         let local_ip = Ipv4Addr::from(self.read_u32()?);
         let remote_ip = Ipv4Addr::from(self.read_u32()?);
@@ -460,19 +460,19 @@ impl<R: Read> Parser<R> {
         &mut self,
     ) -> Result<crate::models::record_flows::ExtendedSocketIpv6> {
         use std::net::Ipv6Addr;
-        
+
         let protocol = self.read_u32()?;
-        
+
         // Read 16 bytes for local IPv6
         let mut local_bytes = [0u8; 16];
         self.reader.read_exact(&mut local_bytes)?;
         let local_ip = Ipv6Addr::from(local_bytes);
-        
+
         // Read 16 bytes for remote IPv6
         let mut remote_bytes = [0u8; 16];
         self.reader.read_exact(&mut remote_bytes)?;
         let remote_ip = Ipv6Addr::from(remote_bytes);
-        
+
         let local_port = self.read_u32()?;
         let remote_port = self.read_u32()?;
 

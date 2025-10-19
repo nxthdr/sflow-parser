@@ -449,9 +449,15 @@ fn test_extended_80211_tx() {
 fn test_extended_80211_aggregation() {
     let aggregation = Extended80211Aggregation {
         pdus: vec![
-            Pdu { flow_records: vec![] },
-            Pdu { flow_records: vec![] },
-            Pdu { flow_records: vec![] },
+            Pdu {
+                flow_records: vec![],
+            },
+            Pdu {
+                flow_records: vec![],
+            },
+            Pdu {
+                flow_records: vec![],
+            },
         ],
     };
 
@@ -461,7 +467,7 @@ fn test_extended_80211_aggregation() {
 #[test]
 fn test_extended_socket_ipv4() {
     use std::net::Ipv4Addr;
-    
+
     let socket = ExtendedSocketIpv4 {
         protocol: 6, // TCP
         local_ip: Ipv4Addr::new(192, 168, 1, 100),
@@ -480,7 +486,7 @@ fn test_extended_socket_ipv4() {
 #[test]
 fn test_extended_socket_ipv6() {
     use std::net::Ipv6Addr;
-    
+
     let socket = ExtendedSocketIpv6 {
         protocol: 17, // UDP
         local_ip: Ipv6Addr::new(0x2001, 0xdb8, 0, 0, 0, 0, 0, 1),
