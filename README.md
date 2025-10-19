@@ -236,7 +236,7 @@ make fuzz-all        # Run all fuzzers (5 minutes each)
 The project includes comprehensive validation against official sFlow specification documents using `syn` crate to parse Rust source files and extract sFlow struct metadata:
 
 ```bash
-make test-validate-specs
+make test-validate
 ```
 
 ### Benchmarks

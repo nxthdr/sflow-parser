@@ -88,8 +88,8 @@ pub fn download_spec(
 
     // Download the spec
     println!("Downloading spec: {} from {}", spec.name, spec.url);
-    let response = ureq::get(spec.url).call()?;
-    let content = response.into_string()?;
+    let mut response = ureq::get(spec.url).call()?;
+    let content = response.body_mut().read_to_string()?;
 
     // Cache it
     fs::write(&cache_file, &content)?;

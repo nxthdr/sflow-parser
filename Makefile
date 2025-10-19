@@ -1,43 +1,4 @@
-.PHONY: help test test-unit test-integration test-unit-verbose test-integration-verbose test-all test-verbose test-lib test-validate-sflowtool test-validate-specs bench coverage coverage-html coverage-open coverage-lcov coverage-unit coverage-integration clean build build-release build-all check fmt fmt-check clippy clippy-strict doc doc-open doc-all install-tools audit outdated
-
-# Default target
-help:
-	@echo "sFlow Parser - Available targets:"
-	@echo ""
-	@echo "Testing:"
-	@echo "  make test                     - Run all tests"
-	@echo "  make test-unit                - Run unit tests only"
-	@echo "  make test-integration         - Run integration tests only"
-	@echo "  make test-unit-verbose        - Run unit tests with output"
-	@echo "  make test-integration-verbose - Run integration tests with output"
-	@echo "  make test-verbose             - Run all tests with verbose output"
-	@echo "  make test-validate-specs      - Validate against official sFlow specs (requires network)"
-	@echo "  make bench                    - Run performance benchmarks"
-	@echo ""
-	@echo "Coverage:"
-	@echo "  make coverage          - Generate coverage report (text)"
-	@echo "  make coverage-html     - Generate HTML coverage report"
-	@echo "  make coverage-open     - Generate and open HTML coverage report"
-	@echo "  make coverage-lcov     - Generate LCOV coverage report"
-	@echo ""
-	@echo "Code Quality:"
-	@echo "  make check             - Run all checks (fmt, clippy, test)"
-	@echo "  make fmt               - Format code"
-	@echo "  make fmt-check         - Check code formatting"
-	@echo "  make clippy            - Run clippy lints"
-	@echo "  make clippy-strict     - Run clippy with strict lints"
-	@echo ""
-	@echo "Build:"
-	@echo "  make build             - Build the project"
-	@echo "  make build-release     - Build release version"
-	@echo "  make doc               - Generate documentation"
-	@echo "  make doc-open          - Generate and open documentation"
-	@echo ""
-	@echo "Utilities:"
-	@echo "  make clean             - Clean build artifacts"
-	@echo "  make install-tools     - Install required development tools"
-	@echo "  make audit             - Run security audit"
-	@echo "  make outdated          - Check for outdated dependencies"
+.PHONY: help test test-unit test-integration test-unit-verbose test-integration-verbose test-all test-verbose test-lib test-validate bench coverage coverage-html coverage-open coverage-lcov coverage-unit coverage-integration clean build build-release build-all check fmt fmt-check clippy clippy-strict doc doc-open doc-all install-tools audit outdated
 
 # Testing targets
 test:
@@ -71,12 +32,7 @@ test-lib:
 	@echo "Running library tests..."
 	cargo test --lib
 
-test-validate-sflowtool:
-	@echo "Validating implementation against sflowtool sflow.h..."
-	@echo "Note: This requires network access to download sflow.h from GitHub"
-	cargo test validation::sflowtool_validation::tests::test_validate_all_formats_live -- --nocapture --ignored
-
-test-validate-specs:
+test-validate:
 	@echo "Validating implementation against official sFlow specifications..."
 	@echo "Note: This requires network access to download spec documents"
 	cargo test validation::specs_validation::tests::test_validate_against_specs -- --nocapture --ignored
