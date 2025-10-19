@@ -3,7 +3,7 @@
 //! These tests validate counter record parsing logic that isn't covered
 //! by integration tests (less common counter types).
 
-use sflow_parser::models::counter_records::*;
+use sflow_parser::models::record_counters::*;
 
 #[test]
 fn test_token_ring_counters_structure() {

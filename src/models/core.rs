@@ -100,46 +100,46 @@ pub struct InterfaceExpanded {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FlowData {
     /// Sampled Header - Format (0,1)
-    SampledHeader(crate::models::flow_records::SampledHeader),
+    SampledHeader(crate::models::record_flows::SampledHeader),
     /// Sampled Ethernet - Format (0,2)
-    SampledEthernet(crate::models::flow_records::SampledEthernet),
+    SampledEthernet(crate::models::record_flows::SampledEthernet),
     /// Sampled IPv4 - Format (0,3)
-    SampledIpv4(crate::models::flow_records::SampledIpv4),
+    SampledIpv4(crate::models::record_flows::SampledIpv4),
     /// Sampled IPv6 - Format (0,4)
-    SampledIpv6(crate::models::flow_records::SampledIpv6),
+    SampledIpv6(crate::models::record_flows::SampledIpv6),
     /// Extended Switch - Format (0,1001)
-    ExtendedSwitch(crate::models::flow_records::ExtendedSwitch),
+    ExtendedSwitch(crate::models::record_flows::ExtendedSwitch),
     /// Extended Router - Format (0,1002)
-    ExtendedRouter(crate::models::flow_records::ExtendedRouter),
+    ExtendedRouter(crate::models::record_flows::ExtendedRouter),
     /// Extended Gateway - Format (0,1003)
-    ExtendedGateway(crate::models::flow_records::ExtendedGateway),
+    ExtendedGateway(crate::models::record_flows::ExtendedGateway),
     /// Extended User - Format (0,1004)
-    ExtendedUser(crate::models::flow_records::ExtendedUser),
+    ExtendedUser(crate::models::record_flows::ExtendedUser),
     /// Extended URL - Format (0,1005)
     /// Note: This format is deprecated but kept for backward compatibility
-    ExtendedUrl(crate::models::flow_records::ExtendedUrl),
+    ExtendedUrl(crate::models::record_flows::ExtendedUrl),
     /// Extended MPLS - Format (0,1006)
-    ExtendedMpls(crate::models::flow_records::ExtendedMpls),
+    ExtendedMpls(crate::models::record_flows::ExtendedMpls),
     /// Extended NAT - Format (0,1007)
-    ExtendedNat(crate::models::flow_records::ExtendedNat),
+    ExtendedNat(crate::models::record_flows::ExtendedNat),
     /// Extended MPLS Tunnel - Format (0,1008)
-    ExtendedMplsTunnel(crate::models::flow_records::ExtendedMplsTunnel),
+    ExtendedMplsTunnel(crate::models::record_flows::ExtendedMplsTunnel),
     /// Extended MPLS VC - Format (0,1009)
-    ExtendedMplsVc(crate::models::flow_records::ExtendedMplsVc),
+    ExtendedMplsVc(crate::models::record_flows::ExtendedMplsVc),
     /// Extended MPLS FEC - Format (0,1010)
-    ExtendedMplsFec(crate::models::flow_records::ExtendedMplsFec),
+    ExtendedMplsFec(crate::models::record_flows::ExtendedMplsFec),
     /// Extended MPLS LVP FEC - Format (0,1011)
-    ExtendedMplsLvpFec(crate::models::flow_records::ExtendedMplsLvpFec),
+    ExtendedMplsLvpFec(crate::models::record_flows::ExtendedMplsLvpFec),
     /// Extended VLAN Tunnel - Format (0,1012)
-    ExtendedVlanTunnel(crate::models::flow_records::ExtendedVlanTunnel),
+    ExtendedVlanTunnel(crate::models::record_flows::ExtendedVlanTunnel),
     /// Extended 802.11 Payload - Format (0,1013)
-    Extended80211Payload(crate::models::flow_records::Extended80211Payload),
+    Extended80211Payload(crate::models::record_flows::Extended80211Payload),
     /// Extended 802.11 RX - Format (0,1014)
-    Extended80211Rx(crate::models::flow_records::Extended80211Rx),
+    Extended80211Rx(crate::models::record_flows::Extended80211Rx),
     /// Extended 802.11 TX - Format (0,1015)
-    Extended80211Tx(crate::models::flow_records::Extended80211Tx),
+    Extended80211Tx(crate::models::record_flows::Extended80211Tx),
     /// Extended 802.11 Aggregation - Format (0,1016)
-    Extended80211Aggregation(crate::models::flow_records::Extended80211Aggregation),
+    Extended80211Aggregation(crate::models::record_flows::Extended80211Aggregation),
     /// Unknown or unparsed format
     Unknown { format: DataFormat, data: Vec<u8> },
 }
@@ -155,55 +155,55 @@ pub struct FlowRecord {
 #[derive(Debug, Clone, PartialEq)]
 pub enum CounterData {
     /// Generic Interface Counters - Format (0,1)
-    GenericInterface(crate::models::counter_records::GenericInterfaceCounters),
+    GenericInterface(crate::models::record_counters::GenericInterfaceCounters),
     /// Ethernet Interface Counters - Format (0,2)
-    EthernetInterface(crate::models::counter_records::EthernetInterfaceCounters),
+    EthernetInterface(crate::models::record_counters::EthernetInterfaceCounters),
     /// Token Ring Counters - Format (0,3)
-    TokenRing(crate::models::counter_records::TokenRingCounters),
+    TokenRing(crate::models::record_counters::TokenRingCounters),
     /// 100BaseVG Counters - Format (0,4)
-    Vg100Interface(crate::models::counter_records::Vg100InterfaceCounters),
+    Vg100Interface(crate::models::record_counters::Vg100InterfaceCounters),
     /// VLAN Counters - Format (0,5)
-    Vlan(crate::models::counter_records::VlanCounters),
+    Vlan(crate::models::record_counters::VlanCounters),
     /// IEEE 802.11 Counters - Format (0,6)
-    Ieee80211(crate::models::counter_records::Ieee80211Counters),
+    Ieee80211(crate::models::record_counters::Ieee80211Counters),
     /// Processor Counters - Format (0,1001)
-    Processor(crate::models::counter_records::ProcessorCounters),
+    Processor(crate::models::record_counters::ProcessorCounters),
     /// Radio Utilization - Format (0,1002)
-    RadioUtilization(crate::models::counter_records::RadioUtilization),
+    RadioUtilization(crate::models::record_counters::RadioUtilization),
     /// Host Description - Format (0,2000)
-    HostDescription(crate::models::counter_records::HostDescription),
+    HostDescription(crate::models::record_counters::HostDescription),
     /// Host Adapters - Format (0,2001)
-    HostAdapters(crate::models::counter_records::HostAdapters),
+    HostAdapters(crate::models::record_counters::HostAdapters),
     /// Host Parent - Format (0,2002)
-    HostParent(crate::models::counter_records::HostParent),
+    HostParent(crate::models::record_counters::HostParent),
     /// Host CPU - Format (0,2003)
-    HostCpu(crate::models::counter_records::HostCpu),
+    HostCpu(crate::models::record_counters::HostCpu),
     /// Host Memory - Format (0,2004)
-    HostMemory(crate::models::counter_records::HostMemory),
+    HostMemory(crate::models::record_counters::HostMemory),
     /// Host Disk I/O - Format (0,2005)
-    HostDiskIo(crate::models::counter_records::HostDiskIo),
+    HostDiskIo(crate::models::record_counters::HostDiskIo),
     /// Host Network I/O - Format (0,2006)
-    HostNetIo(crate::models::counter_records::HostNetIo),
+    HostNetIo(crate::models::record_counters::HostNetIo),
     /// Virtual Node - Format (0,2100)
-    VirtualNode(crate::models::counter_records::VirtualNode),
+    VirtualNode(crate::models::record_counters::VirtualNode),
     /// Virtual CPU - Format (0,2101)
-    VirtualCpu(crate::models::counter_records::VirtualCpu),
+    VirtualCpu(crate::models::record_counters::VirtualCpu),
     /// Virtual Memory - Format (0,2102)
-    VirtualMemory(crate::models::counter_records::VirtualMemory),
+    VirtualMemory(crate::models::record_counters::VirtualMemory),
     /// Virtual Disk I/O - Format (0,2103)
-    VirtualDiskIo(crate::models::counter_records::VirtualDiskIo),
+    VirtualDiskIo(crate::models::record_counters::VirtualDiskIo),
     /// Virtual Network I/O - Format (0,2104)
-    VirtualNetIo(crate::models::counter_records::VirtualNetIo),
+    VirtualNetIo(crate::models::record_counters::VirtualNetIo),
     /// OpenFlow Port - Format (0,1004)
-    OpenFlowPort(crate::models::counter_records::OpenFlowPort),
+    OpenFlowPort(crate::models::record_counters::OpenFlowPort),
     /// OpenFlow Port Name - Format (0,1005)
-    OpenFlowPortName(crate::models::counter_records::OpenFlowPortName),
+    OpenFlowPortName(crate::models::record_counters::OpenFlowPortName),
     /// App Operations - Format (0,2202)
-    AppOperations(crate::models::counter_records::AppOperations),
+    AppOperations(crate::models::record_counters::AppOperations),
     /// App Resources - Format (0,2203)
-    AppResources(crate::models::counter_records::AppResources),
+    AppResources(crate::models::record_counters::AppResources),
     /// App Workers - Format (0,2206)
-    AppWorkers(crate::models::counter_records::AppWorkers),
+    AppWorkers(crate::models::record_counters::AppWorkers),
     /// Unknown or unparsed format
     Unknown { format: DataFormat, data: Vec<u8> },
 }

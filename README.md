@@ -24,25 +24,25 @@ The flows and counters types tables below list all sFlow structure numbers as de
 
 | Year | Specification | Description | Status |
 |------|--------------|-------------|--------|
-| 2004 | [sFlow Version 5](https://sflow.org/sflow_version_5.txt) | Core protocol, base flow and counter records | ✅ Implemented |
-| 2007 | [sFlow 802.11 Structures](https://sflow.org/sflow_80211.txt) | Wireless/802.11 monitoring extensions | ✅ Implemented |
-| 2010 | [sFlow Host Structures](https://sflow.org/sflow_host.txt) | Host and virtual machine performance metrics | ✅ Implemented |
-| 2011 | [sFlow HTTP Structures](https://sflow.org/sflow_http.txt) | HTTP performance metrics | ⬜ Not implemented |
-| 2011 | [sFlow Java Virtual Machine Structures](https://sflow.org/sflow_jvm.txt) | JVM performance metrics | ⬜ Not implemented |
-| 2011 | [sFlow Memcache Structures](https://sflow.org/sflow_memcache.txt) | Memcache performance metrics | ⬜ Not implemented |
-| 2012 | [sFlow NVML GPU Structures](https://sflow.org/sflow_nvml.txt) | NVIDIA GPU performance, status, and health | ⬜ Not implemented |
-| 2012 | [sFlow Application Structures](https://sflow.org/sflow_application.txt) | Application resource monitoring | ✅ Implemented |
-| 2012 | [sFlow LAG Counters Structure](https://sflow.org/sflow_lag.txt) | IEEE 802.1AX Link Aggregation (LACP) | ⬜ Not implemented |
-| 2012 | [sFlow Tunnel Structures](https://sflow.org/sflow_tunnels.txt) | Encapsulation/decapsulation (VXLAN, GRE, etc.) | ⬜ Not implemented |
-| 2012 | [sFlow Port NAT Structures](https://sflow.org/sflow_pnat.txt) | Port-based NAT mapping | ⬜ Not implemented |
-| 2013 | [sFlow InfiniBand Structures](https://sflow.org/draft_sflow_infiniband_2.txt) | InfiniBand network monitoring | ⬜ Not implemented |
-| 2014 | [sFlow OpenFlow Structures](https://sflow.org/sflow_openflow.txt) | OpenFlow port monitoring | ✅ Implemented |
-| 2015 | [sFlow Host TCP/IP Counters](https://sflow.org/sflow_host_ip.txt) | Host IP, ICMP, TCP, and UDP counters | ⬜ Not implemented |
-| 2015 | [sFlow Broadcom ASIC Table Utilization](https://sflow.org/sflow_broadcom_tables.txt) | Hardware table utilization for Broadcom ASICs | ⬜ Not implemented |
-| 2015 | [sFlow Broadcom Buffer Utilization](https://sflow.org/bv-sflow.txt) | Buffer utilization for Broadcom switches | ⬜ Not implemented |
-| 2016 | [sFlow Optical Interface Structures](https://sflow.org/sflow_optics.txt) | Pluggable optical modules (SFP, QSFP, etc.) | ⬜ Not implemented |
-| 2020 | [sFlow Dropped Packet Notification](https://sflow.org/sflow_drops.txt) | Reports on dropped packets with reason codes | ⬜ Not implemented |
-| 2021 | [sFlow Transit Delay Structures](https://sflow.org/sflow_transit.txt) | Delay and queue depth for sampled packets | ⬜ Not implemented |
+| 2004 | [sFlow Version 5](https://sflow.org/sflow_version_5.txt) | Core protocol, base flow and counter records | ✅ |
+| 2007 | [sFlow 802.11 Structures](https://sflow.org/sflow_80211.txt) | Wireless/802.11 monitoring extensions | ✅ |
+| 2010 | [sFlow Host Structures](https://sflow.org/sflow_host.txt) | Host and virtual machine performance metrics | ✅ |
+| 2011 | [sFlow HTTP Structures](https://sflow.org/sflow_http.txt) | HTTP performance metrics | ⬜ |
+| 2011 | [sFlow Java Virtual Machine Structures](https://sflow.org/sflow_jvm.txt) | JVM performance metrics | ⬜ |
+| 2011 | [sFlow Memcache Structures](https://sflow.org/sflow_memcache.txt) | Memcache performance metrics | ⬜ |
+| 2012 | [sFlow NVML GPU Structures](https://sflow.org/sflow_nvml.txt) | NVIDIA GPU performance, status, and health | ⬜ |
+| 2012 | [sFlow Application Structures](https://sflow.org/sflow_application.txt) | Application resource monitoring | ✅ |
+| 2012 | [sFlow LAG Counters Structure](https://sflow.org/sflow_lag.txt) | IEEE 802.1AX Link Aggregation (LACP) | ⬜ |
+| 2012 | [sFlow Tunnel Structures](https://sflow.org/sflow_tunnels.txt) | Encapsulation/decapsulation (VXLAN, GRE, etc.) | ⬜ |
+| 2012 | [sFlow Port NAT Structures](https://sflow.org/sflow_pnat.txt) | Port-based NAT mapping | ⬜ |
+| 2013 | [sFlow InfiniBand Structures](https://sflow.org/draft_sflow_infiniband_2.txt) | InfiniBand network monitoring | ⬜ |
+| 2014 | [sFlow OpenFlow Structures](https://sflow.org/sflow_openflow.txt) | OpenFlow port monitoring | ✅ |
+| 2015 | [sFlow Host TCP/IP Counters](https://sflow.org/sflow_host_ip.txt) | Host IP, ICMP, TCP, and UDP counters | ⬜ |
+| 2015 | [sFlow Broadcom ASIC Table Utilization](https://sflow.org/sflow_broadcom_tables.txt) | Hardware table utilization for Broadcom ASICs | ⬜ |
+| 2015 | [sFlow Broadcom Buffer Utilization](https://sflow.org/bv-sflow.txt) | Buffer utilization for Broadcom switches | ⬜ |
+| 2016 | [sFlow Optical Interface Structures](https://sflow.org/sflow_optics.txt) | Pluggable optical modules (SFP, QSFP, etc.) | ⬜ |
+| 2020 | [sFlow Dropped Packet Notification](https://sflow.org/sflow_drops.txt) | Reports on dropped packets with reason codes | ⬜ |
+| 2021 | [sFlow Transit Delay Structures](https://sflow.org/sflow_transit.txt) | Delay and queue depth for sampled packets | ⬜ |
 
 **Note:** See [sFlow Errata](https://sflow.org/developers/errata.php) for corrections to published specifications.
 

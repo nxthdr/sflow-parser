@@ -1,6 +1,6 @@
 //! Tests for counter record structures
 
-use sflow_parser::models::counter_records::*;
+use sflow_parser::models::record_counters::*;
 use sflow_parser::models::*;
 
 #[test]

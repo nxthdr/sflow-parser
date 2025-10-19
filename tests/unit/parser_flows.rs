@@ -1,6 +1,6 @@
 //! Tests for all flow record types and their parsing
 
-use sflow_parser::models::flow_records::*;
+use sflow_parser::models::record_flows::*;
 use sflow_parser::models::*;
 use std::net::{Ipv4Addr, Ipv6Addr};
 

@@ -164,7 +164,7 @@ fn test_unknown_agent_address() {
 #[test]
 fn test_unknown_header_protocol() {
     // Test that HeaderProtocol::from_u32 rejects invalid values
-    use sflow_parser::models::flow_records::HeaderProtocol;
+    use sflow_parser::models::record_flows::HeaderProtocol;
 
     // Valid protocols (1-17) should return Some
     for protocol in 1..=17 {
