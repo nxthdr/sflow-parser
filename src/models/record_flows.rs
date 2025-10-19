@@ -133,11 +133,11 @@ pub struct SampledEthernet {
     /// Length of MAC packet in bytes
     pub length: u32,
 
-    /// Source MAC address (6 bytes)
-    pub src_mac: [u8; 6], // TODO: use MacAddress
+    /// Source MAC address
+    pub src_mac: crate::models::MacAddress,
 
-    /// Destination MAC address (6 bytes)
-    pub dst_mac: [u8; 6], // TODO: use MacAddress
+    /// Destination MAC address
+    pub dst_mac: crate::models::MacAddress,
 
     /// Ethernet type
     pub eth_type: u32,
@@ -651,7 +651,7 @@ pub struct Extended80211Rx {
     pub ssid: String,
 
     /// BSSID (MAC address)
-    pub bssid: [u8; 6],
+    pub bssid: crate::models::MacAddress,
 
     /// IEEE 802.11 version (a=1, b=2, g=3, n=4)
     pub version: u32,
@@ -700,7 +700,7 @@ pub struct Extended80211Tx {
     pub ssid: String,
 
     /// BSSID (MAC address)
-    pub bssid: [u8; 6],
+    pub bssid: crate::models::MacAddress,
 
     /// IEEE 802.11 version (a=1, b=2, g=3, n=4)
     pub version: u32,

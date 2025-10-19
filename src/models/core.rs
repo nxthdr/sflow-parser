@@ -5,6 +5,61 @@
 
 use std::net::{Ipv4Addr, Ipv6Addr};
 
+/// MAC address (6 bytes)
+///
+/// Represents a 48-bit IEEE 802 MAC address.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MacAddress(pub [u8; 6]);
+
+impl MacAddress {
+    /// Create a new MAC address from 6 bytes
+    pub const fn new(bytes: [u8; 6]) -> Self {
+        Self(bytes)
+    }
+
+    /// Get the MAC address as a byte array
+    pub const fn as_bytes(&self) -> &[u8; 6] {
+        &self.0
+    }
+
+    /// Check if this is a broadcast address (FF:FF:FF:FF:FF:FF)
+    pub fn is_broadcast(&self) -> bool {
+        self.0 == [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
+    }
+
+    /// Check if this is a multicast address (first byte has LSB set)
+    pub fn is_multicast(&self) -> bool {
+        self.0[0] & 0x01 != 0
+    }
+
+    /// Check if this is a unicast address
+    pub fn is_unicast(&self) -> bool {
+        !self.is_multicast()
+    }
+}
+
+impl std::fmt::Display for MacAddress {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}",
+            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5]
+        )
+    }
+}
+
+impl From<[u8; 6]> for MacAddress {
+    fn from(bytes: [u8; 6]) -> Self {
+        Self(bytes)
+    }
+}
+
+impl From<MacAddress> for [u8; 6] {
+    fn from(mac: MacAddress) -> Self {
+        mac.0
+    }
+}
+
 /// sFlow datagram version
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DatagramVersion {

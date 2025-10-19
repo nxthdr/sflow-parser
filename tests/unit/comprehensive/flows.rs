@@ -604,7 +604,10 @@ fn test_parse_extended_80211_rx() {
             match &flow.flow_records[0].flow_data {
                 FlowData::Extended80211Rx(rx) => {
                     assert_eq!(rx.ssid, "TestNet");
-                    assert_eq!(rx.bssid, [0x00, 0x11, 0x22, 0x33, 0x44, 0x55]);
+                    assert_eq!(
+                        rx.bssid,
+                        MacAddress::from([0x00, 0x11, 0x22, 0x33, 0x44, 0x55])
+                    );
                     assert_eq!(rx.version, 4);
                     assert_eq!(rx.channel, 36);
                     assert_eq!(rx.speed, 1000);
@@ -649,7 +652,10 @@ fn test_parse_extended_80211_tx() {
             match &flow.flow_records[0].flow_data {
                 FlowData::Extended80211Tx(tx) => {
                     assert_eq!(tx.ssid, "MyAP");
-                    assert_eq!(tx.bssid, [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]);
+                    assert_eq!(
+                        tx.bssid,
+                        MacAddress::from([0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF])
+                    );
                     assert_eq!(tx.version, 3);
                     assert_eq!(tx.transmissions, 2);
                     assert_eq!(tx.channel, 6);

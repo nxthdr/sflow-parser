@@ -41,14 +41,20 @@ fn test_sampled_header_minimal() {
 fn test_sampled_ethernet_complete() {
     let eth = SampledEthernet {
         length: 1500,
-        src_mac: [0x00, 0x11, 0x22, 0x33, 0x44, 0x55],
-        dst_mac: [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF], // Broadcast
-        eth_type: 0x0800,                              // IPv4
+        src_mac: MacAddress::from([0x00, 0x11, 0x22, 0x33, 0x44, 0x55]),
+        dst_mac: MacAddress::from([0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]), // Broadcast
+        eth_type: 0x0800,                                                // IPv4
     };
 
     assert_eq!(eth.length, 1500);
-    assert_eq!(eth.src_mac, [0x00, 0x11, 0x22, 0x33, 0x44, 0x55]);
-    assert_eq!(eth.dst_mac, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
+    assert_eq!(
+        eth.src_mac,
+        MacAddress::from([0x00, 0x11, 0x22, 0x33, 0x44, 0x55])
+    );
+    assert_eq!(
+        eth.dst_mac,
+        MacAddress::from([0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF])
+    );
     assert_eq!(eth.eth_type, 0x0800);
 }
 
@@ -56,8 +62,8 @@ fn test_sampled_ethernet_complete() {
 fn test_sampled_ethernet_vlan() {
     let eth = SampledEthernet {
         length: 1504, // With VLAN tag
-        src_mac: [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF],
-        dst_mac: [0x01, 0x02, 0x03, 0x04, 0x05, 0x06],
+        src_mac: MacAddress::from([0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]),
+        dst_mac: MacAddress::from([0x01, 0x02, 0x03, 0x04, 0x05, 0x06]),
         eth_type: 0x8100, // VLAN tagged
     };
 
@@ -396,7 +402,7 @@ fn test_extended_80211_payload() {
 fn test_extended_80211_rx() {
     let rx = Extended80211Rx {
         ssid: "MyNetwork".to_string(),
-        bssid: [0x00, 0x11, 0x22, 0x33, 0x44, 0x55],
+        bssid: MacAddress::from([0x00, 0x11, 0x22, 0x33, 0x44, 0x55]),
         version: 4, // 802.11n
         channel: 6,
         speed: 300_000_000, // 300 Mbps in bps
@@ -406,7 +412,10 @@ fn test_extended_80211_rx() {
     };
 
     assert_eq!(rx.ssid, "MyNetwork");
-    assert_eq!(rx.bssid, [0x00, 0x11, 0x22, 0x33, 0x44, 0x55]);
+    assert_eq!(
+        rx.bssid,
+        MacAddress::from([0x00, 0x11, 0x22, 0x33, 0x44, 0x55])
+    );
     assert_eq!(rx.channel, 6);
     assert_eq!(rx.rsni, 180);
     assert_eq!(rx.rcpi, 90);
@@ -416,7 +425,7 @@ fn test_extended_80211_rx() {
 fn test_extended_80211_tx() {
     let tx = Extended80211Tx {
         ssid: "TestAP".to_string(),
-        bssid: [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF],
+        bssid: MacAddress::from([0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]),
         version: 3,       // 802.11ac
         transmissions: 2, // Retried once
         packet_duration: 1000,
@@ -427,6 +436,10 @@ fn test_extended_80211_tx() {
     };
 
     assert_eq!(tx.ssid, "TestAP");
+    assert_eq!(
+        tx.bssid,
+        MacAddress::from([0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF])
+    );
     assert_eq!(tx.transmissions, 2);
     assert_eq!(tx.channel, 149);
     assert_eq!(tx.power, 20);

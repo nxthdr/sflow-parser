@@ -181,3 +181,89 @@ fn test_expanded_structures() {
     assert_eq!(iface.format, 0);
     assert_eq!(iface.value, 0x1000000);
 }
+
+#[test]
+fn test_mac_address_creation() {
+    let mac = MacAddress::new([0x00, 0x11, 0x22, 0x33, 0x44, 0x55]);
+    assert_eq!(mac.as_bytes(), &[0x00, 0x11, 0x22, 0x33, 0x44, 0x55]);
+}
+
+#[test]
+fn test_mac_address_from() {
+    let mac = MacAddress::from([0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]);
+    assert_eq!(mac.as_bytes(), &[0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]);
+
+    // Test conversion back to array
+    let bytes: [u8; 6] = mac.into();
+    assert_eq!(bytes, [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]);
+}
+
+#[test]
+fn test_mac_address_broadcast() {
+    let broadcast = MacAddress::from([0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
+    assert!(broadcast.is_broadcast());
+    assert!(broadcast.is_multicast()); // Broadcast is also multicast
+    assert!(!broadcast.is_unicast());
+
+    let not_broadcast = MacAddress::from([0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE]);
+    assert!(!not_broadcast.is_broadcast());
+}
+
+#[test]
+fn test_mac_address_multicast() {
+    // Multicast address (LSB of first byte is 1)
+    let multicast = MacAddress::from([0x01, 0x00, 0x5E, 0x00, 0x00, 0x01]);
+    assert!(multicast.is_multicast());
+    assert!(!multicast.is_unicast());
+    assert!(!multicast.is_broadcast());
+
+    // Another multicast
+    let multicast2 = MacAddress::from([0x33, 0x33, 0x00, 0x00, 0x00, 0x01]);
+    assert!(multicast2.is_multicast());
+}
+
+#[test]
+fn test_mac_address_unicast() {
+    // Unicast address (LSB of first byte is 0)
+    let unicast = MacAddress::from([0x00, 0x11, 0x22, 0x33, 0x44, 0x55]);
+    assert!(unicast.is_unicast());
+    assert!(!unicast.is_multicast());
+    assert!(!unicast.is_broadcast());
+
+    // Another unicast
+    let unicast2 = MacAddress::from([0x08, 0x00, 0x27, 0x12, 0x34, 0x56]);
+    assert!(unicast2.is_unicast());
+}
+
+#[test]
+fn test_mac_address_display() {
+    let mac = MacAddress::from([0x00, 0x11, 0x22, 0x33, 0x44, 0x55]);
+    assert_eq!(format!("{}", mac), "00:11:22:33:44:55");
+
+    let mac2 = MacAddress::from([0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]);
+    assert_eq!(format!("{}", mac2), "aa:bb:cc:dd:ee:ff");
+
+    let broadcast = MacAddress::from([0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
+    assert_eq!(format!("{}", broadcast), "ff:ff:ff:ff:ff:ff");
+}
+
+#[test]
+fn test_mac_address_equality() {
+    let mac1 = MacAddress::from([0x00, 0x11, 0x22, 0x33, 0x44, 0x55]);
+    let mac2 = MacAddress::from([0x00, 0x11, 0x22, 0x33, 0x44, 0x55]);
+    let mac3 = MacAddress::from([0x00, 0x11, 0x22, 0x33, 0x44, 0x56]);
+
+    assert_eq!(mac1, mac2);
+    assert_ne!(mac1, mac3);
+}
+
+#[test]
+fn test_mac_address_copy() {
+    let mac1 = MacAddress::from([0x00, 0x11, 0x22, 0x33, 0x44, 0x55]);
+    let mac2 = mac1; // Copy (implicit)
+    let mac3 = mac1; // Copy again (can still use mac1 because it's Copy)
+
+    assert_eq!(mac1, mac2);
+    assert_eq!(mac1, mac3);
+    assert_eq!(mac2, mac3);
+}

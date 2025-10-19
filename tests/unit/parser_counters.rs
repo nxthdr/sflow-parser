@@ -4,6 +4,7 @@
 //! by integration tests (less common counter types).
 
 use sflow_parser::models::record_counters::*;
+use sflow_parser::models::MacAddress;
 
 #[test]
 fn test_token_ring_counters_structure() {
@@ -88,11 +89,11 @@ fn test_radio_utilization() {
 fn test_host_adapters() {
     let adapter1 = HostAdapter {
         if_index: 1,
-        mac_addresses: vec![[0x00, 0x11, 0x22, 0x33, 0x44, 0x55]],
+        mac_addresses: vec![MacAddress::from([0x00, 0x11, 0x22, 0x33, 0x44, 0x55])],
     };
     let adapter2 = HostAdapter {
         if_index: 2,
-        mac_addresses: vec![[0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]],
+        mac_addresses: vec![MacAddress::from([0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF])],
     };
 
     let counters = HostAdapters {

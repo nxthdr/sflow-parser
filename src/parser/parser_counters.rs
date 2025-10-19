@@ -244,9 +244,9 @@ impl<R: Read> Parser<R> {
             let mut mac_addresses = Vec::with_capacity(capacity_macs);
 
             for _ in 0..num_macs {
-                let mut mac = [0u8; 6];
-                self.reader.read_exact(&mut mac)?;
-                mac_addresses.push(mac);
+                let mut mac_bytes = [0u8; 6];
+                self.reader.read_exact(&mut mac_bytes)?;
+                mac_addresses.push(crate::models::MacAddress::from(mac_bytes));
             }
 
             adapters.push(crate::models::record_counters::HostAdapter {

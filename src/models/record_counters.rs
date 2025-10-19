@@ -468,7 +468,7 @@ pub struct HostAdapter {
     pub if_index: u32,
 
     /// MAC addresses
-    pub mac_addresses: Vec<[u8; 6]>,
+    pub mac_addresses: Vec<crate::models::MacAddress>,
 }
 
 /// Host Parent - Format (0,2002)

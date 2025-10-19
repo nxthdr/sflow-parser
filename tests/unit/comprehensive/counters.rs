@@ -438,12 +438,12 @@ fn test_parse_host_adapters() {
                     assert_eq!(adapters.adapters[0].mac_addresses.len(), 1);
                     assert_eq!(
                         adapters.adapters[0].mac_addresses[0],
-                        [0x00, 0x11, 0x22, 0x33, 0x44, 0x55]
+                        MacAddress::from([0x00, 0x11, 0x22, 0x33, 0x44, 0x55])
                     );
                     assert_eq!(adapters.adapters[1].if_index, 2);
                     assert_eq!(
                         adapters.adapters[1].mac_addresses[0],
-                        [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]
+                        MacAddress::from([0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF])
                     );
                 }
                 _ => panic!("Expected HostAdapters"),

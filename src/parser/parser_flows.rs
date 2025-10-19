@@ -36,10 +36,13 @@ impl<R: Read> Parser<R> {
     ) -> Result<crate::models::record_flows::SampledEthernet> {
         let length = self.read_u32()?;
 
-        let mut src_mac = [0u8; 6];
-        self.reader.read_exact(&mut src_mac)?;
-        let mut dst_mac = [0u8; 6];
-        self.reader.read_exact(&mut dst_mac)?;
+        let mut src_mac_bytes = [0u8; 6];
+        self.reader.read_exact(&mut src_mac_bytes)?;
+        let src_mac = crate::models::MacAddress::from(src_mac_bytes);
+
+        let mut dst_mac_bytes = [0u8; 6];
+        self.reader.read_exact(&mut dst_mac_bytes)?;
+        let dst_mac = crate::models::MacAddress::from(dst_mac_bytes);
 
         let eth_type = self.read_u32()?;
 
@@ -349,8 +352,9 @@ impl<R: Read> Parser<R> {
     ) -> Result<crate::models::record_flows::Extended80211Rx> {
         let ssid = self.read_string()?;
 
-        let mut bssid = [0u8; 6];
-        self.reader.read_exact(&mut bssid)?;
+        let mut bssid_bytes = [0u8; 6];
+        self.reader.read_exact(&mut bssid_bytes)?;
+        let bssid = crate::models::MacAddress::from(bssid_bytes);
         // Skip 2 bytes of padding to maintain 4-byte alignment
         self.reader.read_exact(&mut [0u8; 2])?;
 
@@ -379,8 +383,9 @@ impl<R: Read> Parser<R> {
     ) -> Result<crate::models::record_flows::Extended80211Tx> {
         let ssid = self.read_string()?;
 
-        let mut bssid = [0u8; 6];
-        self.reader.read_exact(&mut bssid)?;
+        let mut bssid_bytes = [0u8; 6];
+        self.reader.read_exact(&mut bssid_bytes)?;
+        let bssid = crate::models::MacAddress::from(bssid_bytes);
         // Skip 2 bytes of padding to maintain 4-byte alignment
         self.reader.read_exact(&mut [0u8; 2])?;
 
