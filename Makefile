@@ -1,4 +1,4 @@
-.PHONY: help test test-unit test-integration test-unit-verbose test-integration-verbose test-all test-verbose test-lib test-validate bench coverage coverage-html coverage-open coverage-lcov coverage-unit coverage-integration clean build build-release build-all check fmt fmt-check clippy clippy-strict doc doc-open doc-all install-tools audit outdated
+.PHONY: help test test-unit test-integration test-unit-verbose test-integration-verbose test-all test-verbose test-lib specs-validate bench coverage coverage-html coverage-open coverage-lcov coverage-unit coverage-integration clean build build-release build-all check fmt fmt-check clippy clippy-strict doc doc-open doc-all install-tools audit outdated
 
 # Testing targets
 test:
@@ -32,7 +32,7 @@ test-lib:
 	@echo "Running library tests..."
 	cargo test --lib
 
-test-validate:
+specs-validate:
 	@echo "Validating implementation against official sFlow specifications..."
 	@echo "Note: This requires network access to download spec documents"
 	cargo test validation::specs_validation::tests::test_validate_against_specs -- --nocapture --ignored

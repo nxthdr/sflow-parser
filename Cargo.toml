@@ -10,16 +10,17 @@ keywords = ["sflow", "parser"]
 edition = "2021"
 exclude = [
     ".github/*",
+    "benches/*",
     "tests/*",
+    "codecov.yml",
     "renovate.json",
 ]
 
 [dev-dependencies]
-regex = "1"
-ureq = "3"
 criterion = "0.5"
+regex = "1"
 syn = { version = "2", features = ["full", "parsing"] }
-quote = "1"
+ureq = "3"
 
 [[bench]]
 name = "parser_benchmark"

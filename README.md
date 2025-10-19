@@ -6,12 +6,12 @@
 [![Codecov](https://img.shields.io/codecov/c/github/nxthdr/sflow-parser?logo=codecov)](https://codecov.io/gh/nxthdr/sflow-parser)
 [![License](https://img.shields.io/crates/l/sflow-parser)](LICENSE)
 
-A dependency-free Rust library for parsing InMon sFlow version 5 datagrams as specified in [https://sflow.org/sflow_version_5.txt](https://sflow.org/sflow_version_5.txt).
+A dependency-free Rust library for parsing InMon sFlow version 5 datagrams.
 
 ## Implementation Status
 
-All core sFlow v5 specifications and common extensions are implemented.
-Each implemented flow and counter record type has a corresponding unit test.
+Main sFlow v5 specification and common extensions are implemented.
+Each implemented flow and counter record is covered by a unit test and programmatically validated against the official sFlow specification documents.
 
 The flows and counters types tables below list all sFlow structure numbers as defined in the [official sFlow structure registry](https://sflow.org/developers/structures.php).
 
@@ -21,6 +21,8 @@ The flows and counters types tables below list all sFlow structure numbers as de
 - ⚠️ Deprecated
 
 ### Specifications
+
+The main specification is [sFlow Version 5](https://sflow.org/sflow_version_5.txt) from 2004, but many extensions have been published since to support additional monitoring use cases.
 
 | Year | Specification | Description | Status |
 |------|--------------|-------------|--------|
@@ -46,43 +48,19 @@ The flows and counters types tables below list all sFlow structure numbers as de
 
 **Note:** See [sFlow Errata](https://sflow.org/developers/errata.php) for corrections to published specifications.
 
-### Core Features
-
-**Datagram Structure:**
-- Version 5 protocol support
-- Agent address (IPv4/IPv6)
-- Sub-agent ID for distributed architectures
-- Sequence number tracking
-- System uptime
-- Multiple samples per datagram
-
-**Sample Types:**
+### Sample Types
 
 sFlow datagrams contain sample records. Each sample record has a format type that determines its structure:
 
-| Enterprise | Format | Name | Description | Status |
-|-----------|--------|------|-------------|--------|
-| 0 | 1 | Flow Sample | Compact format for ifIndex < 2^24 | ✅ |
-| 0 | 2 | Counters Sample | Compact format for ifIndex < 2^24 | ✅ |
-| 0 | 3 | Flow Sample Expanded | Extended format for ifIndex >= 2^24 | ✅ |
-| 0 | 4 | Counters Sample Expanded | Extended format for ifIndex >= 2^24 | ✅ |
-| 0 | 5 | Discarded Packet | Dropped packet with reason code | ⬜ |
+| Enterprise | Format | Name | Specification | Status |
+|-----------|--------|------|---------------|--------|
+| 0 | 1 | Flow Sample | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
+| 0 | 2 | Counters Sample | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
+| 0 | 3 | Flow Sample Expanded | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
+| 0 | 4 | Counters Sample Expanded | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
+| 0 | 5 | Discarded Packet | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ⬜ |
 
 Each sample contains one or more flow records (for flow samples) or counter records (for counter samples).
-
-**Data Encoding:**
-- XDR (External Data Representation)
-- Big-endian byte order
-- 4-byte alignment
-- Opaque data handling
-- Variable-length arrays
-
-**Core Data Types:**
-- Address types: IPv4, IPv6, Unknown
-- DataFormat: enterprise (20 bits) + format (12 bits)
-- DataSource: source type (8 bits) + index (24 bits)
-- Interface: format (2 bits) + value (30 bits)
-- Expanded variants for large ifIndex values
 
 ### Flow Records
 
@@ -224,19 +202,19 @@ make test-integration  # Run integration tests only
 The project includes comprehensive fuzz testing using `cargo-fuzz`:
 
 ```bash
-make fuzz-install    # Install fuzzing tools (requires nightly Rust)
-make fuzz-single     # Fuzz single datagram parsing (60s)
-make fuzz-multiple   # Fuzz multiple datagrams parsing (60s)
-make fuzz-structured # Fuzz with structured inputs (60s)
-make fuzz-all        # Run all fuzzers (5 minutes each)
+make fuzz-install     # Install fuzzing tools (requires nightly Rust)
+make fuzz-single      # Fuzz single datagram parsing (60s)
+make fuzz-multiple    # Fuzz multiple datagrams parsing (60s)
+make fuzz-structured  # Fuzz with structured inputs (60s)
+make fuzz-all         # Run all fuzzers (5 minutes each)
 ```
 
-## Specifications Validation
+### Specifications Validation
 
 The project includes comprehensive validation against official sFlow specification documents using `syn` crate to parse Rust source files and extract sFlow struct metadata:
 
 ```bash
-make test-validate
+make specs-validate  # Validate implementation against official sFlow specifications
 ```
 
 ### Benchmarks
