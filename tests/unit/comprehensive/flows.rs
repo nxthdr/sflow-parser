@@ -703,6 +703,37 @@ fn test_parse_extended_80211_aggregation() {
 }
 
 #[test]
+fn test_parse_extended_openflow_v1() {
+    // Extended OpenFlow v1: flow_cookie(8) + flow_match(4) + flow_actions(4) = 16 bytes
+    let record_data = [
+        0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0, // flow_cookie = 0x123456789ABCDEF0
+        0x00, 0x00, 0x38, 0x20, // flow_match = 0x00003820 (wildcards)
+        0x00, 0x00, 0x00, 0x41, // flow_actions = 0x00000041 (OUTPUT + SET_VLAN_VID)
+    ];
+
+    let data = build_flow_sample_test(0x03F9, &record_data); // record type = 1017
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedOpenFlowV1(of) => {
+                    assert_eq!(of.flow_cookie, 0x123456789ABCDEF0);
+                    assert_eq!(of.flow_match, 0x00003820);
+                    assert_eq!(of.flow_actions, 0x00000041);
+                }
+                _ => panic!("Expected ExtendedOpenFlowV1"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
 fn test_parse_extended_socket_ipv4() {
     // Extended Socket IPv4: protocol(4) + local_ip(4) + remote_ip(4) + local_port(4) + remote_port(4) = 20 bytes
     let record_data = [

@@ -18,7 +18,7 @@ The flows and counters types tables below list all sFlow structure numbers as de
 **Status Legend:**
 - ✅ Implemented
 - ⬜ Not implemented
-- ⚠️ Deprecated (not supported)
+- ⚠️ Deprecated
 
 ### Specifications
 
@@ -96,7 +96,7 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 1002 | Extended Router | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
 | 0 | 1003 | Extended Gateway (BGP) | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
 | 0 | 1004 | Extended User | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
-| 0 | 1005 | Extended URL (deprecated) | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ⚠️ |
+| 0 | 1005 | Extended URL (deprecated) | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ ⚠️ |
 | 0 | 1006 | Extended MPLS | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
 | 0 | 1007 | Extended NAT | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
 | 0 | 1008 | Extended MPLS Tunnel | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
@@ -108,7 +108,7 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 1014 | Extended 802.11 RX | [sFlow 802.11](https://sflow.org/sflow_80211.txt) | ✅ |
 | 0 | 1015 | Extended 802.11 TX | [sFlow 802.11](https://sflow.org/sflow_80211.txt) | ✅ |
 | 0 | 1016 | Extended 802.11 Aggregation | [sFlow 802.11](https://sflow.org/sflow_80211.txt) | ✅ |
-| 0 | 1017 | Extended OpenFlow v1 (deprecated) | [sFlow OpenFlow](https://sflow.org/draft-sflow-openflow.txt) | ⚠️ |
+| 0 | 1017 | Extended OpenFlow v1 (deprecated) | [sFlow OpenFlow Draft](https://sflow.org/draft-sflow-openflow.txt) | ✅ ⚠️ |
 | 0 | 1018 | Extended Fibre Channel | [sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0244.html) | ⬜ |
 | 0 | 1019 | Extended Queue Length | [sFlow Discussion](http://groups.google.com/group/sflow/browse_thread/thread/773d27b17a81600c) | ⬜ |
 | 0 | 1020 | Extended NAT Port | [sFlow Port NAT](https://sflow.org/sflow_pnat.txt) | ⬜ |
@@ -143,7 +143,7 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 2102 | Extended Proxy Socket IPv4 | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ⬜ |
 | 0 | 2103 | Extended Proxy Socket IPv6 | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ⬜ |
 | 0 | 2200 | Memcache Operation | [sFlow Memcache](https://sflow.org/sflow_memcache.txt) | ⬜ |
-| 0 | 2201 | HTTP Request (deprecated) | [sFlow Discussion](http://groups.google.com/group/sflow/browse_thread/thread/88accb2bad594d1d) | ⚠️ |
+| 0 | 2201 | HTTP Request (deprecated) | [sFlow Discussion](http://groups.google.com/group/sflow/browse_thread/thread/88accb2bad594d1d) | ⬜ ⚠️ |
 | 0 | 2202 | App Operation | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
 | 0 | 2203 | App Parent Context | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
 | 0 | 2204 | App Initiator | [sFlow Application](https://sflow.org/sflow_application.txt) | ⬜ |
@@ -192,7 +192,7 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 2104 | Virtual Network I/O | [sFlow Host](https://sflow.org/sflow_host.txt) | ✅ |
 | 0 | 2105 | JVM Runtime | [sFlow JVM](https://sflow.org/sflow_jvm.txt) | ⬜ |
 | 0 | 2106 | JVM Statistics | [sFlow JVM](https://sflow.org/sflow_jvm.txt) | ⬜ |
-| 0 | 2200 | Memcache Counters (deprecated) | [sFlow Discussion](https://groups.google.com/g/sflow/c/KDk_QrxCSJI) | ⚠️ |
+| 0 | 2200 | Memcache Counters (deprecated) | [sFlow Discussion](https://groups.google.com/g/sflow/c/KDk_QrxCSJI) | ⬜ ⚠️ |
 | 0 | 2201 | HTTP Counters | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ⬜ |
 | 0 | 2202 | App Operations | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
 | 0 | 2203 | App Resources | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |

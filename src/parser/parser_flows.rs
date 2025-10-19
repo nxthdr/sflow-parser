@@ -434,6 +434,21 @@ impl<R: Read> Parser<R> {
         Ok(crate::models::record_flows::Extended80211Aggregation { pdus })
     }
 
+    /// Parse Extended OpenFlow v1 - Format (0,1017) - DEPRECATED
+    pub(super) fn parse_extended_openflow_v1(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedOpenFlowV1> {
+        let flow_cookie = self.read_u64()?;
+        let flow_match = self.read_u32()?;
+        let flow_actions = self.read_u32()?;
+
+        Ok(crate::models::record_flows::ExtendedOpenFlowV1 {
+            flow_cookie,
+            flow_match,
+            flow_actions,
+        })
+    }
+
     /// Parse Extended Socket IPv4 - Format (0,2100)
     pub(super) fn parse_extended_socket_ipv4(
         &mut self,
@@ -570,6 +585,10 @@ impl<R: Read> Parser<R> {
                 1015 => Ok(FlowData::Extended80211Tx(parser.parse_extended_80211_tx()?)),
                 1016 => Ok(FlowData::Extended80211Aggregation(
                     parser.parse_extended_80211_aggregation()?,
+                )),
+                // Note: Format 1017 is deprecated but kept for backward compatibility
+                1017 => Ok(FlowData::ExtendedOpenFlowV1(
+                    parser.parse_extended_openflow_v1()?,
                 )),
                 2100 => Ok(FlowData::ExtendedSocketIpv4(
                     parser.parse_extended_socket_ipv4()?,

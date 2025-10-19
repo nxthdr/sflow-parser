@@ -759,6 +759,40 @@ pub struct Extended80211Aggregation {
     pub pdus: Vec<Pdu>,
 }
 
+/// Extended OpenFlow v1 - Format (0,1017) - **DEPRECATED**
+///
+/// OpenFlow 1.0 forwarding information
+///
+/// **Note:** This format was defined in an early draft of the sFlow OpenFlow specification
+/// but was deprecated and removed from the final specification. It is included here for
+/// backward compatibility with legacy implementations.
+///
+/// # XDR Definition ([sFlow OpenFlow Draft](https://sflow.org/draft-sflow-openflow.txt))
+///
+/// ```text
+/// /* Extended OpenFlow 1.0 Data */
+/// /* opaque = flow_data; enterprise = 0; format = 1017 */
+///
+/// struct extended_openflow_v1 {
+///     unsigned hyper flow_cookie;  /* Flow cookie set by controller */
+///     wildcards flow_match;        /* Bit array of wildcarded fields */
+///     actions flow_actions;        /* Bit array of actions applied */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedOpenFlowV1 {
+    /// Flow cookie set by the OpenFlow controller
+    pub flow_cookie: u64,
+
+    /// Bit array describing the fields in the packet header that are used to form the flow key
+    /// See OpenFlow 1.0 ofp_match for the definition of wildcards
+    pub flow_match: u32,
+
+    /// Bit array describing fields that may have been altered by the flow action
+    /// The ofp_action_type enum is used to determine the bit positions
+    pub flow_actions: u32,
+}
+
 /// Extended Socket IPv4 - Format (0,2100)
 ///
 /// IPv4 socket information for application transactions

@@ -195,6 +195,8 @@ pub enum FlowData {
     Extended80211Tx(crate::models::record_flows::Extended80211Tx),
     /// Extended 802.11 Aggregation - Format (0,1016)
     Extended80211Aggregation(crate::models::record_flows::Extended80211Aggregation),
+    /// Extended OpenFlow v1 - Format (0,1017) - DEPRECATED
+    ExtendedOpenFlowV1(crate::models::record_flows::ExtendedOpenFlowV1),
     /// Extended Socket IPv4 - Format (0,2100)
     ExtendedSocketIpv4(crate::models::record_flows::ExtendedSocketIpv4),
     /// Extended Socket IPv6 - Format (0,2101)

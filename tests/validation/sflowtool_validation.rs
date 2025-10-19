@@ -291,7 +291,30 @@ mod tests {
     #[ignore] // Requires network access
     fn test_validate_all_formats_live() {
         let content = download_sflow_h().expect("Failed to download sflow.h");
-        let validations = validate_all_formats(&content).expect("Failed to validate");
+        let mut validations = validate_all_formats(&content).expect("Failed to validate");
+
+        // Filter out "Unknown" entries (formats without matched structs)
+        validations.retain(|v| v.name != "Unknown");
+
+        // Separate into flows and counters, then sort each by (enterprise, format)
+        let mut flow_validations: Vec<_> = validations
+            .iter()
+            .filter(|v| !v.name.contains("counter") && !v.name.contains("Counter"))
+            .collect();
+        let mut counter_validations: Vec<_> = validations
+            .iter()
+            .filter(|v| v.name.contains("counter") || v.name.contains("Counter"))
+            .collect();
+
+        // Sort by (enterprise, format)
+        flow_validations.sort_by_key(|v| (v.enterprise, v.format));
+        counter_validations.sort_by_key(|v| (v.enterprise, v.format));
+
+        // Combine: flows first, then counters
+        let sorted_validations: Vec<_> = flow_validations
+            .into_iter()
+            .chain(counter_validations.into_iter())
+            .collect();
 
         println!("\n=== sFlow Format Validation Report ===\n");
 
@@ -305,15 +328,39 @@ mod tests {
         let registry = build_registry_from_source(&src_dir).expect("Failed to build registry");
 
         // Track format numbers to detect duplicates
-        let mut format_tracker: std::collections::HashMap<(u32, u32), Vec<String>> =
+        // Note: Same format number can be used for both flow_data and counter_data
+        let mut format_tracker: std::collections::HashMap<(u32, u32, String), Vec<String>> =
             std::collections::HashMap::new();
 
-        for validation in &validations {
+        let mut current_type = String::new();
+        for validation in &sorted_validations {
             total_count += 1;
 
-            // Track format numbers for conflict detection
+            // Determine data type from struct name
+            let data_type =
+                if validation.name.contains("counter") || validation.name.contains("Counter") {
+                    "counter_data"
+                } else {
+                    "flow_data"
+                };
+
+            // Print section headers when switching between flows and counters
+            if current_type != data_type {
+                if data_type == "flow_data" {
+                    println!("=== FLOW RECORDS ===\n");
+                } else {
+                    println!("\n=== COUNTER RECORDS ===\n");
+                }
+                current_type = data_type.to_string();
+            }
+
+            // Track format numbers for conflict detection (including data type)
             format_tracker
-                .entry((validation.enterprise, validation.format))
+                .entry((
+                    validation.enterprise,
+                    validation.format,
+                    data_type.to_string(),
+                ))
                 .or_default()
                 .push(validation.name.clone());
 
@@ -393,14 +440,15 @@ mod tests {
             }
         }
 
-        // Check for duplicate format numbers
+        // Check for duplicate format numbers within the same data type
         let mut duplicate_formats = Vec::new();
-        for ((ent, fmt), names) in &format_tracker {
+        for ((ent, fmt, data_type), names) in &format_tracker {
             if names.len() > 1 {
                 duplicate_formats.push(format!(
-                    "({},{:4}) used by: {}",
+                    "({},{:4}) [{}] used by: {}",
                     ent,
                     fmt,
+                    data_type,
                     names.join(", ")
                 ));
             }

@@ -169,6 +169,12 @@ fn test_parse_sflow_bin() {
                             FlowData::Extended80211Aggregation(agg) => {
                                 println!("Extended80211Aggregation(pdu_count={})", agg.pdus.len());
                             }
+                            FlowData::ExtendedOpenFlowV1(of) => {
+                                println!(
+                                    "ExtendedOpenFlowV1(cookie=0x{:016x}, match=0x{:08x}, actions=0x{:08x})",
+                                    of.flow_cookie, of.flow_match, of.flow_actions
+                                );
+                            }
                             FlowData::ExtendedSocketIpv4(sock) => {
                                 println!(
                                     "ExtendedSocketIpv4(proto={}, {}:{} -> {}:{})",
@@ -816,6 +822,9 @@ fn test_parsed_flow_data() {
                         }
                         FlowData::Extended80211Aggregation(_) => {
                             // 802.11 aggregation - count but don't track separately
+                        }
+                        FlowData::ExtendedOpenFlowV1(_) => {
+                            // OpenFlow v1 (deprecated) - count but don't track separately
                         }
                         FlowData::ExtendedSocketIpv4(_) => {
                             // Extended socket IPv4 - count but don't track separately

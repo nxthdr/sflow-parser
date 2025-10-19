@@ -916,22 +916,36 @@ struct sampled_header {
         let mut implemented_count = 0;
         let mut total_count = 0;
 
-        // Sort validations: first by data_type (flow_data before counter_data), then by format number
+        // Sort validations: first by data_type (flow_data before counter_data), then by (enterprise, format)
         let mut sorted_validations = validations.clone();
         sorted_validations.sort_by(|a, b| {
             // First sort by data_type (flow_data before counter_data)
             // Since "counter_data" < "flow_data" alphabetically, we need to reverse
             match b.data_type.cmp(&a.data_type) {
                 std::cmp::Ordering::Equal => {
-                    // Then by format number
-                    a.format.cmp(&b.format)
+                    // Then by (enterprise, format)
+                    match a.enterprise.cmp(&b.enterprise) {
+                        std::cmp::Ordering::Equal => a.format.cmp(&b.format),
+                        other => other,
+                    }
                 }
                 other => other,
             }
         });
 
+        let mut current_type = String::new();
         for v in &sorted_validations {
             total_count += 1;
+
+            // Print section headers when switching between flows and counters
+            if current_type != v.data_type {
+                if v.data_type == "flow_data" {
+                    println!("=== FLOW RECORDS ===\n");
+                } else {
+                    println!("\n=== COUNTER RECORDS ===\n");
+                }
+                current_type = v.data_type.clone();
+            }
 
             // Determine emoji based on implementation AND field validation
             let has_field_issues = !v.field_issues.is_empty();

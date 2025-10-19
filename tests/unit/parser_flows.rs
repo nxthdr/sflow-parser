@@ -465,6 +465,19 @@ fn test_extended_80211_aggregation() {
 }
 
 #[test]
+fn test_extended_openflow_v1() {
+    let openflow = ExtendedOpenFlowV1 {
+        flow_cookie: 0x123456789ABCDEF0,
+        flow_match: 0x00003820,   // Example wildcards
+        flow_actions: 0x00000041, // Example actions (OUTPUT + SET_VLAN_VID)
+    };
+
+    assert_eq!(openflow.flow_cookie, 0x123456789ABCDEF0);
+    assert_eq!(openflow.flow_match, 0x00003820);
+    assert_eq!(openflow.flow_actions, 0x00000041);
+}
+
+#[test]
 fn test_extended_socket_ipv4() {
     use std::net::Ipv4Addr;
 
