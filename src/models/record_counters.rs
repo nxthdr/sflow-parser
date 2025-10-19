@@ -250,7 +250,7 @@ pub struct Vg100InterfaceCounters {
     pub dot12_in_norm_priority_frames: u32,
     pub dot12_in_norm_priority_octets: u64,
     pub dot12_in_ipm_errors: u32,
-    pub dot12_in_oversized_frame_errors: u32,
+    pub dot12_in_oversize_frame_errors: u32,
     pub dot12_in_data_errors: u32,
     pub dot12_in_null_addressed_frames: u32,
     pub dot12_out_high_priority_frames: u32,
@@ -730,7 +730,7 @@ pub struct HostNetIo {
     pub bytes_out: u64,
 
     /// Packets transmitted
-    pub pkts_out: u32,
+    pub packets_out: u32,
 
     /// Transmit errors
     pub errs_out: u32,
@@ -759,14 +759,20 @@ pub struct HostNetIo {
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VirtualNode {
-    /// Memory in bytes
+    /// Expected CPU frequency in MHz
+    pub mhz: u32,
+
+    /// Number of active CPUs
+    pub cpus: u32,
+
+    /// Memory size in bytes
     pub memory: u64,
 
-    /// Number of virtual CPUs
-    pub num_cpus: u32,
+    /// Unassigned memory in bytes
+    pub memory_free: u64,
 
-    /// CPU time in milliseconds
-    pub cpu_time: u32,
+    /// Number of active domains
+    pub num_domains: u32,
 }
 
 /// Virtual CPU - Format (0,2101)
@@ -792,6 +798,9 @@ pub struct VirtualCpu {
 
     /// CPU time in milliseconds
     pub cpu_time: u32,
+
+    /// Number of virtual CPUs
+    pub nr_virt_cpu: u32,
 }
 
 /// Virtual Memory - Format (0,2102)
@@ -893,7 +902,7 @@ pub struct VirtualNetIo {
     pub rx_bytes: u64,
 
     /// Packets received
-    pub rx_pkts: u32,
+    pub rx_packets: u32,
 
     /// Receive errors
     pub rx_errs: u32,
@@ -905,7 +914,7 @@ pub struct VirtualNetIo {
     pub tx_bytes: u64,
 
     /// Packets transmitted
-    pub tx_pkts: u32,
+    pub tx_packets: u32,
 
     /// Transmit errors
     pub tx_errs: u32,

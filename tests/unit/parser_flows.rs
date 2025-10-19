@@ -283,25 +283,25 @@ fn test_extended_url() {
 fn test_extended_mpls() {
     let mpls = ExtendedMpls {
         next_hop: Address::IPv4(Ipv4Addr::new(10, 0, 0, 1)),
-        in_label_stack: vec![100, 200, 300],
-        out_label_stack: vec![400, 500],
+        in_stack: vec![100, 200, 300],
+        out_stack: vec![400, 500],
     };
 
-    assert_eq!(mpls.in_label_stack.len(), 3);
-    assert_eq!(mpls.out_label_stack.len(), 2);
-    assert_eq!(mpls.in_label_stack[0], 100);
+    assert_eq!(mpls.in_stack.len(), 3);
+    assert_eq!(mpls.out_stack.len(), 2);
+    assert_eq!(mpls.in_stack[0], 100);
 }
 
 #[test]
 fn test_extended_mpls_empty_stacks() {
     let mpls = ExtendedMpls {
         next_hop: Address::IPv4(Ipv4Addr::new(10, 0, 0, 1)),
-        in_label_stack: vec![],
-        out_label_stack: vec![],
+        in_stack: vec![],
+        out_stack: vec![],
     };
 
-    assert_eq!(mpls.in_label_stack.len(), 0);
-    assert_eq!(mpls.out_label_stack.len(), 0);
+    assert_eq!(mpls.in_stack.len(), 0);
+    assert_eq!(mpls.out_stack.len(), 0);
 }
 
 #[test]
@@ -320,12 +320,12 @@ fn test_extended_nat() {
 #[test]
 fn test_extended_mpls_tunnel() {
     let tunnel = ExtendedMplsTunnel {
-        tunnel_name: "tunnel0".to_string(),
+        tunnel_lsp_name: "tunnel0".to_string(),
         tunnel_id: 12345,
         tunnel_cos: 5,
     };
 
-    assert_eq!(tunnel.tunnel_name, "tunnel0");
+    assert_eq!(tunnel.tunnel_lsp_name, "tunnel0");
     assert_eq!(tunnel.tunnel_id, 12345);
     assert_eq!(tunnel.tunnel_cos, 5);
 }
@@ -357,10 +357,10 @@ fn test_extended_mpls_fec() {
 #[test]
 fn test_extended_mpls_lvp_fec() {
     let fec = ExtendedMplsLvpFec {
-        fec_addr_prefix_len: 24,
+        mpls_fec_addr_prefix_length: 24,
     };
 
-    assert_eq!(fec.fec_addr_prefix_len, 24);
+    assert_eq!(fec.mpls_fec_addr_prefix_length, 24);
 }
 
 #[test]
@@ -448,10 +448,14 @@ fn test_extended_80211_tx() {
 #[test]
 fn test_extended_80211_aggregation() {
     let aggregation = Extended80211Aggregation {
-        pdu_count: 5, // 5 PDUs in the aggregation
+        pdus: vec![
+            Pdu { flow_records: vec![] },
+            Pdu { flow_records: vec![] },
+            Pdu { flow_records: vec![] },
+        ],
     };
 
-    assert_eq!(aggregation.pdu_count, 5);
+    assert_eq!(aggregation.pdus.len(), 3);
 }
 
 // ============================================================================

@@ -141,7 +141,7 @@ fn test_host_net_io() {
         errs_in: 10,
         drops_in: 5,
         bytes_out: 5_000_000_000,
-        pkts_out: 500_000,
+        packets_out: 500_000,
         errs_out: 2,
         drops_out: 1,
     };

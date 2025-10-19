@@ -1,4 +1,4 @@
-.PHONY: help test test-unit test-integration test-unit-verbose test-integration-verbose test-all test-verbose test-lib test-validate bench coverage coverage-html coverage-open coverage-lcov coverage-unit coverage-integration clean build build-release build-all check fmt fmt-check clippy clippy-strict doc doc-open doc-all install-tools audit outdated
+.PHONY: help test test-unit test-integration test-unit-verbose test-integration-verbose test-all test-verbose test-lib test-validate-sflowtool test-validate-specs bench coverage coverage-html coverage-open coverage-lcov coverage-unit coverage-integration clean build build-release build-all check fmt fmt-check clippy clippy-strict doc doc-open doc-all install-tools audit outdated
 
 # Default target
 help:
@@ -11,7 +11,8 @@ help:
 	@echo "  make test-unit-verbose        - Run unit tests with output"
 	@echo "  make test-integration-verbose - Run integration tests with output"
 	@echo "  make test-verbose             - Run all tests with verbose output"
-	@echo "  make test-validate            - Validate against official sflow.h (requires network)"
+	@echo "  make test-validate-sflowtool  - Validate against sflowtool sflow.h (requires network)"
+	@echo "  make test-validate-specs      - Validate against official sFlow specs (requires network)"
 	@echo "  make bench                    - Run performance benchmarks"
 	@echo ""
 	@echo "Coverage:"
@@ -71,10 +72,15 @@ test-lib:
 	@echo "Running library tests..."
 	cargo test --lib
 
-test-validate:
-	@echo "Validating implementation against official sflow.h..."
+test-validate-sflowtool:
+	@echo "Validating implementation against sflowtool sflow.h..."
 	@echo "Note: This requires network access to download sflow.h from GitHub"
-	cargo test validation::validation::tests::test_validate_all_formats_live -- --nocapture --ignored
+	cargo test validation::sflowtool_validation::tests::test_validate_all_formats_live -- --nocapture --ignored
+
+test-validate-specs:
+	@echo "Validating implementation against official sFlow specifications..."
+	@echo "Note: This requires network access to download spec documents"
+	cargo test validation::specs_validation::tests::test_validate_against_specs -- --nocapture --ignored
 
 bench:
 	@echo "Running performance benchmarks..."

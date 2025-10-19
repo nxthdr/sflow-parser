@@ -447,10 +447,10 @@ pub struct ExtendedMpls {
     pub next_hop: crate::models::core::Address,
 
     /// Input label stack
-    pub in_label_stack: Vec<u32>,
+    pub in_stack: Vec<u32>,
 
     /// Output label stack
-    pub out_label_stack: Vec<u32>,
+    pub out_stack: Vec<u32>,
 }
 
 /// Extended NAT Data - Format (0,1007)
@@ -495,13 +495,13 @@ pub struct ExtendedNat {
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedMplsTunnel {
-    /// Tunnel name
-    pub tunnel_name: String,
+    /// Tunnel LSP name
+    pub tunnel_lsp_name: String,
 
     /// Tunnel ID
     pub tunnel_id: u32,
 
-    /// Tunnel cost
+    /// Tunnel COS value
     pub tunnel_cos: u32,
 }
 
@@ -577,7 +577,7 @@ pub struct ExtendedMplsFec {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedMplsLvpFec {
     /// FEC address prefix length
-    pub fec_addr_prefix_len: u32,
+    pub mpls_fec_addr_prefix_length: u32,
 }
 
 /// Extended VLAN Tunnel - Format (0,1012)
@@ -724,6 +724,21 @@ pub struct Extended80211Tx {
     pub power: u32,
 }
 
+/// PDU (Protocol Data Unit) in 802.11 aggregation
+///
+/// # XDR Definition ([sFlow 802.11](https://sflow.org/sflow_80211.txt))
+///
+/// ```text
+/// struct pdu {
+///     flow_record flow_records<>;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Pdu {
+    /// Flow records for this PDU
+    pub flow_records: Vec<crate::models::FlowRecord>,
+}
+
 /// Extended 802.11 Aggregation - Format (0,1016)
 ///
 /// 802.11 frame aggregation information
@@ -740,6 +755,6 @@ pub struct Extended80211Tx {
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Extended80211Aggregation {
-    /// Array of PDUs in the aggregation (simplified - just count for now)
-    pub pdu_count: u32,
+    /// Array of PDUs in the aggregation
+    pub pdus: Vec<Pdu>,
 }

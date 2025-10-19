@@ -18,6 +18,8 @@ exclude = [
 regex = "1"
 ureq = "2"
 criterion = "0.5"
+syn = { version = "2", features = ["full", "parsing"] }
+quote = "1"
 
 [[bench]]
 name = "parser_benchmark"

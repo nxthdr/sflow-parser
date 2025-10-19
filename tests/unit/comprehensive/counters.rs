@@ -620,7 +620,7 @@ fn test_parse_host_net_io_counters() {
         0x00, 0x00, 0x00, 0x0A, // errs_in = 10
         0x00, 0x00, 0x00, 0x05, // drops_in = 5
         0x00, 0x00, 0x00, 0x01, 0x2A, 0x05, 0xF2, 0x00, // bytes_out = 5GB
-        0x00, 0x07, 0xA1, 0x20, // pkts_out = 500000
+        0x00, 0x07, 0xA1, 0x20, // packets_out = 500000
         0x00, 0x00, 0x00, 0x02, // errs_out = 2
         0x00, 0x00, 0x00, 0x01, // drops_out = 1
     ];
@@ -639,7 +639,7 @@ fn test_parse_host_net_io_counters() {
                     assert_eq!(net.bytes_in, 10_000_000_000);
                     assert_eq!(net.pkts_in, 1_000_000);
                     assert_eq!(net.bytes_out, 5_000_000_000);
-                    assert_eq!(net.pkts_out, 500_000);
+                    assert_eq!(net.packets_out, 500_000);
                 }
                 _ => panic!("Expected HostNetIo"),
             }
@@ -650,11 +650,13 @@ fn test_parse_host_net_io_counters() {
 
 #[test]
 fn test_parse_virtual_node() {
-    // Virtual Node: memory(8) + num_cpus(4) + cpu_time(4) = 16 bytes
+    // Virtual Node: mhz(4) + cpus(4) + memory(8) + memory_free(8) + num_domains(4) = 28 bytes
     let record_data = [
+        0x00, 0x00, 0x09, 0x60, // mhz = 2400
+        0x00, 0x00, 0x00, 0x04, // cpus = 4
         0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, // memory = 4 GB
-        0x00, 0x00, 0x00, 0x04, // num_cpus = 4
-        0x00, 0x00, 0x27, 0x10, // cpu_time = 10000 ms
+        0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, // memory_free = 2 GB
+        0x00, 0x00, 0x00, 0x02, // num_domains = 2
     ];
 
     let data = build_counter_sample_test(0x0834, &record_data); // record type = 2100
@@ -668,9 +670,12 @@ fn test_parse_virtual_node() {
             assert_eq!(counters.counters.len(), 1);
             match &counters.counters[0].counter_data {
                 CounterData::VirtualNode(node) => {
+                    // Fields: mhz, cpus, memory, memory_free, num_domains
+                    assert_eq!(node.mhz, 2400);
+                    assert_eq!(node.cpus, 4);
                     assert_eq!(node.memory, 4_294_967_296);
-                    assert_eq!(node.num_cpus, 4);
-                    assert_eq!(node.cpu_time, 10000);
+                    assert_eq!(node.memory_free, 2_147_483_648);
+                    assert_eq!(node.num_domains, 2);
                 }
                 _ => panic!("Expected VirtualNode"),
             }
@@ -681,10 +686,11 @@ fn test_parse_virtual_node() {
 
 #[test]
 fn test_parse_virtual_cpu() {
-    // Virtual CPU: state(4) + cpu_time(4) = 8 bytes
+    // Virtual CPU: state(4) + cpu_time(4) + nr_virt_cpu(4) = 12 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x00, // state = 0 (running)
         0x00, 0x00, 0x13, 0x88, // cpu_time = 5000 ms
+        0x00, 0x00, 0x00, 0x02, // nr_virt_cpu = 2
     ];
 
     let data = build_counter_sample_test(0x0835, &record_data); // record type = 2101
@@ -700,6 +706,7 @@ fn test_parse_virtual_cpu() {
                 CounterData::VirtualCpu(cpu) => {
                     assert_eq!(cpu.state, 0);
                     assert_eq!(cpu.cpu_time, 5000);
+                    assert_eq!(cpu.nr_virt_cpu, 2);
                 }
                 _ => panic!("Expected VirtualCpu"),
             }
@@ -780,10 +787,10 @@ fn test_parse_virtual_disk_io() {
 
 #[test]
 fn test_parse_virtual_net_io() {
-    // Virtual Network I/O: rx_bytes(8) + rx_pkts(4) + rx_errs(4) + rx_drop(4) + tx_bytes(8) + tx_pkts(4) + tx_errs(4) + tx_drop(4) = 44 bytes
+    // Virtual Network I/O: rx_bytes(8) + rx_packets(4) + rx_errs(4) + rx_drop(4) + tx_bytes(8) + tx_packets(4) + tx_errs(4) + tx_drop(4) = 44 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x00, 0x3B, 0x9A, 0xCA, 0x00, // rx_bytes = 1 GB
-        0x00, 0x00, 0x27, 0x10, // rx_pkts = 10000
+        0x00, 0x00, 0x27, 0x10, // rx_packets = 10000
         0x00, 0x00, 0x00, 0x02, // rx_errs = 2
         0x00, 0x00, 0x00, 0x01, // rx_drop = 1
         0x00, 0x00, 0x00, 0x00, 0x77, 0x35, 0x94, 0x00, // tx_bytes = 2 GB
@@ -804,11 +811,11 @@ fn test_parse_virtual_net_io() {
             match &counters.counters[0].counter_data {
                 CounterData::VirtualNetIo(net) => {
                     assert_eq!(net.rx_bytes, 1_000_000_000);
-                    assert_eq!(net.rx_pkts, 10000);
+                    assert_eq!(net.rx_packets, 10000);
                     assert_eq!(net.rx_errs, 2);
                     assert_eq!(net.rx_drop, 1);
                     assert_eq!(net.tx_bytes, 2_000_000_000);
-                    assert_eq!(net.tx_pkts, 20000);
+                    assert_eq!(net.tx_packets, 20000);
                     assert_eq!(net.tx_errs, 3);
                     assert_eq!(net.tx_drop, 2);
                 }

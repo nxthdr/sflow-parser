@@ -3,7 +3,9 @@
 //! This module automatically downloads sflow.h, parses it, and validates
 //! our Rust implementation against the official C specification.
 
-use super::parser_spec::{c_type_to_rust, parse_format_definitions, parse_sflow_header, CStruct};
+use super::sflowtool_parser_spec::{
+    c_type_to_rust, parse_format_definitions, parse_sflow_header, CStruct,
+};
 use std::collections::HashMap;
 
 const SFLOW_H_URL: &str =

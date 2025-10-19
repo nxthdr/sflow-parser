@@ -257,7 +257,7 @@ fn test_parse_extended_mpls() {
     let record_data = [
         0x00, 0x00, 0x00, 0x01, // next_hop address type = IPv4
         0x0A, 0x00, 0x00, 0x01, // next_hop = 10.0.0.1
-        0x00, 0x00, 0x00, 0x03, // in_label_stack_len = 3
+        0x00, 0x00, 0x00, 0x03, // in_stack_len = 3
         0x00, 0x00, 0x00, 0x64, // label 100
         0x00, 0x00, 0x00, 0xC8, // label 200
         0x00, 0x00, 0x01, 0x2C, // label 300
@@ -277,10 +277,10 @@ fn test_parse_extended_mpls() {
             assert_eq!(flow.flow_records.len(), 1);
             match &flow.flow_records[0].flow_data {
                 FlowData::ExtendedMpls(mpls) => {
-                    assert_eq!(mpls.in_label_stack.len(), 3);
-                    assert_eq!(mpls.in_label_stack[0], 100);
-                    assert_eq!(mpls.out_label_stack.len(), 2);
-                    assert_eq!(mpls.out_label_stack[0], 400);
+                    assert_eq!(mpls.in_stack.len(), 3);
+                    assert_eq!(mpls.in_stack[0], 100);
+                    assert_eq!(mpls.out_stack.len(), 2);
+                    assert_eq!(mpls.out_stack[0], 400);
                 }
                 _ => panic!("Expected ExtendedMpls"),
             }
@@ -412,9 +412,9 @@ fn test_parse_extended_gateway() {
 
 #[test]
 fn test_parse_extended_mpls_tunnel() {
-    // Extended MPLS Tunnel data: tunnel_name_len(4) + "mpls0"(5) + padding(3) + tunnel_id(4) + tunnel_cos(4) = 20 bytes
+    // Extended MPLS Tunnel data: tunnel_lsp_name_len(4) + "mpls0"(5) + padding(3) + tunnel_id(4) + tunnel_cos(4) = 20 bytes
     let record_data = [
-        0x00, 0x00, 0x00, 0x05, // tunnel_name length = 5
+        0x00, 0x00, 0x00, 0x05, // tunnel_lsp_name length = 5
         b'm', b'p', b'l', b's', b'0', 0x00, 0x00, 0x00, // "mpls0" + padding
         0x00, 0x00, 0x30, 0x39, // tunnel_id = 12345
         0x00, 0x00, 0x00, 0x03, // tunnel_cos = 3
@@ -431,7 +431,7 @@ fn test_parse_extended_mpls_tunnel() {
             assert_eq!(flow.flow_records.len(), 1);
             match &flow.flow_records[0].flow_data {
                 FlowData::ExtendedMplsTunnel(tunnel) => {
-                    assert_eq!(tunnel.tunnel_name, "mpls0");
+                    assert_eq!(tunnel.tunnel_lsp_name, "mpls0");
                     assert_eq!(tunnel.tunnel_id, 12345);
                     assert_eq!(tunnel.tunnel_cos, 3);
                 }
@@ -514,9 +514,9 @@ fn test_parse_extended_mpls_fec() {
 
 #[test]
 fn test_parse_extended_mpls_lvp_fec() {
-    // Extended MPLS LVP FEC data: fec_addr_prefix_len(4) = 4 bytes
+    // Extended MPLS LVP FEC data: mpls_fec_addr_prefix_length(4) = 4 bytes
     let record_data = [
-        0x00, 0x00, 0x00, 0x18, // fec_addr_prefix_len = 24
+        0x00, 0x00, 0x00, 0x18, // mpls_fec_addr_prefix_length = 24
     ];
 
     let data = build_flow_sample_test(0x03F3, &record_data); // record type = 1011
@@ -530,7 +530,7 @@ fn test_parse_extended_mpls_lvp_fec() {
             assert_eq!(flow.flow_records.len(), 1);
             match &flow.flow_records[0].flow_data {
                 FlowData::ExtendedMplsLvpFec(fec) => {
-                    assert_eq!(fec.fec_addr_prefix_len, 24);
+                    assert_eq!(fec.mpls_fec_addr_prefix_length, 24);
                 }
                 _ => panic!("Expected ExtendedMplsLvpFec"),
             }
@@ -671,9 +671,12 @@ fn test_parse_extended_80211_tx() {
 
 #[test]
 fn test_parse_extended_80211_aggregation() {
-    // Extended 802.11 Aggregation: pdu_count(4) = 4 bytes
+    // Extended 802.11 Aggregation: pdu_count(4) + for each PDU: flow_record_count(4)
+    // Simple test with 2 PDUs, each with 0 flow records
     let record_data = [
-        0x00, 0x00, 0x00, 0x05, // pdu_count = 5
+        0x00, 0x00, 0x00, 0x02, // pdu_count = 2
+        0x00, 0x00, 0x00, 0x00, // PDU 1: flow_record_count = 0
+        0x00, 0x00, 0x00, 0x00, // PDU 2: flow_record_count = 0
     ];
 
     let data = build_flow_sample_test(0x03F8, &record_data); // record type = 1016
@@ -687,7 +690,9 @@ fn test_parse_extended_80211_aggregation() {
             assert_eq!(flow.flow_records.len(), 1);
             match &flow.flow_records[0].flow_data {
                 FlowData::Extended80211Aggregation(agg) => {
-                    assert_eq!(agg.pdu_count, 5);
+                    assert_eq!(agg.pdus.len(), 2);
+                    assert_eq!(agg.pdus[0].flow_records.len(), 0);
+                    assert_eq!(agg.pdus[1].flow_records.len(), 0);
                 }
                 _ => panic!("Expected Extended80211Aggregation"),
             }

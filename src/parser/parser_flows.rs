@@ -232,24 +232,24 @@ impl<R: Read> Parser<R> {
     ) -> Result<crate::models::record_flows::ExtendedMpls> {
         let next_hop = self.parse_address()?;
 
-        let in_label_stack_len = self.read_u32()?;
-        let capacity_in = in_label_stack_len.min(1024) as usize;
-        let mut in_label_stack = Vec::with_capacity(capacity_in);
-        for _ in 0..in_label_stack_len {
-            in_label_stack.push(self.read_u32()?);
+        let in_stack_len = self.read_u32()?;
+        let capacity_in = in_stack_len.min(1024) as usize;
+        let mut in_stack = Vec::with_capacity(capacity_in);
+        for _ in 0..in_stack_len {
+            in_stack.push(self.read_u32()?);
         }
 
-        let out_label_stack_len = self.read_u32()?;
-        let capacity_out = out_label_stack_len.min(1024) as usize;
-        let mut out_label_stack = Vec::with_capacity(capacity_out);
-        for _ in 0..out_label_stack_len {
-            out_label_stack.push(self.read_u32()?);
+        let out_stack_len = self.read_u32()?;
+        let capacity_out = out_stack_len.min(1024) as usize;
+        let mut out_stack = Vec::with_capacity(capacity_out);
+        for _ in 0..out_stack_len {
+            out_stack.push(self.read_u32()?);
         }
 
         Ok(crate::models::record_flows::ExtendedMpls {
             next_hop,
-            in_label_stack,
-            out_label_stack,
+            in_stack,
+            out_stack,
         })
     }
 
@@ -270,12 +270,12 @@ impl<R: Read> Parser<R> {
     pub(super) fn parse_extended_mpls_tunnel(
         &mut self,
     ) -> Result<crate::models::record_flows::ExtendedMplsTunnel> {
-        let tunnel_name = self.read_string()?;
+        let tunnel_lsp_name = self.read_string()?;
         let tunnel_id = self.read_u32()?;
         let tunnel_cos = self.read_u32()?;
 
         Ok(crate::models::record_flows::ExtendedMplsTunnel {
-            tunnel_name,
+            tunnel_lsp_name,
             tunnel_id,
             tunnel_cos,
         })
@@ -315,10 +315,10 @@ impl<R: Read> Parser<R> {
     pub(super) fn parse_extended_mpls_lvp_fec(
         &mut self,
     ) -> Result<crate::models::record_flows::ExtendedMplsLvpFec> {
-        let fec_addr_prefix_len = self.read_u32()?;
+        let mpls_fec_addr_prefix_length = self.read_u32()?;
 
         Ok(crate::models::record_flows::ExtendedMplsLvpFec {
-            fec_addr_prefix_len,
+            mpls_fec_addr_prefix_length,
         })
     }
 
@@ -414,11 +414,24 @@ impl<R: Read> Parser<R> {
     pub(super) fn parse_extended_80211_aggregation(
         &mut self,
     ) -> Result<crate::models::record_flows::Extended80211Aggregation> {
-        // Simplified implementation - just read PDU count
-        // Full implementation would parse array of PDUs with flow records
         let pdu_count = self.read_u32()?;
+        let capacity = pdu_count.min(256) as usize; // Reasonable limit for PDUs
+        let mut pdus = Vec::with_capacity(capacity);
 
-        Ok(crate::models::record_flows::Extended80211Aggregation { pdu_count })
+        for _ in 0..pdu_count {
+            // Parse flow records for this PDU
+            let flow_record_count = self.read_u32()?;
+            let flow_capacity = flow_record_count.min(64) as usize;
+            let mut flow_records = Vec::with_capacity(flow_capacity);
+
+            for _ in 0..flow_record_count {
+                flow_records.push(self.parse_flow_record()?);
+            }
+
+            pdus.push(crate::models::record_flows::Pdu { flow_records });
+        }
+
+        Ok(crate::models::record_flows::Extended80211Aggregation { pdus })
     }
 
     /// Parse flow data based on format

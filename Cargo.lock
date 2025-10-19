@@ -693,7 +693,9 @@ name = "sflow-parser"
 version = "0.1.0"
 dependencies = [
  "criterion",
+ "quote",
  "regex",
+ "syn",
  "ureq",
 ]
 

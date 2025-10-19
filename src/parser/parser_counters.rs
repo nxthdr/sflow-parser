@@ -112,7 +112,7 @@ impl<R: Read> Parser<R> {
             dot12_in_norm_priority_frames: self.read_u32()?,
             dot12_in_norm_priority_octets: self.read_u64()?,
             dot12_in_ipm_errors: self.read_u32()?,
-            dot12_in_oversized_frame_errors: self.read_u32()?,
+            dot12_in_oversize_frame_errors: self.read_u32()?,
             dot12_in_data_errors: self.read_u32()?,
             dot12_in_null_addressed_frames: self.read_u32()?,
             dot12_out_high_priority_frames: self.read_u32()?,
@@ -337,7 +337,7 @@ impl<R: Read> Parser<R> {
             errs_in: self.read_u32()?,
             drops_in: self.read_u32()?,
             bytes_out: self.read_u64()?,
-            pkts_out: self.read_u32()?,
+            packets_out: self.read_u32()?,
             errs_out: self.read_u32()?,
             drops_out: self.read_u32()?,
         })
@@ -348,9 +348,11 @@ impl<R: Read> Parser<R> {
         &mut self,
     ) -> Result<crate::models::record_counters::VirtualNode> {
         Ok(crate::models::record_counters::VirtualNode {
+            mhz: self.read_u32()?,
+            cpus: self.read_u32()?,
             memory: self.read_u64()?,
-            num_cpus: self.read_u32()?,
-            cpu_time: self.read_u32()?,
+            memory_free: self.read_u64()?,
+            num_domains: self.read_u32()?,
         })
     }
 
@@ -361,6 +363,7 @@ impl<R: Read> Parser<R> {
         Ok(crate::models::record_counters::VirtualCpu {
             state: self.read_u32()?,
             cpu_time: self.read_u32()?,
+            nr_virt_cpu: self.read_u32()?,
         })
     }
 
@@ -396,11 +399,11 @@ impl<R: Read> Parser<R> {
     ) -> Result<crate::models::record_counters::VirtualNetIo> {
         Ok(crate::models::record_counters::VirtualNetIo {
             rx_bytes: self.read_u64()?,
-            rx_pkts: self.read_u32()?,
+            rx_packets: self.read_u32()?,
             rx_errs: self.read_u32()?,
             rx_drop: self.read_u32()?,
             tx_bytes: self.read_u64()?,
-            tx_pkts: self.read_u32()?,
+            tx_packets: self.read_u32()?,
             tx_errs: self.read_u32()?,
             tx_drop: self.read_u32()?,
         })

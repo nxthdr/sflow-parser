@@ -5,3 +5,6 @@
 /tests/fuzz/corpus
 /tests/fuzz/artifacts
 /tests/fuzz/coverage
+
+# Validation specs cache
+/tests/validation/specs/

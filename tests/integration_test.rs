@@ -113,8 +113,8 @@ fn test_parse_sflow_bin() {
                             FlowData::ExtendedMpls(mpls) => {
                                 println!(
                                     "ExtendedMpls(in_labels={}, out_labels={})",
-                                    mpls.in_label_stack.len(),
-                                    mpls.out_label_stack.len()
+                                    mpls.in_stack.len(),
+                                    mpls.out_stack.len()
                                 );
                             }
                             FlowData::ExtendedNat(nat) => {
@@ -126,7 +126,7 @@ fn test_parse_sflow_bin() {
                             FlowData::ExtendedMplsTunnel(tunnel) => {
                                 println!(
                                     "ExtendedMplsTunnel(name={}, id={})",
-                                    tunnel.tunnel_name, tunnel.tunnel_id
+                                    tunnel.tunnel_lsp_name, tunnel.tunnel_id
                                 );
                             }
                             FlowData::ExtendedMplsVc(vc) => {
@@ -141,7 +141,7 @@ fn test_parse_sflow_bin() {
                             FlowData::ExtendedMplsLvpFec(fec) => {
                                 println!(
                                     "ExtendedMplsLvpFec(prefix_len={})",
-                                    fec.fec_addr_prefix_len
+                                    fec.mpls_fec_addr_prefix_length
                                 );
                             }
                             FlowData::ExtendedVlanTunnel(vlan) => {
@@ -167,7 +167,7 @@ fn test_parse_sflow_bin() {
                                 );
                             }
                             FlowData::Extended80211Aggregation(agg) => {
-                                println!("Extended80211Aggregation(pdu_count={})", agg.pdu_count);
+                                println!("Extended80211Aggregation(pdu_count={})", agg.pdus.len());
                             }
                             FlowData::Unknown { format, data } => {
                                 println!(

@@ -42,7 +42,7 @@ fn test_vg100_interface_counters_structure() {
         dot12_in_norm_priority_frames: 40,
         dot12_in_norm_priority_octets: 4000,
         dot12_in_ipm_errors: 0,
-        dot12_in_oversized_frame_errors: 0,
+        dot12_in_oversize_frame_errors: 0,
         dot12_in_data_errors: 0,
         dot12_in_null_addressed_frames: 0,
         dot12_out_high_priority_frames: 12,
@@ -119,14 +119,18 @@ fn test_host_parent() {
 #[test]
 fn test_virtual_node() {
     let counters = VirtualNode {
+        mhz: 2400,
+        cpus: 4,
         memory: 8_589_934_592, // 8 GB
-        num_cpus: 4,
-        cpu_time: 1_000_000,
+        memory_free: 4_294_967_296, // 4 GB
+        num_domains: 2,
     };
 
+    assert_eq!(counters.mhz, 2400);
+    assert_eq!(counters.cpus, 4);
     assert_eq!(counters.memory, 8_589_934_592);
-    assert_eq!(counters.num_cpus, 4);
-    assert_eq!(counters.cpu_time, 1_000_000);
+    assert_eq!(counters.memory_free, 4_294_967_296);
+    assert_eq!(counters.num_domains, 2);
 }
 
 #[test]
@@ -134,10 +138,12 @@ fn test_virtual_cpu() {
     let counters = VirtualCpu {
         state: 1,
         cpu_time: 1_000_000,
+        nr_virt_cpu: 2,
     };
 
     assert_eq!(counters.state, 1);
     assert_eq!(counters.cpu_time, 1_000_000);
+    assert_eq!(counters.nr_virt_cpu, 2);
 }
 
 #[test]
@@ -173,19 +179,19 @@ fn test_virtual_disk_io() {
 fn test_virtual_net_io() {
     let counters = VirtualNetIo {
         rx_bytes: 1_048_576, // 1 MB
-        rx_pkts: 1000,
+        rx_packets: 1000,
         rx_errs: 0,
         rx_drop: 0,
         tx_bytes: 524_288, // 512 KB
-        tx_pkts: 500,
+        tx_packets: 500,
         tx_errs: 0,
         tx_drop: 0,
     };
 
     assert_eq!(counters.rx_bytes, 1_048_576);
-    assert_eq!(counters.rx_pkts, 1000);
+    assert_eq!(counters.rx_packets, 1000);
     assert_eq!(counters.tx_bytes, 524_288);
-    assert_eq!(counters.tx_pkts, 500);
+    assert_eq!(counters.tx_packets, 500);
 }
 
 #[test]
