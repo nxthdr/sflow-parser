@@ -5,5 +5,7 @@
 //! - flow_records: Flow record structures
 //! - counter_records: Counter record structures
 //! - enums: FlowData, CounterData, SampleData variants
+//! - validation: Validation against official sFlow specification
 
 mod unit;
+mod validation;

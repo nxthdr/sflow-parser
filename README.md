@@ -66,6 +66,7 @@ sFlow datagrams contain sample records. Each sample record has a format type tha
 | 0 | 2 | Counters Sample | Compact format for ifIndex < 2^24 | ✅ |
 | 0 | 3 | Flow Sample Expanded | Extended format for ifIndex >= 2^24 | ✅ |
 | 0 | 4 | Counters Sample Expanded | Extended format for ifIndex >= 2^24 | ✅ |
+| 0 | 5 | Discarded Packet | Dropped packet with reason code | ⬜ |
 
 Each sample contains one or more flow records (for flow samples) or counter records (for counter samples).
 

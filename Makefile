@@ -1,4 +1,4 @@
-.PHONY: help test test-unit test-integration test-unit-verbose test-integration-verbose test-all test-verbose test-lib coverage coverage-html coverage-open coverage-lcov coverage-unit coverage-integration clean build build-release build-all check fmt fmt-check clippy clippy-strict doc doc-open doc-all install-tools audit outdated
+.PHONY: help test test-unit test-integration test-unit-verbose test-integration-verbose test-all test-verbose test-lib test-validate coverage coverage-html coverage-open coverage-lcov coverage-unit coverage-integration clean build build-release build-all check fmt fmt-check clippy clippy-strict doc doc-open doc-all install-tools audit outdated
 
 # Default target
 help:
@@ -11,6 +11,7 @@ help:
 	@echo "  make test-unit-verbose        - Run unit tests with output"
 	@echo "  make test-integration-verbose - Run integration tests with output"
 	@echo "  make test-verbose             - Run all tests with verbose output"
+	@echo "  make test-validate            - Validate against official sflow.h (requires network)"
 	@echo ""
 	@echo "Coverage:"
 	@echo "  make coverage          - Generate coverage report (text)"
@@ -68,6 +69,11 @@ test-verbose:
 test-lib:
 	@echo "Running library tests..."
 	cargo test --lib
+
+test-validate:
+	@echo "Validating implementation against official sflow.h..."
+	@echo "Note: This requires network access to download sflow.h from GitHub"
+	cargo test validation::validation::tests::test_validate_all_formats_live -- --nocapture --ignored
 
 # Coverage targets
 coverage:

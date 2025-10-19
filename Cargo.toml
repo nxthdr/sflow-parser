@@ -13,3 +13,7 @@ exclude = [
     "tests/*",
     "renovate.json",
 ]
+
+[dev-dependencies]
+regex = "1"
+ureq = "2"
