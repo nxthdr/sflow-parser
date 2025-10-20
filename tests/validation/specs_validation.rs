@@ -1002,10 +1002,46 @@ struct sampled_header {
             (implemented_count as f64 / total_count as f64) * 100.0
         );
 
+        // Collect all validation issues
+        let mut total_issues = 0;
+        let mut structures_with_issues = Vec::new();
+        for v in &sorted_validations {
+            if v.implemented && !v.field_issues.is_empty() {
+                total_issues += v.field_issues.len();
+                structures_with_issues.push(format!(
+                    "({},{}) {} - {} issue(s)",
+                    v.enterprise,
+                    v.format,
+                    v.name,
+                    v.field_issues.len()
+                ));
+            }
+        }
+
         assert!(total_count > 0, "Should find structures in specs");
         assert!(
             implemented_count > 0,
             "Should have some structures implemented"
         );
+
+        // Fail if there are any validation issues
+        if total_issues > 0 {
+            println!("\n❌ VALIDATION FAILED ❌");
+            println!(
+                "Found {} validation issue(s) in {} structure(s):",
+                total_issues,
+                structures_with_issues.len()
+            );
+            for structure in &structures_with_issues {
+                println!("  - {}", structure);
+            }
+            panic!(
+                "Specs validation failed: {} issue(s) found in {} structure(s). All implemented structures must match their XDR definitions exactly.",
+                total_issues,
+                structures_with_issues.len()
+            );
+        }
+
+        println!("\n✅ All implemented structures validated successfully!");
     }
 }
