@@ -225,6 +225,10 @@ pub enum FlowData {
     AppOperation(crate::models::record_flows::AppOperation),
     /// Application Parent Context - Format (0,2203)
     AppParentContext(crate::models::record_flows::AppParentContext),
+    /// Application Initiator - Format (0,2204)
+    AppInitiator(crate::models::record_flows::AppInitiator),
+    /// Application Target - Format (0,2205)
+    AppTarget(crate::models::record_flows::AppTarget),
     /// Unknown or unparsed format
     Unknown { format: DataFormat, data: Vec<u8> },
 }

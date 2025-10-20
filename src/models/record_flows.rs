@@ -348,8 +348,8 @@ pub struct ExtendedGateway {
     /// Source peer AS
     pub src_peer_as: u32,
 
-    /// Number of AS path segments
-    pub as_path_segments: Vec<AsPathSegment>,
+    /// Autonomous system path to the destination
+    pub dst_as_path: Vec<AsPathSegment>,
 
     /// BGP communities
     pub communities: Vec<u32>,
@@ -596,8 +596,8 @@ pub struct ExtendedMplsLvpFec {
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedVlanTunnel {
-    /// Stack of VLAN tags
-    pub vlan_stack: Vec<u32>,
+    /// List of stripped 802.1Q TPID/TCI layers
+    pub stack: Vec<u32>,
 }
 
 /// Extended 802.11 Payload - Format (0,1013)
@@ -1174,4 +1174,46 @@ pub struct AppOperation {
 pub struct AppParentContext {
     /// Parent operation context
     pub context: AppContext,
+}
+
+/// Application Initiator - Format (0,2204)
+///
+/// Actor initiating the request (e.g., customer sending a payment)
+///
+/// # XDR Definition ([sFlow Application](https://sflow.org/sflow_application.txt))
+///
+/// ```text
+/// /* Actor initiating the request */
+/// /* e.g. customer sending a payment */
+/// /* opaque = flow_data; enterprise = 0; format = 2204 */
+///
+/// app_initiator {
+///    actor actor;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AppInitiator {
+    /// Business level identifier (e.g., customer id, vendor id)
+    pub actor: String,
+}
+
+/// Application Target - Format (0,2205)
+///
+/// Actor targeted by the request (e.g., recipient of payment)
+///
+/// # XDR Definition ([sFlow Application](https://sflow.org/sflow_application.txt))
+///
+/// ```text
+/// /* Actor targetted by the request */
+/// /* e.g. recipient of payment */
+/// /* opaque = flow_data; enterprise = 0; format = 2205 */
+///
+/// app_target {
+///    actor actor;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AppTarget {
+    /// Business level identifier (e.g., customer id, vendor id)
+    pub actor: String,
 }

@@ -349,9 +349,9 @@ fn test_parse_extended_vlan_tunnel() {
             assert_eq!(flow.flow_records.len(), 1);
             match &flow.flow_records[0].flow_data {
                 FlowData::ExtendedVlanTunnel(vlan) => {
-                    assert_eq!(vlan.vlan_stack.len(), 4);
-                    assert_eq!(vlan.vlan_stack[0], 10);
-                    assert_eq!(vlan.vlan_stack[3], 40);
+                    assert_eq!(vlan.stack.len(), 4);
+                    assert_eq!(vlan.stack[0], 10);
+                    assert_eq!(vlan.stack[3], 40);
                 }
                 _ => panic!("Expected ExtendedVlanTunnel"),
             }
@@ -398,9 +398,9 @@ fn test_parse_extended_gateway() {
                 FlowData::ExtendedGateway(gw) => {
                     assert_eq!(gw.as_number, 65000);
                     assert_eq!(gw.src_as, 65001);
-                    assert_eq!(gw.as_path_segments.len(), 1);
-                    assert_eq!(gw.as_path_segments[0].path.len(), 2);
-                    assert_eq!(gw.as_path_segments[0].path[0], 65003);
+                    assert_eq!(gw.dst_as_path.len(), 1);
+                    assert_eq!(gw.dst_as_path[0].path.len(), 2);
+                    assert_eq!(gw.dst_as_path[0].path[0], 65003);
                     assert_eq!(gw.communities.len(), 2);
                     assert_eq!(gw.local_pref, 100);
                 }
@@ -887,6 +887,66 @@ fn test_parse_app_parent_context() {
                     assert_eq!(parent.context.attributes, "");
                 }
                 _ => panic!("Expected AppParentContext"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_app_initiator() {
+    // Application Initiator: actor string
+    // actor = "customer123"
+    let record_data = [
+        0x00, 0x00, 0x00, 0x0B, // length = 11
+        b'c', b'u', b's', b't', b'o', b'm', b'e', b'r', b'1', b'2', b'3', // "customer123"
+        0x00, // padding to 4-byte boundary
+    ];
+
+    let data = build_flow_sample_test(0x089C, &record_data); // record type = 2204
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::AppInitiator(initiator) => {
+                    assert_eq!(initiator.actor, "customer123");
+                }
+                _ => panic!("Expected AppInitiator"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_app_target() {
+    // Application Target: actor string
+    // actor = "merchant456"
+    let record_data = [
+        0x00, 0x00, 0x00, 0x0B, // length = 11
+        b'm', b'e', b'r', b'c', b'h', b'a', b'n', b't', b'4', b'5', b'6', // "merchant456"
+        0x00, // padding to 4-byte boundary
+    ];
+
+    let data = build_flow_sample_test(0x089D, &record_data); // record type = 2205
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::AppTarget(target) => {
+                    assert_eq!(target.actor, "merchant456");
+                }
+                _ => panic!("Expected AppTarget"),
             }
         }
         _ => panic!("Expected FlowSample"),

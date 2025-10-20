@@ -102,7 +102,7 @@ fn test_extended_gateway() {
         as_number: 65000,
         src_as: 100,
         src_peer_as: 200,
-        as_path_segments: vec![AsPathSegment {
+        dst_as_path: vec![AsPathSegment {
             path_type: 2,
             path_length: 2,
             path: vec![100, 200],
@@ -112,7 +112,7 @@ fn test_extended_gateway() {
     };
     assert_eq!(gateway.as_number, 65000);
     assert_eq!(gateway.src_as, 100);
-    assert_eq!(gateway.as_path_segments.len(), 1);
+    assert_eq!(gateway.dst_as_path.len(), 1);
     assert_eq!(gateway.communities.len(), 3);
 }
 

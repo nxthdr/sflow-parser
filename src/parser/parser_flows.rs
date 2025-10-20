@@ -157,7 +157,7 @@ impl<R: Read> Parser<R> {
         // Parse AS path segments
         let num_segments = self.read_u32()?;
         let capacity_segments = num_segments.min(1024) as usize;
-        let mut as_path_segments = Vec::with_capacity(capacity_segments);
+        let mut dst_as_path = Vec::with_capacity(capacity_segments);
         for _ in 0..num_segments {
             let path_type = self.read_u32()?;
             let path_length = self.read_u32()?;
@@ -166,7 +166,7 @@ impl<R: Read> Parser<R> {
             for _ in 0..path_length {
                 path.push(self.read_u32()?);
             }
-            as_path_segments.push(crate::models::record_flows::AsPathSegment {
+            dst_as_path.push(crate::models::record_flows::AsPathSegment {
                 path_type,
                 path_length,
                 path,
@@ -188,7 +188,7 @@ impl<R: Read> Parser<R> {
             as_number,
             src_as,
             src_peer_as,
-            as_path_segments,
+            dst_as_path,
             communities,
             local_pref,
         })
@@ -328,12 +328,12 @@ impl<R: Read> Parser<R> {
     ) -> Result<crate::models::record_flows::ExtendedVlanTunnel> {
         let num_vlans = self.read_u32()?;
         let capacity = num_vlans.min(1024) as usize;
-        let mut vlan_stack = Vec::with_capacity(capacity);
+        let mut stack = Vec::with_capacity(capacity);
         for _ in 0..num_vlans {
-            vlan_stack.push(self.read_u32()?);
+            stack.push(self.read_u32()?);
         }
 
-        Ok(crate::models::record_flows::ExtendedVlanTunnel { vlan_stack })
+        Ok(crate::models::record_flows::ExtendedVlanTunnel { stack })
     }
 
     /// Parse Extended 802.11 Payload - Format (0,1013)
@@ -637,6 +637,22 @@ impl<R: Read> Parser<R> {
         Ok(crate::models::record_flows::AppParentContext { context })
     }
 
+    /// Parse Application Initiator - Format (0,2204)
+    pub(super) fn parse_app_initiator(
+        &mut self,
+    ) -> Result<crate::models::record_flows::AppInitiator> {
+        let actor = self.read_string()?;
+
+        Ok(crate::models::record_flows::AppInitiator { actor })
+    }
+
+    /// Parse Application Target - Format (0,2205)
+    pub(super) fn parse_app_target(&mut self) -> Result<crate::models::record_flows::AppTarget> {
+        let actor = self.read_string()?;
+
+        Ok(crate::models::record_flows::AppTarget { actor })
+    }
+
     /// Parse flow data based on format
     pub(super) fn parse_flow_data(
         &mut self,
@@ -724,6 +740,8 @@ impl<R: Read> Parser<R> {
                 2203 => Ok(FlowData::AppParentContext(
                     parser.parse_app_parent_context()?,
                 )),
+                2204 => Ok(FlowData::AppInitiator(parser.parse_app_initiator()?)),
+                2205 => Ok(FlowData::AppTarget(parser.parse_app_target()?)),
                 _ => Ok(FlowData::Unknown { format, data }),
             }
         } else {

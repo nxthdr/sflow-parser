@@ -124,8 +124,8 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 2201 | HTTP Request (deprecated) | [sFlow Discussion](http://groups.google.com/group/sflow/browse_thread/thread/88accb2bad594d1d) | ⬜ ⚠️ |
 | 0 | 2202 | App Operation | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
 | 0 | 2203 | App Parent Context | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
-| 0 | 2204 | App Initiator | [sFlow Application](https://sflow.org/sflow_application.txt) | ⬜ |
-| 0 | 2205 | App Target | [sFlow Application](https://sflow.org/sflow_application.txt) | ⬜ |
+| 0 | 2204 | App Initiator | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
+| 0 | 2205 | App Target | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
 | 0 | 2206 | HTTP Request | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ⬜ |
 | 0 | 2207 | Extended Proxy Request | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ⬜ |
 | 0 | 2208 | Extended Nav Timing | [sFlow Discussion](https://groups.google.com/forum/) | ⬜ |

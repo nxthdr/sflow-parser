@@ -208,7 +208,7 @@ fn test_extended_gateway_simple() {
         as_number: 65000,
         src_as: 100,
         src_peer_as: 200,
-        as_path_segments: vec![],
+        dst_as_path: vec![],
         communities: vec![],
         local_pref: 100,
     };
@@ -226,7 +226,7 @@ fn test_extended_gateway_with_as_path() {
         as_number: 65001,
         src_as: 100,
         src_peer_as: 200,
-        as_path_segments: vec![
+        dst_as_path: vec![
             AsPathSegment {
                 path_type: 2, // AS_SEQUENCE
                 path_length: 3,
@@ -242,9 +242,9 @@ fn test_extended_gateway_with_as_path() {
         local_pref: 150,
     };
 
-    assert_eq!(gateway.as_path_segments.len(), 2);
-    assert_eq!(gateway.as_path_segments[0].path.len(), 3);
-    assert_eq!(gateway.as_path_segments[1].path_type, 1);
+    assert_eq!(gateway.dst_as_path.len(), 2);
+    assert_eq!(gateway.dst_as_path[0].path.len(), 3);
+    assert_eq!(gateway.dst_as_path[1].path_type, 1);
     assert_eq!(gateway.communities.len(), 3);
 }
 
@@ -366,21 +366,19 @@ fn test_extended_mpls_lvp_fec() {
 #[test]
 fn test_extended_vlan_tunnel() {
     let vlan = ExtendedVlanTunnel {
-        vlan_stack: vec![100, 200, 300],
+        stack: vec![100, 200, 300],
     };
 
-    assert_eq!(vlan.vlan_stack.len(), 3);
-    assert_eq!(vlan.vlan_stack[0], 100);
-    assert_eq!(vlan.vlan_stack[2], 300);
+    assert_eq!(vlan.stack.len(), 3);
+    assert_eq!(vlan.stack[0], 100);
+    assert_eq!(vlan.stack[2], 300);
 }
 
 #[test]
 fn test_extended_vlan_tunnel_single() {
-    let vlan = ExtendedVlanTunnel {
-        vlan_stack: vec![100],
-    };
+    let vlan = ExtendedVlanTunnel { stack: vec![100] };
 
-    assert_eq!(vlan.vlan_stack.len(), 1);
+    assert_eq!(vlan.stack.len(), 1);
 }
 
 // ============================================================================
@@ -577,7 +575,7 @@ fn test_extended_gateway_max_as_path() {
         as_number: 65535,
         src_as: 65534,
         src_peer_as: 65533,
-        as_path_segments: vec![AsPathSegment {
+        dst_as_path: vec![AsPathSegment {
             path_type: 2,
             path_length: 255,
             path,
@@ -586,14 +584,14 @@ fn test_extended_gateway_max_as_path() {
         local_pref: 100,
     };
 
-    assert_eq!(gateway.as_path_segments[0].path.len(), 255);
+    assert_eq!(gateway.dst_as_path[0].path.len(), 255);
 }
 
 #[test]
 fn test_extended_vlan_tunnel_max_depth() {
     let vlan = ExtendedVlanTunnel {
-        vlan_stack: vec![100, 200, 300, 400, 500], // Q-in-Q-in-Q...
+        stack: vec![100, 200, 300, 400, 500], // Q-in-Q-in-Q...
     };
 
-    assert_eq!(vlan.vlan_stack.len(), 5);
+    assert_eq!(vlan.stack.len(), 5);
 }

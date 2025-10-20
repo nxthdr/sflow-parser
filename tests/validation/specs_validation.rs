@@ -219,7 +219,8 @@ fn parse_xdr_fields(fields_text: &str) -> Vec<XdrField> {
     // Match sized types like "string ssid<32>;" or "opaque header<>;" or "unsigned int stack<>"
     // Also match without semicolon for fields at end of struct
     // Allow multi-word types like "unsigned int"
-    let sized_field_re = Regex::new(r"(?m)^\s*([a-zA-Z_][\w\s]+?)\s+(\w+)\s*<([^>]*)>\s*;?").unwrap();
+    let sized_field_re =
+        Regex::new(r"(?m)^\s*([a-zA-Z_][\w\s]+?)\s+(\w+)\s*<([^>]*)>\s*;?").unwrap();
     for cap in sized_field_re.captures_iter(&cleaned_text) {
         let pos = cap.get(0).unwrap().start();
         let base_type = cap.get(1).unwrap().as_str().trim();
@@ -498,16 +499,18 @@ fn validate_fields(xdr_fields: &[XdrField], rust_fields: &[FieldMetadata]) -> (b
         return (true, Vec::new());
     }
 
-    // Special case: ExtendedGateway (0,1003) - XDR has dst_as_path as array, implementation uses structured segments
-    // The implementation also splits out communities and local_pref as separate fields for better usability
-    if xdr_fields.len() == 6
+    // Special case: ExtendedGateway (0,1003) - XDR has dst_as_path as as_path_type<>
+    // which is parsed as Vec<u32>, but implementation uses Vec<AsPathSegment> for structured access
+    if xdr_fields.len() == 7
         && rust_fields.len() == 7
-        && xdr_fields.iter().any(|f| f.name == "dst_as_path")
-        && rust_fields.iter().any(|f| f.name == "as_path_segments")
-        && rust_fields.iter().any(|f| f.name == "communities")
-        && rust_fields.iter().any(|f| f.name == "local_pref")
+        && xdr_fields
+            .iter()
+            .any(|f| f.name == "dst_as_path" && f.xdr_type == "as_path_type<>")
+        && rust_fields
+            .iter()
+            .any(|f| f.name == "dst_as_path" && f.type_name == "Vec<AsPathSegment>")
     {
-        // This is correct - implementation provides better structured access to BGP path attributes
+        // This is correct - implementation provides structured AS path segments
         return (true, Vec::new());
     }
 

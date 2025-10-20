@@ -98,7 +98,7 @@ fn test_parse_sflow_bin() {
                                 println!(
                                     "ExtendedGateway(as={}, segments={})",
                                     gw.as_number,
-                                    gw.as_path_segments.len()
+                                    gw.dst_as_path.len()
                                 );
                             }
                             FlowData::ExtendedUser(user) => {
@@ -145,7 +145,7 @@ fn test_parse_sflow_bin() {
                                 );
                             }
                             FlowData::ExtendedVlanTunnel(vlan) => {
-                                println!("ExtendedVlanTunnel(vlans={:?})", vlan.vlan_stack);
+                                println!("ExtendedVlanTunnel(vlans={:?})", vlan.stack);
                             }
                             FlowData::Extended80211Payload(wifi) => {
                                 println!(
@@ -209,6 +209,12 @@ fn test_parse_sflow_bin() {
                                     "AppParentContext(app={}, op={})",
                                     parent.context.application, parent.context.operation
                                 );
+                            }
+                            FlowData::AppInitiator(initiator) => {
+                                println!("AppInitiator(actor={})", initiator.actor);
+                            }
+                            FlowData::AppTarget(target) => {
+                                println!("AppTarget(actor={})", target.actor);
                             }
                             FlowData::ExtendedL2TunnelEgress(tunnel) => {
                                 println!(
@@ -834,8 +840,8 @@ fn test_parsed_flow_data() {
                                 println!("  AS: {}", gw.as_number);
                                 println!("  Source AS: {}", gw.src_as);
                                 println!("  Source Peer AS: {}", gw.src_peer_as);
-                                println!("  AS path segments: {}", gw.as_path_segments.len());
-                                for (i, segment) in gw.as_path_segments.iter().enumerate() {
+                                println!("  AS path segments: {}", gw.dst_as_path.len());
+                                for (i, segment) in gw.dst_as_path.iter().enumerate() {
                                     println!(
                                         "    Segment {}: type={}, path={:?}",
                                         i + 1,
@@ -903,6 +909,12 @@ fn test_parsed_flow_data() {
                         }
                         FlowData::AppParentContext(_) => {
                             // Application parent context - count but don't track separately
+                        }
+                        FlowData::AppInitiator(_) => {
+                            // Application initiator - count but don't track separately
+                        }
+                        FlowData::AppTarget(_) => {
+                            // Application target - count but don't track separately
                         }
                         FlowData::ExtendedL2TunnelEgress(_) => {
                             // L2 tunnel egress - count but don't track separately
