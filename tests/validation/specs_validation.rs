@@ -128,8 +128,9 @@ pub fn parse_xdr_structures(spec_content: &str, spec_name: &str) -> Vec<XdrStruc
 
     // Match format comment followed by struct definition
     // Use (?s) for . to match newlines, but be careful not to match across multiple format comments
+    // The 'struct' keyword is optional (some specs like app_initiator don't use it)
     let format_comment_re = Regex::new(
-        r"(?s)/\*\s*opaque\s*=\s*(\w+)\s*;\s*enterprise\s*=\s*(\d+)\s*;\s*format\s*=\s*(\d+)\s*\*/\s*([^/]*?)\s*struct\s+(\w+)\s*\{([^}]+)\}"
+        r"(?s)/\*\s*opaque\s*=\s*(\w+)\s*;\s*enterprise\s*=\s*(\d+)\s*;\s*format\s*=\s*(\d+)\s*\*/\s*([^/]*?)\s*(?:struct\s+)?(\w+)\s*\{([^}]+)\}"
     ).unwrap();
 
     for cap in format_comment_re.captures_iter(spec_content) {
@@ -215,9 +216,10 @@ fn parse_xdr_fields(fields_text: &str) -> Vec<XdrField> {
     // Collect all field matches with their positions to preserve order
     let mut field_matches: Vec<(usize, XdrField)> = Vec::new();
 
-    // Match sized types like "string ssid<32>;" or "opaque header<>;"
+    // Match sized types like "string ssid<32>;" or "opaque header<>;" or "unsigned int stack<>"
     // Also match without semicolon for fields at end of struct
-    let sized_field_re = Regex::new(r"(?m)^\s*([a-zA-Z_]\w+)\s+(\w+)\s*<([^>]*)>\s*;?").unwrap();
+    // Allow multi-word types like "unsigned int"
+    let sized_field_re = Regex::new(r"(?m)^\s*([a-zA-Z_][\w\s]+?)\s+(\w+)\s*<([^>]*)>\s*;?").unwrap();
     for cap in sized_field_re.captures_iter(&cleaned_text) {
         let pos = cap.get(0).unwrap().start();
         let base_type = cap.get(1).unwrap().as_str().trim();
