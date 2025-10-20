@@ -793,6 +793,196 @@ pub struct ExtendedOpenFlowV1 {
     pub flow_actions: u32,
 }
 
+/// Extended L2 Tunnel Egress - Format (0,1021)
+///
+/// Layer 2 tunnel egress information - reports outer Ethernet headers
+/// that will be added on egress when encapsulating packets
+///
+/// # XDR Definition ([sFlow Tunnels](https://sflow.org/sflow_tunnels.txt))
+///
+/// ```text
+/// /* opaque = flow_data; enterprise = 0; format = 1021 */
+/// struct extended_L2_tunnel_egress {
+///     sampled_ethernet header;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedL2TunnelEgress {
+    /// Outer Ethernet header that will be added on egress
+    pub header: SampledEthernet,
+}
+
+/// Extended L2 Tunnel Ingress - Format (0,1022)
+///
+/// Layer 2 tunnel ingress information - reports outer Ethernet headers
+/// that were present on ingress and removed during decapsulation
+///
+/// # XDR Definition ([sFlow Tunnels](https://sflow.org/sflow_tunnels.txt))
+///
+/// ```text
+/// /* opaque = flow_data; enterprise = 0; format = 1022 */
+/// struct extended_L2_tunnel_ingress {
+///     sampled_ethernet header;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedL2TunnelIngress {
+    /// Outer Ethernet header that was present on ingress
+    pub header: SampledEthernet,
+}
+
+/// Extended IPv4 Tunnel Egress - Format (0,1023)
+///
+/// IPv4 tunnel egress information - reports outer IPv4 headers
+/// that will be added on egress when encapsulating packets
+///
+/// # XDR Definition ([sFlow Tunnels](https://sflow.org/sflow_tunnels.txt))
+///
+/// ```text
+/// /* opaque = flow_data; enterprise = 0; format = 1023 */
+/// struct extended_ipv4_tunnel_egress {
+///     sampled_ipv4 header;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedIpv4TunnelEgress {
+    /// Outer IPv4 header that will be added on egress
+    pub header: SampledIpv4,
+}
+
+/// Extended IPv4 Tunnel Ingress - Format (0,1024)
+///
+/// IPv4 tunnel ingress information - reports outer IPv4 headers
+/// that were present on ingress and removed during decapsulation
+///
+/// # XDR Definition ([sFlow Tunnels](https://sflow.org/sflow_tunnels.txt))
+///
+/// ```text
+/// /* opaque = flow_data; enterprise = 0; format = 1024 */
+/// struct extended_ipv4_tunnel_ingress {
+///     sampled_ipv4 header;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedIpv4TunnelIngress {
+    /// Outer IPv4 header that was present on ingress
+    pub header: SampledIpv4,
+}
+
+/// Extended IPv6 Tunnel Egress - Format (0,1025)
+///
+/// IPv6 tunnel egress information - reports outer IPv6 headers
+/// that will be added on egress when encapsulating packets
+///
+/// # XDR Definition ([sFlow Tunnels](https://sflow.org/sflow_tunnels.txt))
+///
+/// ```text
+/// /* opaque = flow_data; enterprise = 0; format = 1025 */
+/// struct extended_ipv6_tunnel_egress {
+///     sampled_ipv6 header;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedIpv6TunnelEgress {
+    /// Outer IPv6 header that will be added on egress
+    pub header: SampledIpv6,
+}
+
+/// Extended IPv6 Tunnel Ingress - Format (0,1026)
+///
+/// IPv6 tunnel ingress information - reports outer IPv6 headers
+/// that were present on ingress and removed during decapsulation
+///
+/// # XDR Definition ([sFlow Tunnels](https://sflow.org/sflow_tunnels.txt))
+///
+/// ```text
+/// /* opaque = flow_data; enterprise = 0; format = 1026 */
+/// struct extended_ipv6_tunnel_ingress {
+///     sampled_ipv6 header;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedIpv6TunnelIngress {
+    /// Outer IPv6 header that was present on ingress
+    pub header: SampledIpv6,
+}
+
+/// Extended Decapsulate Egress - Format (0,1027)
+///
+/// Indicates the end of a tunnel and points to the start of the inner header
+/// Used when a packet is sampled before decapsulation on ingress
+///
+/// # XDR Definition ([sFlow Tunnels](https://sflow.org/sflow_tunnels.txt))
+///
+/// ```text
+/// /* opaque = flow_data; enterprise = 0; format = 1027 */
+/// struct extended_decapsulate_egress {
+///     unsigned int inner_header_offset;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedDecapsulateEgress {
+    /// Offset in bytes to the inner header within the sampled packet header
+    pub inner_header_offset: u32,
+}
+
+/// Extended Decapsulate Ingress - Format (0,1028)
+///
+/// Indicates the start of a tunnel
+/// Used when a packet is sampled after encapsulation on egress
+///
+/// # XDR Definition ([sFlow Tunnels](https://sflow.org/sflow_tunnels.txt))
+///
+/// ```text
+/// /* opaque = flow_data; enterprise = 0; format = 1028 */
+/// struct extended_decapsulate_ingress {
+///     unsigned int inner_header_offset;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedDecapsulateIngress {
+    /// Offset in bytes to the inner header within the sampled packet header
+    pub inner_header_offset: u32,
+}
+
+/// Extended VNI Egress - Format (0,1029)
+///
+/// Virtual Network Identifier for egress traffic
+/// The VNI may be explicitly included in the tunneling protocol or implicit
+///
+/// # XDR Definition ([sFlow Tunnels](https://sflow.org/sflow_tunnels.txt))
+///
+/// ```text
+/// /* opaque_flow_data; enterprise = 0; format = 1029 */
+/// struct extended_vni_egress {
+///     unsigned int vni;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedVniEgress {
+    /// Virtual Network Identifier
+    pub vni: u32,
+}
+
+/// Extended VNI Ingress - Format (0,1030)
+///
+/// Virtual Network Identifier for ingress traffic
+/// The VNI may be explicitly included in the tunneling protocol or implicit
+///
+/// # XDR Definition ([sFlow Tunnels](https://sflow.org/sflow_tunnels.txt))
+///
+/// ```text
+/// /* opaque_flow_data; enterprise = 0; format = 1030 */
+/// struct extended_vni_ingress {
+///     unsigned int vni;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedVniIngress {
+    /// Virtual Network Identifier
+    pub vni: u32,
+}
+
 /// Extended Socket IPv4 - Format (0,2100)
 ///
 /// IPv4 socket information for application transactions

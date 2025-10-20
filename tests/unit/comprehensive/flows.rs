@@ -892,3 +892,320 @@ fn test_parse_app_parent_context() {
         _ => panic!("Expected FlowSample"),
     }
 }
+
+// ===== Tunnel Extension Tests (formats 1021-1030) =====
+
+#[test]
+fn test_parse_extended_l2_tunnel_egress() {
+    // Extended L2 Tunnel Egress: sampled_ethernet
+    // length(4) + src_mac(6) + dst_mac(6) + eth_type(4) = 20 bytes
+    let record_data = [
+        0x00, 0x00, 0x05, 0xDC, // length = 1500
+        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, // src_mac
+        0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, // dst_mac
+        0x00, 0x00, 0x08, 0x00, // eth_type = 0x0800 (IPv4)
+    ];
+
+    let data = build_flow_sample_test(0x03FD, &record_data); // record type = 1021
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedL2TunnelEgress(tunnel) => {
+                    assert_eq!(tunnel.header.length, 1500);
+                    assert_eq!(tunnel.header.eth_type, 0x0800);
+                }
+                _ => panic!("Expected ExtendedL2TunnelEgress"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_l2_tunnel_ingress() {
+    // Extended L2 Tunnel Ingress: sampled_ethernet
+    let record_data = [
+        0x00, 0x00, 0x05, 0xDC, // length = 1500
+        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, // src_mac
+        0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, // dst_mac
+        0x00, 0x00, 0x86, 0xDD, // eth_type = 0x86DD (IPv6)
+    ];
+
+    let data = build_flow_sample_test(0x03FE, &record_data); // record type = 1022
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedL2TunnelIngress(tunnel) => {
+                    assert_eq!(tunnel.header.length, 1500);
+                    assert_eq!(tunnel.header.eth_type, 0x86DD);
+                }
+                _ => panic!("Expected ExtendedL2TunnelIngress"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_ipv4_tunnel_egress() {
+    // Extended IPv4 Tunnel Egress: sampled_ipv4
+    let record_data = [
+        0x00, 0x00, 0x00, 0x14, // length = 20
+        0x00, 0x00, 0x00, 0x11, // protocol = UDP (17)
+        0xC0, 0xA8, 0x01, 0x01, // src_ip = 192.168.1.1
+        0xC0, 0xA8, 0x01, 0x02, // dst_ip = 192.168.1.2
+        0x00, 0x00, 0x12, 0xB5, // src_port = 4789 (VXLAN)
+        0x00, 0x00, 0x12, 0xB5, // dst_port = 4789
+        0x00, 0x00, 0x00, 0x00, // tcp_flags = 0
+        0x00, 0x00, 0x00, 0x00, // tos = 0
+    ];
+
+    let data = build_flow_sample_test(0x03FF, &record_data); // record type = 1023
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedIpv4TunnelEgress(tunnel) => {
+                    assert_eq!(tunnel.header.protocol, 17); // UDP
+                    assert_eq!(tunnel.header.src_port, 4789);
+                    assert_eq!(tunnel.header.dst_port, 4789);
+                }
+                _ => panic!("Expected ExtendedIpv4TunnelEgress"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_ipv4_tunnel_ingress() {
+    // Extended IPv4 Tunnel Ingress: sampled_ipv4
+    let record_data = [
+        0x00, 0x00, 0x00, 0x14, // length = 20
+        0x00, 0x00, 0x00, 0x2F, // protocol = GRE (47)
+        0x0A, 0x00, 0x00, 0x01, // src_ip = 10.0.0.1
+        0x0A, 0x00, 0x00, 0x02, // dst_ip = 10.0.0.2
+        0x00, 0x00, 0x00, 0x00, // src_port = 0
+        0x00, 0x00, 0x00, 0x00, // dst_port = 0
+        0x00, 0x00, 0x00, 0x00, // tcp_flags = 0
+        0x00, 0x00, 0x00, 0x00, // tos = 0
+    ];
+
+    let data = build_flow_sample_test(0x0400, &record_data); // record type = 1024
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedIpv4TunnelIngress(tunnel) => {
+                    assert_eq!(tunnel.header.protocol, 47); // GRE
+                }
+                _ => panic!("Expected ExtendedIpv4TunnelIngress"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_ipv6_tunnel_egress() {
+    // Extended IPv6 Tunnel Egress: sampled_ipv6
+    let record_data = [
+        0x00, 0x00, 0x00, 0x28, // length = 40
+        0x00, 0x00, 0x00, 0x11, // protocol = UDP (17)
+        // src_ip = 2001:db8::1
+        0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x01, // dst_ip = 2001:db8::2
+        0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x12, 0xB5, // src_port = 4789
+        0x00, 0x00, 0x12, 0xB5, // dst_port = 4789
+        0x00, 0x00, 0x00, 0x00, // tcp_flags = 0
+        0x00, 0x00, 0x00, 0x00, // priority = 0
+    ];
+
+    let data = build_flow_sample_test(0x0401, &record_data); // record type = 1025
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedIpv6TunnelEgress(tunnel) => {
+                    assert_eq!(tunnel.header.protocol, 17); // UDP
+                    assert_eq!(tunnel.header.src_port, 4789);
+                    assert_eq!(tunnel.header.dst_port, 4789);
+                }
+                _ => panic!("Expected ExtendedIpv6TunnelEgress"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_ipv6_tunnel_ingress() {
+    // Extended IPv6 Tunnel Ingress: sampled_ipv6
+    let record_data = [
+        0x00, 0x00, 0x00, 0x28, // length = 40
+        0x00, 0x00, 0x00, 0x2F, // protocol = GRE (47)
+        // src_ip = fd00::1
+        0xfd, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x01, // dst_ip = fd00::2
+        0xfd, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00, 0x00, // src_port = 0
+        0x00, 0x00, 0x00, 0x00, // dst_port = 0
+        0x00, 0x00, 0x00, 0x00, // tcp_flags = 0
+        0x00, 0x00, 0x00, 0x00, // priority = 0
+    ];
+
+    let data = build_flow_sample_test(0x0402, &record_data); // record type = 1026
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedIpv6TunnelIngress(tunnel) => {
+                    assert_eq!(tunnel.header.protocol, 47); // GRE
+                }
+                _ => panic!("Expected ExtendedIpv6TunnelIngress"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_decapsulate_egress() {
+    // Extended Decapsulate Egress: inner_header_offset(4)
+    let record_data = [
+        0x00, 0x00, 0x00, 0x32, // inner_header_offset = 50 bytes
+    ];
+
+    let data = build_flow_sample_test(0x0403, &record_data); // record type = 1027
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedDecapsulateEgress(decap) => {
+                    assert_eq!(decap.inner_header_offset, 50);
+                }
+                _ => panic!("Expected ExtendedDecapsulateEgress"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_decapsulate_ingress() {
+    // Extended Decapsulate Ingress: inner_header_offset(4)
+    let record_data = [
+        0x00, 0x00, 0x00, 0x2A, // inner_header_offset = 42 bytes
+    ];
+
+    let data = build_flow_sample_test(0x0404, &record_data); // record type = 1028
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedDecapsulateIngress(decap) => {
+                    assert_eq!(decap.inner_header_offset, 42);
+                }
+                _ => panic!("Expected ExtendedDecapsulateIngress"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_vni_egress() {
+    // Extended VNI Egress: vni(4)
+    let record_data = [
+        0x00, 0x00, 0x27, 0x10, // vni = 10000
+    ];
+
+    let data = build_flow_sample_test(0x0405, &record_data); // record type = 1029
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedVniEgress(vni) => {
+                    assert_eq!(vni.vni, 10000);
+                }
+                _ => panic!("Expected ExtendedVniEgress"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_vni_ingress() {
+    // Extended VNI Ingress: vni(4)
+    let record_data = [
+        0x00, 0x00, 0x4E, 0x20, // vni = 20000
+    ];
+
+    let data = build_flow_sample_test(0x0406, &record_data); // record type = 1030
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedVniIngress(vni) => {
+                    assert_eq!(vni.vni, 20000);
+                }
+                _ => panic!("Expected ExtendedVniIngress"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}

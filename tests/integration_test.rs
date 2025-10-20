@@ -210,6 +210,72 @@ fn test_parse_sflow_bin() {
                                     parent.context.application, parent.context.operation
                                 );
                             }
+                            FlowData::ExtendedL2TunnelEgress(tunnel) => {
+                                println!(
+                                    "ExtendedL2TunnelEgress(len={}, type=0x{:04x})",
+                                    tunnel.header.length, tunnel.header.eth_type
+                                );
+                            }
+                            FlowData::ExtendedL2TunnelIngress(tunnel) => {
+                                println!(
+                                    "ExtendedL2TunnelIngress(len={}, type=0x{:04x})",
+                                    tunnel.header.length, tunnel.header.eth_type
+                                );
+                            }
+                            FlowData::ExtendedIpv4TunnelEgress(tunnel) => {
+                                println!(
+                                    "ExtendedIpv4TunnelEgress({}:{} -> {}:{})",
+                                    tunnel.header.src_ip,
+                                    tunnel.header.src_port,
+                                    tunnel.header.dst_ip,
+                                    tunnel.header.dst_port
+                                );
+                            }
+                            FlowData::ExtendedIpv4TunnelIngress(tunnel) => {
+                                println!(
+                                    "ExtendedIpv4TunnelIngress({}:{} -> {}:{})",
+                                    tunnel.header.src_ip,
+                                    tunnel.header.src_port,
+                                    tunnel.header.dst_ip,
+                                    tunnel.header.dst_port
+                                );
+                            }
+                            FlowData::ExtendedIpv6TunnelEgress(tunnel) => {
+                                println!(
+                                    "ExtendedIpv6TunnelEgress({}:{} -> {}:{})",
+                                    tunnel.header.src_ip,
+                                    tunnel.header.src_port,
+                                    tunnel.header.dst_ip,
+                                    tunnel.header.dst_port
+                                );
+                            }
+                            FlowData::ExtendedIpv6TunnelIngress(tunnel) => {
+                                println!(
+                                    "ExtendedIpv6TunnelIngress({}:{} -> {}:{})",
+                                    tunnel.header.src_ip,
+                                    tunnel.header.src_port,
+                                    tunnel.header.dst_ip,
+                                    tunnel.header.dst_port
+                                );
+                            }
+                            FlowData::ExtendedDecapsulateEgress(decap) => {
+                                println!(
+                                    "ExtendedDecapsulateEgress(offset={})",
+                                    decap.inner_header_offset
+                                );
+                            }
+                            FlowData::ExtendedDecapsulateIngress(decap) => {
+                                println!(
+                                    "ExtendedDecapsulateIngress(offset={})",
+                                    decap.inner_header_offset
+                                );
+                            }
+                            FlowData::ExtendedVniEgress(vni) => {
+                                println!("ExtendedVniEgress(vni={})", vni.vni);
+                            }
+                            FlowData::ExtendedVniIngress(vni) => {
+                                println!("ExtendedVniIngress(vni={})", vni.vni);
+                            }
                             FlowData::Unknown { format, data } => {
                                 println!(
                                     "Unknown(enterprise={}, format={}, data_len={})",
@@ -837,6 +903,36 @@ fn test_parsed_flow_data() {
                         }
                         FlowData::AppParentContext(_) => {
                             // Application parent context - count but don't track separately
+                        }
+                        FlowData::ExtendedL2TunnelEgress(_) => {
+                            // L2 tunnel egress - count but don't track separately
+                        }
+                        FlowData::ExtendedL2TunnelIngress(_) => {
+                            // L2 tunnel ingress - count but don't track separately
+                        }
+                        FlowData::ExtendedIpv4TunnelEgress(_) => {
+                            // IPv4 tunnel egress - count but don't track separately
+                        }
+                        FlowData::ExtendedIpv4TunnelIngress(_) => {
+                            // IPv4 tunnel ingress - count but don't track separately
+                        }
+                        FlowData::ExtendedIpv6TunnelEgress(_) => {
+                            // IPv6 tunnel egress - count but don't track separately
+                        }
+                        FlowData::ExtendedIpv6TunnelIngress(_) => {
+                            // IPv6 tunnel ingress - count but don't track separately
+                        }
+                        FlowData::ExtendedDecapsulateEgress(_) => {
+                            // Decapsulate egress - count but don't track separately
+                        }
+                        FlowData::ExtendedDecapsulateIngress(_) => {
+                            // Decapsulate ingress - count but don't track separately
+                        }
+                        FlowData::ExtendedVniEgress(_) => {
+                            // VNI egress - count but don't track separately
+                        }
+                        FlowData::ExtendedVniIngress(_) => {
+                            // VNI ingress - count but don't track separately
                         }
                         FlowData::Unknown { format, data } => {
                             unknown += 1;

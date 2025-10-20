@@ -45,6 +45,11 @@ pub const SFLOW_SPECS: &[SpecDocument] = &[
         url: "https://sflow.org/sflow_openflow.txt",
         year: 2014,
     },
+    SpecDocument {
+        name: "sflow_tunnels",
+        url: "https://sflow.org/sflow_tunnels.txt",
+        year: 2012,
+    },
 ];
 
 /// XDR structure definition parsed from spec
@@ -338,6 +343,9 @@ fn xdr_type_to_rust(xdr_type: &str) -> String {
         "duration_us" => "u32".to_string(),
         "as_path_type" => "Vec<AsPathSegment>".to_string(),
         "host_adapter" => "HostAdapter".to_string(),
+        "sampled_ethernet" => "SampledEthernet".to_string(),
+        "sampled_ipv4" => "SampledIpv4".to_string(),
+        "sampled_ipv6" => "SampledIpv6".to_string(),
         _ => {
             // Custom types - assume they're defined elsewhere
             if xdr_type.starts_with("SFL") || xdr_type.starts_with("enum") {

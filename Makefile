@@ -1,4 +1,4 @@
-.PHONY: help test test-unit test-integration test-unit-verbose test-integration-verbose test-all test-verbose test-lib specs-validate bench coverage coverage-html coverage-open coverage-lcov coverage-unit coverage-integration clean build build-release build-all check fmt fmt-check clippy clippy-strict doc doc-open doc-all install-tools audit outdated
+.PHONY: help test test-unit test-integration test-unit-verbose test-integration-verbose test-verbose test-lib specs-validate bench coverage coverage-html coverage-open coverage-lcov coverage-unit coverage-integration clean build build-release build-all check fmt fmt-check clippy clippy-strict doc doc-open doc-all install-tools audit outdated
 
 # Testing targets
 test:
@@ -20,9 +20,6 @@ test-unit-verbose:
 test-integration-verbose:
 	@echo "Running integration tests with output..."
 	cargo test --test integration_test -- --nocapture
-
-test-all: test
-	@echo "All tests completed!"
 
 test-verbose:
 	@echo "Running tests with verbose output..."
@@ -88,7 +85,7 @@ fmt-check:
 
 clippy:
 	@echo "Running clippy..."
-	cargo clippy -- -D warnings
+	cargo clippy --all-targets --all-features -- -D warnings
 
 clippy-strict:
 	@echo "Running clippy with strict lints..."

@@ -449,6 +449,100 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Extended L2 Tunnel Egress - Format (0,1021)
+    pub(super) fn parse_extended_l2_tunnel_egress(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedL2TunnelEgress> {
+        let header = self.parse_sampled_ethernet()?;
+
+        Ok(crate::models::record_flows::ExtendedL2TunnelEgress { header })
+    }
+
+    /// Parse Extended L2 Tunnel Ingress - Format (0,1022)
+    pub(super) fn parse_extended_l2_tunnel_ingress(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedL2TunnelIngress> {
+        let header = self.parse_sampled_ethernet()?;
+
+        Ok(crate::models::record_flows::ExtendedL2TunnelIngress { header })
+    }
+
+    /// Parse Extended IPv4 Tunnel Egress - Format (0,1023)
+    pub(super) fn parse_extended_ipv4_tunnel_egress(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedIpv4TunnelEgress> {
+        let header = self.parse_sampled_ipv4()?;
+
+        Ok(crate::models::record_flows::ExtendedIpv4TunnelEgress { header })
+    }
+
+    /// Parse Extended IPv4 Tunnel Ingress - Format (0,1024)
+    pub(super) fn parse_extended_ipv4_tunnel_ingress(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedIpv4TunnelIngress> {
+        let header = self.parse_sampled_ipv4()?;
+
+        Ok(crate::models::record_flows::ExtendedIpv4TunnelIngress { header })
+    }
+
+    /// Parse Extended IPv6 Tunnel Egress - Format (0,1025)
+    pub(super) fn parse_extended_ipv6_tunnel_egress(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedIpv6TunnelEgress> {
+        let header = self.parse_sampled_ipv6()?;
+
+        Ok(crate::models::record_flows::ExtendedIpv6TunnelEgress { header })
+    }
+
+    /// Parse Extended IPv6 Tunnel Ingress - Format (0,1026)
+    pub(super) fn parse_extended_ipv6_tunnel_ingress(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedIpv6TunnelIngress> {
+        let header = self.parse_sampled_ipv6()?;
+
+        Ok(crate::models::record_flows::ExtendedIpv6TunnelIngress { header })
+    }
+
+    /// Parse Extended Decapsulate Egress - Format (0,1027)
+    pub(super) fn parse_extended_decapsulate_egress(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedDecapsulateEgress> {
+        let inner_header_offset = self.read_u32()?;
+
+        Ok(crate::models::record_flows::ExtendedDecapsulateEgress {
+            inner_header_offset,
+        })
+    }
+
+    /// Parse Extended Decapsulate Ingress - Format (0,1028)
+    pub(super) fn parse_extended_decapsulate_ingress(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedDecapsulateIngress> {
+        let inner_header_offset = self.read_u32()?;
+
+        Ok(crate::models::record_flows::ExtendedDecapsulateIngress {
+            inner_header_offset,
+        })
+    }
+
+    /// Parse Extended VNI Egress - Format (0,1029)
+    pub(super) fn parse_extended_vni_egress(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedVniEgress> {
+        let vni = self.read_u32()?;
+
+        Ok(crate::models::record_flows::ExtendedVniEgress { vni })
+    }
+
+    /// Parse Extended VNI Ingress - Format (0,1030)
+    pub(super) fn parse_extended_vni_ingress(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedVniIngress> {
+        let vni = self.read_u32()?;
+
+        Ok(crate::models::record_flows::ExtendedVniIngress { vni })
+    }
+
     /// Parse Extended Socket IPv4 - Format (0,2100)
     pub(super) fn parse_extended_socket_ipv4(
         &mut self,
@@ -589,6 +683,36 @@ impl<R: Read> Parser<R> {
                 // Note: Format 1017 is deprecated but kept for backward compatibility
                 1017 => Ok(FlowData::ExtendedOpenFlowV1(
                     parser.parse_extended_openflow_v1()?,
+                )),
+                1021 => Ok(FlowData::ExtendedL2TunnelEgress(
+                    parser.parse_extended_l2_tunnel_egress()?,
+                )),
+                1022 => Ok(FlowData::ExtendedL2TunnelIngress(
+                    parser.parse_extended_l2_tunnel_ingress()?,
+                )),
+                1023 => Ok(FlowData::ExtendedIpv4TunnelEgress(
+                    parser.parse_extended_ipv4_tunnel_egress()?,
+                )),
+                1024 => Ok(FlowData::ExtendedIpv4TunnelIngress(
+                    parser.parse_extended_ipv4_tunnel_ingress()?,
+                )),
+                1025 => Ok(FlowData::ExtendedIpv6TunnelEgress(
+                    parser.parse_extended_ipv6_tunnel_egress()?,
+                )),
+                1026 => Ok(FlowData::ExtendedIpv6TunnelIngress(
+                    parser.parse_extended_ipv6_tunnel_ingress()?,
+                )),
+                1027 => Ok(FlowData::ExtendedDecapsulateEgress(
+                    parser.parse_extended_decapsulate_egress()?,
+                )),
+                1028 => Ok(FlowData::ExtendedDecapsulateIngress(
+                    parser.parse_extended_decapsulate_ingress()?,
+                )),
+                1029 => Ok(FlowData::ExtendedVniEgress(
+                    parser.parse_extended_vni_egress()?,
+                )),
+                1030 => Ok(FlowData::ExtendedVniIngress(
+                    parser.parse_extended_vni_ingress()?,
                 )),
                 2100 => Ok(FlowData::ExtendedSocketIpv4(
                     parser.parse_extended_socket_ipv4()?,

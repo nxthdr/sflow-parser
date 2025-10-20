@@ -197,6 +197,26 @@ pub enum FlowData {
     Extended80211Aggregation(crate::models::record_flows::Extended80211Aggregation),
     /// Extended OpenFlow v1 - Format (0,1017) - DEPRECATED
     ExtendedOpenFlowV1(crate::models::record_flows::ExtendedOpenFlowV1),
+    /// Extended L2 Tunnel Egress - Format (0,1021)
+    ExtendedL2TunnelEgress(crate::models::record_flows::ExtendedL2TunnelEgress),
+    /// Extended L2 Tunnel Ingress - Format (0,1022)
+    ExtendedL2TunnelIngress(crate::models::record_flows::ExtendedL2TunnelIngress),
+    /// Extended IPv4 Tunnel Egress - Format (0,1023)
+    ExtendedIpv4TunnelEgress(crate::models::record_flows::ExtendedIpv4TunnelEgress),
+    /// Extended IPv4 Tunnel Ingress - Format (0,1024)
+    ExtendedIpv4TunnelIngress(crate::models::record_flows::ExtendedIpv4TunnelIngress),
+    /// Extended IPv6 Tunnel Egress - Format (0,1025)
+    ExtendedIpv6TunnelEgress(crate::models::record_flows::ExtendedIpv6TunnelEgress),
+    /// Extended IPv6 Tunnel Ingress - Format (0,1026)
+    ExtendedIpv6TunnelIngress(crate::models::record_flows::ExtendedIpv6TunnelIngress),
+    /// Extended Decapsulate Egress - Format (0,1027)
+    ExtendedDecapsulateEgress(crate::models::record_flows::ExtendedDecapsulateEgress),
+    /// Extended Decapsulate Ingress - Format (0,1028)
+    ExtendedDecapsulateIngress(crate::models::record_flows::ExtendedDecapsulateIngress),
+    /// Extended VNI Egress - Format (0,1029)
+    ExtendedVniEgress(crate::models::record_flows::ExtendedVniEgress),
+    /// Extended VNI Ingress - Format (0,1030)
+    ExtendedVniIngress(crate::models::record_flows::ExtendedVniIngress),
     /// Extended Socket IPv4 - Format (0,2100)
     ExtendedSocketIpv4(crate::models::record_flows::ExtendedSocketIpv4),
     /// Extended Socket IPv6 - Format (0,2101)
