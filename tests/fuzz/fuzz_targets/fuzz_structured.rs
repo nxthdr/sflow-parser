@@ -1,7 +1,86 @@
 #![no_main]
 
-use libfuzzer_sys::{fuzz_target, arbitrary::{Arbitrary, Unstructured}};
+use libfuzzer_sys::{
+    arbitrary::{Arbitrary, Unstructured},
+    fuzz_target,
+};
 use sflow_parser::parser::parse_datagram;
+
+/// Valid sFlow sample types (enterprise=0)
+const SAMPLE_TYPES: &[(u32, u32)] = &[
+    (0, 1), // Flow Sample
+    (0, 2), // Counters Sample
+    (0, 3), // Flow Sample Expanded
+    (0, 4), // Counters Sample Expanded
+];
+
+/// Valid flow record format IDs (enterprise=0)
+const FLOW_FORMATS: &[(u32, u32)] = &[
+    (0, 1),    // Sampled Header
+    (0, 2),    // Sampled Ethernet
+    (0, 3),    // Sampled IPv4
+    (0, 4),    // Sampled IPv6
+    (0, 1001), // Extended Switch
+    (0, 1002), // Extended Router
+    (0, 1003), // Extended Gateway
+    (0, 1004), // Extended User
+    (0, 1005), // Extended URL
+    (0, 1006), // Extended MPLS
+    (0, 1007), // Extended NAT
+    (0, 1008), // Extended MPLS Tunnel
+    (0, 1009), // Extended MPLS VC
+    (0, 1010), // Extended MPLS FEC
+    (0, 1011), // Extended MPLS LVP FEC
+    (0, 1012), // Extended VLAN Tunnel
+    (0, 1013), // Extended 802.11 Payload
+    (0, 1014), // Extended 802.11 RX
+    (0, 1015), // Extended 802.11 TX
+    (0, 1016), // Extended 802.11 Aggregation
+    (0, 1017), // Extended OpenFlow v1
+    (0, 1021), // Extended L2 Tunnel Egress
+    (0, 1022), // Extended L2 Tunnel Ingress
+    (0, 1023), // Extended IPv4 Tunnel Egress
+    (0, 1024), // Extended IPv4 Tunnel Ingress
+    (0, 1025), // Extended IPv6 Tunnel Egress
+    (0, 1026), // Extended IPv6 Tunnel Ingress
+    (0, 1027), // Extended Decapsulate Egress
+    (0, 1028), // Extended Decapsulate Ingress
+    (0, 1029), // Extended VNI Egress
+    (0, 1030), // Extended VNI Ingress
+    (0, 2100), // Extended Socket IPv4
+    (0, 2101), // Extended Socket IPv6
+    (0, 2202), // App Operation
+    (0, 2203), // App Parent Context
+];
+
+/// Valid counter record format IDs (enterprise=0)
+const COUNTER_FORMATS: &[(u32, u32)] = &[
+    (0, 1),    // Generic Interface
+    (0, 2),    // Ethernet Interface
+    (0, 3),    // Token Ring
+    (0, 4),    // 100BaseVG Interface
+    (0, 5),    // VLAN
+    (0, 6),    // IEEE 802.11 Counters
+    (0, 1001), // Processor
+    (0, 1002), // Radio Utilization
+    (0, 1004), // OpenFlow Port
+    (0, 1005), // OpenFlow Port Name
+    (0, 2000), // Host Description
+    (0, 2001), // Host Adapters
+    (0, 2002), // Host Parent
+    (0, 2003), // Host CPU
+    (0, 2004), // Host Memory
+    (0, 2005), // Host Disk I/O
+    (0, 2006), // Host Network I/O
+    (0, 2100), // Virtual Node
+    (0, 2101), // Virtual CPU
+    (0, 2102), // Virtual Memory
+    (0, 2103), // Virtual Disk I/O
+    (0, 2104), // Virtual Network I/O
+    (0, 2202), // App Operations
+    (0, 2203), // App Resources
+    (0, 2206), // App Workers
+];
 
 /// Structured fuzzing input that generates more realistic sFlow data
 #[derive(Debug)]
@@ -12,15 +91,73 @@ struct SflowFuzzInput {
     sub_agent_id: u32,
     sequence_number: u32,
     uptime: u32,
-    num_samples: u8,
-    sample_data: Vec<u8>,
+    samples: Vec<SampleData>,
+}
+
+#[derive(Debug)]
+struct SampleData {
+    sample_type: (u32, u32), // (enterprise, format)
+    sample_length: u32,
+    records: Vec<RecordData>,
+}
+
+#[derive(Debug)]
+struct RecordData {
+    record_format: (u32, u32), // (enterprise, format)
+    record_length: u32,
+    data: Vec<u8>,
+}
+
+impl<'a> Arbitrary<'a> for RecordData {
+    fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
+        // Pick a random flow or counter format
+        let is_flow = u.arbitrary::<bool>()?;
+        let formats = if is_flow { FLOW_FORMATS } else { COUNTER_FORMATS };
+        let format_idx = u.choose_index(formats.len())?;
+        let record_format = formats[format_idx];
+
+        // Generate record data (limited size)
+        let data_len = u.int_in_range(4..=128)?;
+        let data = u.bytes(data_len)?.to_vec();
+        let record_length = data.len() as u32;
+
+        Ok(RecordData {
+            record_format,
+            record_length,
+            data,
+        })
+    }
+}
+
+impl<'a> Arbitrary<'a> for SampleData {
+    fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
+        // Pick a valid sample type
+        let type_idx = u.choose_index(SAMPLE_TYPES.len())?;
+        let sample_type = SAMPLE_TYPES[type_idx];
+
+        // Generate 1-3 records per sample
+        let num_records = u.int_in_range(1..=3)?;
+        let mut records = Vec::new();
+        for _ in 0..num_records {
+            records.push(u.arbitrary()?);
+        }
+
+        // Calculate sample length (will be computed during serialization)
+        let sample_length = 0; // Placeholder
+
+        Ok(SampleData {
+            sample_type,
+            sample_length,
+            records,
+        })
+    }
 }
 
 impl<'a> Arbitrary<'a> for SflowFuzzInput {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
-        let version = u.int_in_range(1..=10)?;
+        let version = 5; // Always use version 5
         let agent_addr_type = u.int_in_range(0..=5)?;
-        
+
         // Generate appropriate address length based on type
         let addr_len = match agent_addr_type {
             1 => 4,  // IPv4
@@ -28,16 +165,18 @@ impl<'a> Arbitrary<'a> for SflowFuzzInput {
             _ => u.int_in_range(0..=32)?,
         };
         let agent_addr = u.bytes(addr_len)?.to_vec();
-        
+
         let sub_agent_id = u.arbitrary()?;
         let sequence_number = u.arbitrary()?;
         let uptime = u.arbitrary()?;
-        let num_samples = u.int_in_range(0..=5)?;  // Reduced from 10 to 5
-        
-        // Generate sample data - limit to reasonable size
-        let sample_len = u.int_in_range(0..=512)?;  // Reduced from 1024 to 512
-        let sample_data = u.bytes(sample_len)?.to_vec();
-        
+
+        // Generate 1-3 samples
+        let num_samples = u.int_in_range(1..=3)?;
+        let mut samples = Vec::new();
+        for _ in 0..num_samples {
+            samples.push(u.arbitrary()?);
+        }
+
         Ok(SflowFuzzInput {
             version,
             agent_addr_type,
@@ -45,40 +184,108 @@ impl<'a> Arbitrary<'a> for SflowFuzzInput {
             sub_agent_id,
             sequence_number,
             uptime,
-            num_samples,
-            sample_data,
+            samples,
         })
+    }
+}
+
+impl RecordData {
+    fn to_bytes(&self) -> Vec<u8> {
+        let mut data = Vec::new();
+
+        // Record format (enterprise + format as DataFormat)
+        let format_value = (self.record_format.0 << 12) | self.record_format.1;
+        data.extend_from_slice(&format_value.to_be_bytes());
+
+        // Record length
+        data.extend_from_slice(&self.record_length.to_be_bytes());
+
+        // Record data
+        data.extend_from_slice(&self.data);
+
+        // Add padding to 4-byte boundary
+        let padding = (4 - (self.data.len() % 4)) % 4;
+        data.extend_from_slice(&vec![0u8; padding]);
+
+        data
+    }
+}
+
+impl SampleData {
+    fn to_bytes(&self) -> Vec<u8> {
+        let mut data = Vec::new();
+
+        // Sample type (enterprise + format as DataFormat)
+        let format_value = (self.sample_type.0 << 12) | self.sample_type.1;
+        data.extend_from_slice(&format_value.to_be_bytes());
+
+        // Build sample body first to calculate length
+        let mut sample_body = Vec::new();
+
+        // Add sample-specific header fields (simplified)
+        // Sequence number
+        sample_body.extend_from_slice(&0u32.to_be_bytes());
+        // Source ID
+        sample_body.extend_from_slice(&0u32.to_be_bytes());
+        // Sampling rate
+        sample_body.extend_from_slice(&1u32.to_be_bytes());
+        // Sample pool
+        sample_body.extend_from_slice(&0u32.to_be_bytes());
+        // Drops
+        sample_body.extend_from_slice(&0u32.to_be_bytes());
+        // Input interface
+        sample_body.extend_from_slice(&0u32.to_be_bytes());
+        // Output interface
+        sample_body.extend_from_slice(&0u32.to_be_bytes());
+
+        // Number of records
+        sample_body.extend_from_slice(&(self.records.len() as u32).to_be_bytes());
+
+        // Records
+        for record in &self.records {
+            sample_body.extend_from_slice(&record.to_bytes());
+        }
+
+        // Sample length
+        data.extend_from_slice(&(sample_body.len() as u32).to_be_bytes());
+
+        // Sample body
+        data.extend_from_slice(&sample_body);
+
+        data
     }
 }
 
 impl SflowFuzzInput {
     fn to_bytes(&self) -> Vec<u8> {
         let mut data = Vec::new();
-        
+
         // Version
         data.extend_from_slice(&self.version.to_be_bytes());
-        
+
         // Agent address type
         data.extend_from_slice(&self.agent_addr_type.to_be_bytes());
-        
+
         // Agent address
         data.extend_from_slice(&self.agent_addr);
-        
+
         // Sub-agent ID
         data.extend_from_slice(&self.sub_agent_id.to_be_bytes());
-        
+
         // Sequence number
         data.extend_from_slice(&self.sequence_number.to_be_bytes());
-        
+
         // Uptime
         data.extend_from_slice(&self.uptime.to_be_bytes());
-        
+
         // Number of samples
-        data.extend_from_slice(&(self.num_samples as u32).to_be_bytes());
-        
-        // Sample data
-        data.extend_from_slice(&self.sample_data);
-        
+        data.extend_from_slice(&(self.samples.len() as u32).to_be_bytes());
+
+        // Samples
+        for sample in &self.samples {
+            data.extend_from_slice(&sample.to_bytes());
+        }
+
         data
     }
 }
