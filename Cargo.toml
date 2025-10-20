@@ -1,6 +1,6 @@
 [package]
 name = "sflow-parser"
-version = "0.1.0"
+version = "0.2.0"
 license = "MIT"
 readme = "README.md"
 description = "InMon sFlow v5 Parser"
