@@ -225,7 +225,7 @@ Performance benchmarks using Criterion:
 make bench
 ```
 
-**Results:** ~330ns per datagram (~3M datagrams/sec) on typical hardware. The parser is not zero-copy (at least for now) and does not use any unsafe code, but it is fast enough for most use cases.
+**Results:** ~300ns per datagram (~346 MiB/s throughput) on typical hardware. The parser is not zero-copy (at least for now) and does not use any unsafe code, but it is fast enough for most use cases.
 
 ## License
 
