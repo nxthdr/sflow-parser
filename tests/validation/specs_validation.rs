@@ -55,6 +55,11 @@ pub const SFLOW_SPECS: &[SpecDocument] = &[
         url: "https://sflow.org/sflow_drops.txt",
         year: 2020,
     },
+    SpecDocument {
+        name: "sflow_transit",
+        url: "https://sflow.org/sflow_transit.txt",
+        year: 2021,
+    },
 ];
 
 /// XDR structure definition parsed from spec

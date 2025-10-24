@@ -223,6 +223,10 @@ pub enum FlowData {
     ExtendedAcl(crate::models::record_flows::ExtendedAcl),
     /// Extended Function - Format (0,1038)
     ExtendedFunction(crate::models::record_flows::ExtendedFunction),
+    /// Extended Transit - Format (0,1039)
+    ExtendedTransit(crate::models::record_flows::ExtendedTransit),
+    /// Extended Queue - Format (0,1040)
+    ExtendedQueue(crate::models::record_flows::ExtendedQueue),
     /// Extended Socket IPv4 - Format (0,2100)
     ExtendedSocketIpv4(crate::models::record_flows::ExtendedSocketIpv4),
     /// Extended Socket IPv6 - Format (0,2101)

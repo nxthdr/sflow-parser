@@ -1359,3 +1359,57 @@ fn test_parse_extended_function() {
         _ => panic!("Expected FlowSample"),
     }
 }
+
+#[test]
+fn test_parse_extended_transit() {
+    // Extended Transit: delay(4)
+    let record_data = [
+        0x00, 0x00, 0x27, 0x10, // delay = 10000 nanoseconds
+    ];
+
+    let data = build_flow_sample_test(0x040F, &record_data); // record type = 1039
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedTransit(transit) => {
+                    assert_eq!(transit.delay, 10000);
+                }
+                _ => panic!("Expected ExtendedTransit"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_queue() {
+    // Extended Queue: depth(4)
+    let record_data = [
+        0x00, 0x00, 0x04, 0x00, // depth = 1024 bytes
+    ];
+
+    let data = build_flow_sample_test(0x0410, &record_data); // record type = 1040
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedQueue(queue) => {
+                    assert_eq!(queue.depth, 1024);
+                }
+                _ => panic!("Expected ExtendedQueue"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}

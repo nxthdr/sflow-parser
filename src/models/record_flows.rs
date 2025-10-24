@@ -1295,6 +1295,46 @@ pub struct ExtendedFunction {
     pub symbol: String,
 }
 
+/// Extended Transit - Format (0,1039)
+///
+/// Delay for sampled packet traversing switch
+///
+/// # XDR Definition ([sFlow Transit](https://sflow.org/sflow_transit.txt))
+///
+/// ```text
+/// /* Delay for sampled packet traversing switch */
+/// /* opaque = flow_data; enterprise = 0; format = 1039 */
+/// struct extended_transit {
+///   unsigned int delay; /* transit delay in nanoseconds
+///                          0xffffffff indicates value >= 0xffffffff */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedTransit {
+    /// Transit delay in nanoseconds (0xffffffff indicates value >= 0xffffffff)
+    pub delay: u32,
+}
+
+/// Extended Queue - Format (0,1040)
+///
+/// Queue depth for sampled packet traversing switch
+///
+/// # XDR Definition ([sFlow Transit](https://sflow.org/sflow_transit.txt))
+///
+/// ```text
+/// /* Queue depth for sampled packet traversing switch */
+/// /* extended_egress_queue structure must be included */
+/// /* opaque = flow_data; enterprise = 0; format = 1040 */
+/// struct extended_queue {
+///   unsigned int depth;   /* queue depth in bytes */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedQueue {
+    /// Queue depth in bytes
+    pub depth: u32,
+}
+
 /// Extended Socket IPv4 - Format (0,2100)
 ///
 /// IPv4 socket information for application transactions

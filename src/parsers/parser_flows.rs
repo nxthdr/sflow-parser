@@ -576,6 +576,24 @@ impl<R: Read> Parser<R> {
         Ok(crate::models::record_flows::ExtendedFunction { symbol })
     }
 
+    /// Parse Extended Transit - Format (0,1039)
+    pub(super) fn parse_extended_transit(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedTransit> {
+        let delay = self.read_u32()?;
+
+        Ok(crate::models::record_flows::ExtendedTransit { delay })
+    }
+
+    /// Parse Extended Queue - Format (0,1040)
+    pub(super) fn parse_extended_queue(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedQueue> {
+        let depth = self.read_u32()?;
+
+        Ok(crate::models::record_flows::ExtendedQueue { depth })
+    }
+
     /// Parse Extended Socket IPv4 - Format (0,2100)
     pub(super) fn parse_extended_socket_ipv4(
         &mut self,
@@ -770,6 +788,8 @@ impl<R: Read> Parser<R> {
                 1038 => Ok(FlowData::ExtendedFunction(
                     parser.parse_extended_function()?,
                 )),
+                1039 => Ok(FlowData::ExtendedTransit(parser.parse_extended_transit()?)),
+                1040 => Ok(FlowData::ExtendedQueue(parser.parse_extended_queue()?)),
                 2100 => Ok(FlowData::ExtendedSocketIpv4(
                     parser.parse_extended_socket_ipv4()?,
                 )),

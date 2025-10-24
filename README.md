@@ -44,7 +44,7 @@ The main specification is [sFlow Version 5](https://sflow.org/sflow_version_5.tx
 | 2015 | [sFlow Broadcom Buffer Utilization](https://sflow.org/bv-sflow.txt) | Buffer utilization for Broadcom switches | ⬜ |
 | 2016 | [sFlow Optical Interface Structures](https://sflow.org/sflow_optics.txt) | Pluggable optical modules (SFP, QSFP, etc.) | ⬜ |
 | 2020 | [sFlow Dropped Packet Notification](https://sflow.org/sflow_drops.txt) | Reports on dropped packets with reason codes | ✅ |
-| 2021 | [sFlow Transit Delay Structures](https://sflow.org/sflow_transit.txt) | Delay and queue depth for sampled packets | ⬜ |
+| 2021 | [sFlow Transit Delay Structures](https://sflow.org/sflow_transit.txt) | Delay and queue depth for sampled packets | ✅ |
 
 **Note:** See [sFlow Errata](https://sflow.org/developers/errata.php) for corrections to published specifications.
 
@@ -108,8 +108,8 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 1036 | Extended Egress Queue | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ✅ |
 | 0 | 1037 | Extended ACL | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ✅ |
 | 0 | 1038 | Extended Function | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ✅ |
-| 0 | 1039 | Extended Transit Delay | [sFlow Transit](https://sflow.org/sflow_transit.txt) | ⬜ |
-| 0 | 1040 | Extended Queue Depth | [sFlow Transit](https://sflow.org/sflow_transit.txt) | ⬜ |
+| 0 | 1039 | Extended Transit Delay | [sFlow Transit](https://sflow.org/sflow_transit.txt) | ✅ |
+| 0 | 1040 | Extended Queue Depth | [sFlow Transit](https://sflow.org/sflow_transit.txt) | ✅ |
 | 0 | 1041 | Extended HW Trap | [sFlow Host](https://github.com/sflow/host-sflow/blob/v2.0.50-3/src/sflow/sflow.h) | ⬜ |
 | 0 | 1042 | Extended Linux Drop Reason | [sFlow Host](https://github.com/sflow/host-sflow/blob/v2.0.50-3/src/sflow/sflow.h) | ⬜ |
 | 0 | 2000 | Transaction | [sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0282.html) | ⬜ |
