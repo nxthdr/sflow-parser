@@ -6,7 +6,7 @@
 //! # Example
 //!
 //! ```no_run
-//! use sflow_parser::parser::parse_datagram;
+//! use sflow_parser::parsers::parse_datagram;
 //!
 //! let data = std::fs::read("sflow.bin").unwrap();
 //! let datagram = parse_datagram(&data).unwrap();
@@ -14,8 +14,8 @@
 //! ```
 
 pub mod models;
-pub mod parser;
+pub mod parsers;
 
 // Re-export commonly used types
 pub use models::{SFlowDatagram, SampleData, SampleRecord};
-pub use parser::{parse_datagram, parse_datagrams, ParseError};
+pub use parsers::{parse_datagram, parse_datagrams, ParseError};

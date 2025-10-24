@@ -4,7 +4,7 @@
 
 use super::helpers::*;
 use sflow_parser::models::AppStatus;
-use sflow_parser::parser::parse_datagram;
+use sflow_parser::parsers::parse_datagram;
 
 #[test]
 fn test_parse_sampled_ethernet() {
@@ -1264,6 +1264,96 @@ fn test_parse_extended_vni_ingress() {
                     assert_eq!(vni.vni, 20000);
                 }
                 _ => panic!("Expected ExtendedVniIngress"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_egress_queue() {
+    // Extended Egress Queue: queue(4)
+    let record_data = [
+        0x00, 0x00, 0x00, 0x05, // queue = 5
+    ];
+
+    let data = build_flow_sample_test(0x040C, &record_data); // record type = 1036
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedEgressQueue(queue) => {
+                    assert_eq!(queue.queue, 5);
+                }
+                _ => panic!("Expected ExtendedEgressQueue"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_acl() {
+    // Extended ACL: number(4) + name_len(4) + name + padding + direction(4)
+    let record_data = [
+        0x00, 0x00, 0x00, 0x64, // number = 100
+        0x00, 0x00, 0x00, 0x07, // name length = 7
+        b'a', b'c', b'l', b'-', b'1', b'2', b'3', // name = "acl-123"
+        0x00, // padding to 4-byte boundary
+        0x00, 0x00, 0x00, 0x01, // direction = 1 (ingress)
+    ];
+
+    let data = build_flow_sample_test(0x040D, &record_data); // record type = 1037
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedAcl(acl) => {
+                    assert_eq!(acl.number, 100);
+                    assert_eq!(acl.name, "acl-123");
+                    assert_eq!(acl.direction, 1);
+                }
+                _ => panic!("Expected ExtendedAcl"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_function() {
+    // Extended Function: symbol_len(4) + symbol + padding
+    let record_data = [
+        0x00, 0x00, 0x00, 0x0D, // symbol length = 13
+        b'k', b'f', b'r', b'e', b'e', b'_', b's', b'k', b'b', b'_', b'f', b'r',
+        b'e', // symbol = "kfree_skb_fre"
+        0x00, 0x00, 0x00, // padding to 4-byte boundary
+    ];
+
+    let data = build_flow_sample_test(0x040E, &record_data); // record type = 1038
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedFunction(func) => {
+                    assert_eq!(func.symbol, "kfree_skb_fre");
+                }
+                _ => panic!("Expected ExtendedFunction"),
             }
         }
         _ => panic!("Expected FlowSample"),

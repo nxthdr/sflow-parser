@@ -543,6 +543,39 @@ impl<R: Read> Parser<R> {
         Ok(crate::models::record_flows::ExtendedVniIngress { vni })
     }
 
+    /// Parse Extended Egress Queue - Format (0,1036)
+    pub(super) fn parse_extended_egress_queue(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedEgressQueue> {
+        let queue = self.read_u32()?;
+
+        Ok(crate::models::record_flows::ExtendedEgressQueue { queue })
+    }
+
+    /// Parse Extended ACL - Format (0,1037)
+    pub(super) fn parse_extended_acl(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedAcl> {
+        let number = self.read_u32()?;
+        let name = self.read_string()?;
+        let direction = self.read_u32()?;
+
+        Ok(crate::models::record_flows::ExtendedAcl {
+            number,
+            name,
+            direction,
+        })
+    }
+
+    /// Parse Extended Function - Format (0,1038)
+    pub(super) fn parse_extended_function(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedFunction> {
+        let symbol = self.read_string()?;
+
+        Ok(crate::models::record_flows::ExtendedFunction { symbol })
+    }
+
     /// Parse Extended Socket IPv4 - Format (0,2100)
     pub(super) fn parse_extended_socket_ipv4(
         &mut self,
@@ -729,6 +762,13 @@ impl<R: Read> Parser<R> {
                 )),
                 1030 => Ok(FlowData::ExtendedVniIngress(
                     parser.parse_extended_vni_ingress()?,
+                )),
+                1036 => Ok(FlowData::ExtendedEgressQueue(
+                    parser.parse_extended_egress_queue()?,
+                )),
+                1037 => Ok(FlowData::ExtendedAcl(parser.parse_extended_acl()?)),
+                1038 => Ok(FlowData::ExtendedFunction(
+                    parser.parse_extended_function()?,
                 )),
                 2100 => Ok(FlowData::ExtendedSocketIpv4(
                     parser.parse_extended_socket_ipv4()?,

@@ -3,7 +3,7 @@
 //! These tests validate that the parser correctly handles invalid input
 //! and returns appropriate errors.
 
-use sflow_parser::parser::parse_datagram;
+use sflow_parser::parsers::parse_datagram;
 
 #[test]
 fn test_invalid_version() {

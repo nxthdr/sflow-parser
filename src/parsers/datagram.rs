@@ -112,6 +112,39 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse a discarded packet sample
+    pub(super) fn parse_discarded_packet(&mut self) -> Result<DiscardedPacket> {
+        let sequence_number = self.read_u32()?;
+        let source_id = self.parse_data_source_expanded()?;
+        let drops = self.read_u32()?;
+        let input_ifindex = self.read_u32()?;
+        let output_ifindex = self.read_u32()?;
+
+        // Parse drop reason
+        let reason_value = self.read_u32()?;
+        let reason = crate::models::record_flows::DropReason::from_u32(reason_value)
+            .unwrap_or(crate::models::record_flows::DropReason::Unknown);
+
+        // Parse flow records array
+        let num_records = self.read_u32()?;
+        // Limit capacity to prevent OOM attacks - allocate conservatively
+        let capacity = num_records.min(1024) as usize;
+        let mut flow_records = Vec::with_capacity(capacity);
+        for _ in 0..num_records {
+            flow_records.push(self.parse_flow_record()?);
+        }
+
+        Ok(DiscardedPacket {
+            sequence_number,
+            source_id,
+            drops,
+            input_ifindex,
+            output_ifindex,
+            reason,
+            flow_records,
+        })
+    }
+
     /// Parse sample data based on format
     fn parse_sample_data(&mut self, format: DataFormat, data: Vec<u8>) -> Result<SampleData> {
         let mut cursor = Cursor::new(data.clone());
@@ -135,6 +168,10 @@ impl<R: Read> Parser<R> {
                 4 => {
                     let sample = parser.parse_counters_sample_expanded()?;
                     Ok(SampleData::CountersSampleExpanded(sample))
+                }
+                5 => {
+                    let sample = parser.parse_discarded_packet()?;
+                    Ok(SampleData::DiscardedPacket(sample))
                 }
                 _ => Ok(SampleData::Unknown { format, data }),
             }

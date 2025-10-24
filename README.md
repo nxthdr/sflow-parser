@@ -43,7 +43,7 @@ The main specification is [sFlow Version 5](https://sflow.org/sflow_version_5.tx
 | 2015 | [sFlow Broadcom ASIC Table Utilization](https://sflow.org/sflow_broadcom_tables.txt) | Hardware table utilization for Broadcom ASICs | ⬜ |
 | 2015 | [sFlow Broadcom Buffer Utilization](https://sflow.org/bv-sflow.txt) | Buffer utilization for Broadcom switches | ⬜ |
 | 2016 | [sFlow Optical Interface Structures](https://sflow.org/sflow_optics.txt) | Pluggable optical modules (SFP, QSFP, etc.) | ⬜ |
-| 2020 | [sFlow Dropped Packet Notification](https://sflow.org/sflow_drops.txt) | Reports on dropped packets with reason codes | ⬜ |
+| 2020 | [sFlow Dropped Packet Notification](https://sflow.org/sflow_drops.txt) | Reports on dropped packets with reason codes | ✅ |
 | 2021 | [sFlow Transit Delay Structures](https://sflow.org/sflow_transit.txt) | Delay and queue depth for sampled packets | ⬜ |
 
 **Note:** See [sFlow Errata](https://sflow.org/developers/errata.php) for corrections to published specifications.
@@ -58,7 +58,7 @@ sFlow datagrams contain sample records. Each sample record has a format type tha
 | 0 | 2 | Counters Sample | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
 | 0 | 3 | Flow Sample Expanded | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
 | 0 | 4 | Counters Sample Expanded | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
-| 0 | 5 | Discarded Packet | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ⬜ |
+| 0 | 5 | Discarded Packet | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ✅ |
 
 Each sample contains one or more flow records (for flow samples) or counter records (for counter samples).
 
@@ -105,9 +105,9 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 1033 | Extended InfiniBand BRH | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ⬜ |
 | 0 | 1034 | Extended VLAN In | [sFlow Discussion](https://groups.google.com/forum/) | ⬜ |
 | 0 | 1035 | Extended VLAN Out | [sFlow Discussion](https://groups.google.com/forum/) | ⬜ |
-| 0 | 1036 | Extended Egress Queue | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ⬜ |
-| 0 | 1037 | Extended ACL | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ⬜ |
-| 0 | 1038 | Extended Function | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ⬜ |
+| 0 | 1036 | Extended Egress Queue | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ✅ |
+| 0 | 1037 | Extended ACL | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ✅ |
+| 0 | 1038 | Extended Function | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ✅ |
 | 0 | 1039 | Extended Transit Delay | [sFlow Transit](https://sflow.org/sflow_transit.txt) | ⬜ |
 | 0 | 1040 | Extended Queue Depth | [sFlow Transit](https://sflow.org/sflow_transit.txt) | ⬜ |
 | 0 | 1041 | Extended HW Trap | [sFlow Host](https://github.com/sflow/host-sflow/blob/v2.0.50-3/src/sflow/sflow.h) | ⬜ |

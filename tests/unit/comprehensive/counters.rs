@@ -3,7 +3,7 @@
 //! Tests for parsing all counter record types: interface, host, virtual, and app counters.
 
 use super::helpers::*;
-use sflow_parser::parser::parse_datagram;
+use sflow_parser::parsers::parse_datagram;
 
 #[test]
 fn test_parse_ethernet_interface_counters() {

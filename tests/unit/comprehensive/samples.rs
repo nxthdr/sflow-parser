@@ -4,7 +4,7 @@
 //! expanded samples, and handling of unknown sample types.
 
 use super::helpers::*;
-use sflow_parser::parser::parse_datagram;
+use sflow_parser::parsers::parse_datagram;
 
 #[test]
 fn test_parse_flow_sample_with_sampled_header() {
@@ -349,5 +349,73 @@ fn test_parse_interface_formats() {
             assert!(flow.output.is_discarded());
         }
         _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_discarded_packet_sample() {
+    let mut data = create_datagram_header(1);
+
+    // Build a discarded packet sample with a sampled header record
+    let sampled_header_data = [
+        0x00, 0x00, 0x00, 0x01, // protocol = Ethernet
+        0x00, 0x00, 0x05, 0xDC, // frame length = 1500
+        0x00, 0x00, 0x00, 0x00, // stripped bytes = 0
+        0x00, 0x00, 0x00, 0x0E, // header length = 14 bytes
+        // Ethernet header (14 bytes + 2 padding)
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // dst MAC
+        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, // src MAC
+        0x08, 0x00, // EtherType = IPv4
+        0x00, 0x00, // padding
+    ];
+
+    data.extend_from_slice(&[
+        // Discarded packet sample
+        0x00, 0x00, 0x00, 0x05, // sample type = discarded packet (format 5)
+        0x00, 0x00, 0x00,
+        0x48, // sample length = 72 bytes (7*4 fields + 4 num_records + 8 record_header + 32 record_data)
+        0x00, 0x00, 0x00, 0x01, // sequence number = 1
+        0x00, 0x00, 0x00, 0x00, // source_id_type = 0
+        0x00, 0x00, 0x00, 0x01, // source_id_index = 1
+        0x00, 0x00, 0x00, 0x00, // drops = 0
+        0x00, 0x00, 0x00, 0x02, // input_ifindex = 2
+        0x00, 0x00, 0x00, 0x00, // output_ifindex = 0 (not egress drop)
+        0x00, 0x00, 0x01, 0x02, // reason = 258 (ACL)
+        0x00, 0x00, 0x00, 0x01, // number of flow records = 1
+        // Flow record: sampled header
+        0x00, 0x00, 0x00, 0x01, // flow format = sampled header (0,1)
+        0x00, 0x00, 0x00, 0x20, // flow data length = 32 bytes
+    ]);
+    data.extend_from_slice(&sampled_header_data);
+
+    let result = parse_datagram(&data);
+    if let Err(e) = &result {
+        eprintln!("Parse error: {}", e);
+    }
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    assert_eq!(datagram.samples.len(), 1);
+
+    match &datagram.samples[0].sample_data {
+        SampleData::DiscardedPacket(discarded) => {
+            assert_eq!(discarded.sequence_number, 1);
+            assert_eq!(discarded.source_id.source_id_type, 0);
+            assert_eq!(discarded.source_id.source_id_index, 1);
+            assert_eq!(discarded.drops, 0);
+            assert_eq!(discarded.input_ifindex, 2);
+            assert_eq!(discarded.output_ifindex, 0);
+            assert_eq!(discarded.reason as u32, 258); // ACL
+            assert_eq!(discarded.flow_records.len(), 1);
+
+            match &discarded.flow_records[0].flow_data {
+                FlowData::SampledHeader(header) => {
+                    assert_eq!(header.frame_length, 1500);
+                    assert_eq!(header.header.len(), 14);
+                }
+                _ => panic!("Expected SampledHeader"),
+            }
+        }
+        _ => panic!("Expected DiscardedPacket"),
     }
 }
