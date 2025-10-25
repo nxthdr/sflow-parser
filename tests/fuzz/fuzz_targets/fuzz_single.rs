@@ -1,7 +1,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use sflow_parser::parser::parse_datagram;
+use sflow_parser::parsers::parse_datagram;
 
 fuzz_target!(|data: &[u8]| {
     // Try to parse arbitrary data as an sFlow datagram

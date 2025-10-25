@@ -4,7 +4,7 @@ use libfuzzer_sys::{
     arbitrary::{Arbitrary, Unstructured},
     fuzz_target,
 };
-use sflow_parser::parser::parse_datagram;
+use sflow_parser::parsers::parse_datagram;
 
 /// Valid sFlow sample types (enterprise=0)
 const SAMPLE_TYPES: &[(u32, u32)] = &[
@@ -12,6 +12,7 @@ const SAMPLE_TYPES: &[(u32, u32)] = &[
     (0, 2), // Counters Sample
     (0, 3), // Flow Sample Expanded
     (0, 4), // Counters Sample Expanded
+    (0, 5), // Discarded Packet
 ];
 
 /// Valid flow record format IDs (enterprise=0)
@@ -22,9 +23,9 @@ const FLOW_FORMATS: &[(u32, u32)] = &[
     (0, 4),    // Sampled IPv6
     (0, 1001), // Extended Switch
     (0, 1002), // Extended Router
-    (0, 1003), // Extended Gateway
+    (0, 1003), // Extended Gateway (BGP)
     (0, 1004), // Extended User
-    (0, 1005), // Extended URL
+    (0, 1005), // Extended URL (deprecated)
     (0, 1006), // Extended MPLS
     (0, 1007), // Extended NAT
     (0, 1008), // Extended MPLS Tunnel
@@ -36,7 +37,10 @@ const FLOW_FORMATS: &[(u32, u32)] = &[
     (0, 1014), // Extended 802.11 RX
     (0, 1015), // Extended 802.11 TX
     (0, 1016), // Extended 802.11 Aggregation
-    (0, 1017), // Extended OpenFlow v1
+    (0, 1017), // Extended OpenFlow v1 (deprecated)
+    (0, 1018), // Extended Fibre Channel
+    (0, 1019), // Extended Queue Length
+    (0, 1020), // Extended NAT Port
     (0, 1021), // Extended L2 Tunnel Egress
     (0, 1022), // Extended L2 Tunnel Ingress
     (0, 1023), // Extended IPv4 Tunnel Egress
@@ -47,10 +51,38 @@ const FLOW_FORMATS: &[(u32, u32)] = &[
     (0, 1028), // Extended Decapsulate Ingress
     (0, 1029), // Extended VNI Egress
     (0, 1030), // Extended VNI Ingress
+    (0, 1031), // Extended InfiniBand LRH
+    (0, 1032), // Extended InfiniBand GRH
+    (0, 1033), // Extended InfiniBand BRH
+    (0, 1034), // Extended VLAN In
+    (0, 1035), // Extended VLAN Out
+    (0, 1036), // Extended Egress Queue
+    (0, 1037), // Extended ACL
+    (0, 1038), // Extended Function
+    (0, 1039), // Extended Transit Delay
+    (0, 1040), // Extended Queue Depth
+    (0, 1041), // Extended HW Trap
+    (0, 1042), // Extended Linux Drop Reason
+    (0, 2000), // Transaction
+    (0, 2001), // Extended NFS Storage Transaction
+    (0, 2002), // Extended SCSI Storage Transaction
+    (0, 2003), // Extended HTTP Transaction
     (0, 2100), // Extended Socket IPv4
     (0, 2101), // Extended Socket IPv6
+    (0, 2102), // Extended Proxy Socket IPv4
+    (0, 2103), // Extended Proxy Socket IPv6
+    (0, 2200), // Memcache Operation
+    (0, 2201), // HTTP Request (deprecated)
     (0, 2202), // App Operation
     (0, 2203), // App Parent Context
+    (0, 2204), // App Initiator
+    (0, 2205), // App Target
+    (0, 2206), // HTTP Request
+    (0, 2207), // Extended Proxy Request
+    (0, 2208), // Extended Nav Timing
+    (0, 2209), // Extended TCP Info
+    (0, 2210), // Extended Entities
+    (4413, 1), // BST Egress Queue
 ];
 
 /// Valid counter record format IDs (enterprise=0)
@@ -61,8 +93,13 @@ const COUNTER_FORMATS: &[(u32, u32)] = &[
     (0, 4),    // 100BaseVG Interface
     (0, 5),    // VLAN
     (0, 6),    // IEEE 802.11 Counters
+    (0, 7),    // LAG Port Stats
+    (0, 8),    // Slow Path Counts
+    (0, 9),    // InfiniBand Counters
+    (0, 10),   // Optical SFP/QSFP
     (0, 1001), // Processor
     (0, 1002), // Radio Utilization
+    (0, 1003), // Queue Length
     (0, 1004), // OpenFlow Port
     (0, 1005), // OpenFlow Port Name
     (0, 2000), // Host Description
@@ -72,14 +109,32 @@ const COUNTER_FORMATS: &[(u32, u32)] = &[
     (0, 2004), // Host Memory
     (0, 2005), // Host Disk I/O
     (0, 2006), // Host Network I/O
+    (0, 2007), // MIB2 IP Group
+    (0, 2008), // MIB2 ICMP Group
+    (0, 2009), // MIB2 TCP Group
+    (0, 2010), // MIB2 UDP Group
     (0, 2100), // Virtual Node
     (0, 2101), // Virtual CPU
     (0, 2102), // Virtual Memory
     (0, 2103), // Virtual Disk I/O
     (0, 2104), // Virtual Network I/O
+    (0, 2105), // JVM Runtime
+    (0, 2106), // JVM Statistics
+    (0, 2200), // Memcache Counters (deprecated)
+    (0, 2201), // HTTP Counters
     (0, 2202), // App Operations
     (0, 2203), // App Resources
+    (0, 2204), // Memcache Counters
     (0, 2206), // App Workers
+    (0, 2207), // OVS DP Stats
+    (0, 3000), // Energy
+    (0, 3001), // Temperature
+    (0, 3002), // Humidity
+    (0, 3003), // Fans
+    (4413, 1), // Broadcom Device Buffer
+    (4413, 2), // Broadcom Port Buffer
+    (4413, 3), // Broadcom ASIC Tables
+    (5703, 1), // NVIDIA GPU
 ];
 
 /// Structured fuzzing input that generates more realistic sFlow data
@@ -97,7 +152,6 @@ struct SflowFuzzInput {
 #[derive(Debug)]
 struct SampleData {
     sample_type: (u32, u32), // (enterprise, format)
-    sample_length: u32,
     records: Vec<RecordData>,
 }
 
@@ -142,12 +196,8 @@ impl<'a> Arbitrary<'a> for SampleData {
             records.push(u.arbitrary()?);
         }
 
-        // Calculate sample length (will be computed during serialization)
-        let sample_length = 0; // Placeholder
-
         Ok(SampleData {
             sample_type,
-            sample_length,
             records,
         })
     }

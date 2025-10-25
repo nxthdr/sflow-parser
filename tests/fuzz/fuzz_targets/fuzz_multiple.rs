@@ -1,7 +1,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use sflow_parser::parser::parse_datagram;
+use sflow_parser::parsers::Parser;
 use std::io::Cursor;
 
 fuzz_target!(|data: &[u8]| {
@@ -32,7 +32,7 @@ fuzz_target!(|data: &[u8]| {
             break;
         }
 
-        match sflow_parser::parser::Parser::new(&mut cursor).parse_datagram() {
+        match Parser::new(&mut cursor).parse_datagram() {
             Ok(_) => count += 1,
             Err(_) => break,
         }
