@@ -67,15 +67,48 @@ pub enum DatagramVersion {
 }
 
 /// Address types supported by sFlow
+///
+/// # XDR Definition ([sFlow v5](https://sflow.org/sflow_version_5.txt))
+///
+/// ```text
+/// enum address_type {
+///    UNKNOWN = 0,
+///    IP_V4   = 1,
+///    IP_V6   = 2
+/// }
+///
+/// union address (address_type type) {
+///    case UNKNOWN:
+///       void;
+///    case IP_V4:
+///       ip_v4 ip;
+///    case IP_V6:
+///       ip_v6 ip;
+/// }
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Address {
+    /// Unknown address type
     Unknown,
+    /// IPv4 address
     IPv4(Ipv4Addr),
+    /// IPv6 address
     IPv6(Ipv6Addr),
 }
 
 /// Data format identifier
-/// Top 20 bits = enterprise ID, bottom 12 bits = format number
+///
+/// Encodes enterprise ID and format number in a single 32-bit value.
+/// Top 20 bits = enterprise ID, bottom 12 bits = format number.
+///
+/// # XDR Definition ([sFlow v5](https://sflow.org/sflow_version_5.txt))
+///
+/// ```text
+/// typedef unsigned int data_format;
+/// /* The data_format uniquely identifies the format of an opaque structure in
+///    the sFlow specification. For example, the combination of enterprise = 0
+///    and format = 1 identifies the "sampled_header" flow_data structure. */
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DataFormat(pub u32);
 
@@ -94,6 +127,18 @@ impl DataFormat {
 }
 
 /// sFlow data source identifier
+///
+/// Identifies the source of the data. Top 8 bits = source type, bottom 24 bits = index.
+///
+/// # XDR Definition ([sFlow v5](https://sflow.org/sflow_version_5.txt))
+///
+/// ```text
+/// typedef unsigned int sflow_data_source;
+/// /* The sflow_data_source is encoded as follows:
+///    The most significant byte of the sflow_data_source is used to indicate the type of
+///    sFlowDataSource (e.g. ifIndex, smonVlanDataSource, entPhysicalEntry) and the lower
+///    three bytes contain the relevant index value. */
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DataSource(pub u32);
 
@@ -112,13 +157,43 @@ impl DataSource {
 }
 
 /// Expanded data source (for ifIndex >= 2^24)
+///
+/// Used when the index value exceeds 24 bits (16,777,215).
+///
+/// # XDR Definition ([sFlow v5](https://sflow.org/sflow_version_5.txt))
+///
+/// ```text
+/// struct sflow_data_source_expanded {
+///    unsigned int source_id_type;  /* sFlowDataSource type */
+///    unsigned int source_id_index; /* sFlowDataSource index */
+/// }
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DataSourceExpanded {
+    /// Source type (e.g., 0 = ifIndex, 1 = smonVlanDataSource, 2 = entPhysicalEntry)
     pub source_id_type: u32,
+    /// Source index value
     pub source_id_index: u32,
 }
 
 /// Interface identifier
+///
+/// Compact encoding for interface identification. Top 2 bits indicate format:
+/// - 00 = Single interface (value is ifIndex)
+/// - 01 = Packet discarded (value is reason code)
+/// - 10 = Multiple destination interfaces (value is number of interfaces)
+///
+/// # XDR Definition ([sFlow v5](https://sflow.org/sflow_version_5.txt))
+///
+/// ```text
+/// typedef unsigned int interface;
+/// /* Encoding of the interface value:
+///    Bits 31-30: Format
+///       00 = ifIndex (0-0x3FFFFFFF)
+///       01 = Packet discarded
+///       10 = Multiple destinations
+///    Bits 29-0: Value */
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Interface(pub u32);
 
@@ -145,9 +220,29 @@ impl Interface {
 }
 
 /// Expanded interface (for ifIndex >= 2^24)
+///
+/// Used when the interface index exceeds 30 bits (1,073,741,823).
+///
+/// # XDR Definition ([sFlow v5](https://sflow.org/sflow_version_5.txt))
+///
+/// ```text
+/// struct interface_expanded {
+///    unsigned int format;        /* interface format */
+///    unsigned int value;         /* interface value,
+///                                   Note: 0xFFFFFFFF is the maximum value and must be used
+///                                   to indicate traffic originating or terminating in device
+///                                   (do not use 0x3FFFFFFF value from compact encoding example) */
+/// }
+/// ```
+///
+/// **ERRATUM:** 0xFFFFFFFF is the maximum value and must be used to indicate traffic
+/// originating or terminating in device (do not use 0x3FFFFFFF value from compact encoding example).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct InterfaceExpanded {
+    /// Interface format (0 = ifIndex, 1 = packet discarded, 2 = multiple destinations)
     pub format: u32,
+    /// Interface value
+    /// **ERRATUM:** 0xFFFFFFFF indicates traffic originating or terminating in device
     pub value: u32,
 }
 
@@ -324,49 +419,165 @@ pub struct CounterRecord {
     pub counter_data: CounterData,
 }
 
-/// Compact flow sample (enterprise=0, format=1)
+/// Compact flow sample - Format (0,1)
+///
+/// Contains sampled packet information with compact encoding for interfaces.
+///
+/// # XDR Definition ([sFlow v5](https://sflow.org/sflow_version_5.txt))
+///
+/// ```text
+/// /* Format of a single flow sample */
+/// /* opaque = sample_data; enterprise = 0; format = 1 */
+///
+/// struct flow_sample {
+///    unsigned int sequence_number;  /* Incremented with each flow sample
+///                                      generated by this sFlow Instance. */
+///    sflow_data_source source_id;   /* sFlowDataSource */
+///    unsigned int sampling_rate;    /* sFlowPacketSamplingRate */
+///    unsigned int sample_pool;      /* Total number of packets that could have been
+///                                      sampled (i.e. packets skipped by sampling process
+///                                      + total number of samples) */
+///    unsigned int drops;            /* Number of times that the sFlow agent detected
+///                                      that a packet marked to be sampled was dropped
+///                                      due to lack of resources. */
+///    interface input;               /* Input interface */
+///    interface output;              /* Output interface */
+///    flow_record flow_records<>;    /* Information about sampled packet */
+/// }
+/// ```
+///
+/// **ERRATUM:** Sequence number clarified as incremented per "sFlow Instance" instead of "source_id".
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FlowSample {
+    /// Sequence number incremented with each flow sample generated by this sFlow Instance
+    /// **ERRATUM:** Clarified as "sFlow Instance" instead of "source_id"
     pub sequence_number: u32,
+    /// sFlow data source identifier
     pub source_id: DataSource,
+    /// Sampling rate (1 in N packets)
     pub sampling_rate: u32,
+    /// Total packets that could have been sampled
     pub sample_pool: u32,
+    /// Number of dropped samples due to lack of resources
     pub drops: u32,
+    /// Input interface
     pub input: Interface,
+    /// Output interface
     pub output: Interface,
+    /// Flow records describing the sampled packet
     pub flow_records: Vec<FlowRecord>,
 }
 
-/// Compact counters sample (enterprise=0, format=2)
+/// Compact counters sample - Format (0,2)
+///
+/// Contains interface and system counter statistics.
+///
+/// # XDR Definition ([sFlow v5](https://sflow.org/sflow_version_5.txt))
+///
+/// ```text
+/// /* Format of a single counter sample */
+/// /* opaque = sample_data; enterprise = 0; format = 2 */
+///
+/// struct counters_sample {
+///    unsigned int sequence_number;   /* Incremented with each counter sample
+///                                       generated by this sFlow Instance. */
+///    sflow_data_source source_id;    /* sFlowDataSource */
+///    counter_record counters<>;      /* Counters polled for this source */
+/// }
+/// ```
+///
+/// **ERRATUM:** Sequence number clarified as incremented per "sFlow Instance" instead of "source_id".
 #[derive(Debug, Clone, PartialEq)]
 pub struct CountersSample {
+    /// Sequence number incremented with each counter sample generated by this sFlow Instance
+    /// **ERRATUM:** Clarified as "sFlow Instance" instead of "source_id"
     pub sequence_number: u32,
+    /// sFlow data source identifier
     pub source_id: DataSource,
+    /// Counter records for this source
     pub counters: Vec<CounterRecord>,
 }
 
-/// Expanded flow sample (enterprise=0, format=3)
+/// Expanded flow sample - Format (0,3)
+///
+/// Flow sample with expanded encoding for large interface indices (>= 2^24).
+///
+/// # XDR Definition ([sFlow v5](https://sflow.org/sflow_version_5.txt))
+///
+/// ```text
+/// /* Format of a single expanded flow sample */
+/// /* opaque = sample_data; enterprise = 0; format = 3 */
+///
+/// struct flow_sample_expanded {
+///    unsigned int sequence_number;  /* Incremented with each flow sample
+///                                      generated by this sFlow Instance. */
+///    sflow_data_source_expanded source_id; /* sFlowDataSource */
+///    unsigned int sampling_rate;    /* sFlowPacketSamplingRate */
+///    unsigned int sample_pool;      /* Total number of packets that could have been
+///                                      sampled (i.e. packets skipped by sampling process
+///                                      + total number of samples) */
+///    unsigned int drops;            /* Number of times that the sFlow agent detected
+///                                      that a packet marked to be sampled was dropped
+///                                      due to lack of resources. */
+///    interface_expanded input;      /* Input interface */
+///    interface_expanded output;     /* Output interface */
+///    flow_record flow_records<>;    /* Information about sampled packet */
+/// }
+/// ```
+///
+/// **ERRATUM:** Sequence number clarified as incremented per "sFlow Instance" instead of "source_id".
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FlowSampleExpanded {
+    /// Sequence number incremented with each flow sample generated by this sFlow Instance
+    /// **ERRATUM:** Clarified as "sFlow Instance" instead of "source_id"
     pub sequence_number: u32,
+    /// Expanded sFlow data source identifier
     pub source_id: DataSourceExpanded,
+    /// Sampling rate (1 in N packets)
     pub sampling_rate: u32,
+    /// Total packets that could have been sampled
     pub sample_pool: u32,
+    /// Number of dropped samples due to lack of resources
     pub drops: u32,
+    /// Input interface (expanded)
     pub input: InterfaceExpanded,
+    /// Output interface (expanded)
     pub output: InterfaceExpanded,
+    /// Flow records describing the sampled packet
     pub flow_records: Vec<FlowRecord>,
 }
 
-/// Expanded counter sample (enterprise=0, format=4)
+/// Expanded counter sample - Format (0,4)
+///
+/// Counter sample with expanded encoding for large interface indices (>= 2^24).
+///
+/// # XDR Definition ([sFlow v5](https://sflow.org/sflow_version_5.txt))
+///
+/// ```text
+/// /* Format of a single expanded counters sample */
+/// /* opaque = sample_data; enterprise = 0; format = 4 */
+///
+/// struct counters_sample_expanded {
+///    unsigned int sequence_number;   /* Incremented with each counter sample
+///                                       generated by this sFlow Instance. */
+///    sflow_data_source_expanded source_id; /* sFlowDataSource */
+///    counter_record counters<>;      /* Counters polled for this source */
+/// }
+/// ```
+///
+/// **ERRATUM:** Sequence number clarified as incremented per "sFlow Instance" instead of "source_id".
 #[derive(Debug, Clone, PartialEq)]
 pub struct CountersSampleExpanded {
+    /// Sequence number incremented with each counter sample generated by this sFlow Instance
+    /// **ERRATUM:** Clarified as "sFlow Instance" instead of "source_id"
     pub sequence_number: u32,
+    /// Expanded sFlow data source identifier
     pub source_id: DataSourceExpanded,
+    /// Counter records for this source
     pub counters: Vec<CounterRecord>,
 }
 
-/// Discarded packet sample (enterprise=0, format=5)
+/// Discarded packet sample - Format (0,5)
 ///
 /// # XDR Definition ([sFlow Drops](https://sflow.org/sflow_drops.txt))
 ///
@@ -440,13 +651,40 @@ pub struct SampleRecord {
 }
 
 /// sFlow v5 datagram
+///
+/// Top-level structure containing one or more samples.
+///
+/// # XDR Definition ([sFlow v5](https://sflow.org/sflow_version_5.txt))
+///
+/// ```text
+/// /* sFlow version 5 datagram */
+///
+/// struct sflow_datagram {
+///    unsigned int version;        /* sFlow version (5) */
+///    address agent_address;       /* IP address of sampling agent */
+///    unsigned int sub_agent_id;   /* Used to distinguish multiple sFlow instances
+///                                    on the same agent */
+///    unsigned int sequence_number;/* Incremented with each sample datagram generated
+///                                    by a sub-agent within an agent */
+///    unsigned int uptime;         /* Current time (in milliseconds since device
+///                                    last booted). Should be set as close to
+///                                    datagram transmission time as possible. */
+///    sample_record samples<>;     /* An array of sample records */
+/// }
+/// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct SFlowDatagram {
+    /// sFlow protocol version (always 5)
     pub version: DatagramVersion,
+    /// IP address of the sFlow agent
     pub agent_address: Address,
+    /// Sub-agent identifier (distinguishes multiple sFlow instances on same agent)
     pub sub_agent_id: u32,
+    /// Datagram sequence number (incremented with each datagram from this sub-agent)
     pub sequence_number: u32,
+    /// Device uptime in milliseconds since last boot
     pub uptime: u32,
+    /// Array of sample records
     pub samples: Vec<SampleRecord>,
 }
 

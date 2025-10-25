@@ -182,7 +182,13 @@ mod tests {
         assert!(iface.is_single());
         assert_eq!(iface.value(), 42);
 
-        // Discarded packet
+        // Discarded packet - ACL drop
+        // ERRATUM: Spec page 28 example corrected from 0x40000001 to 0x40000102
+        let iface = Interface(0x40000102);
+        assert!(iface.is_discarded());
+        assert_eq!(iface.value(), 0x102);
+
+        // Discarded packet - generic example
         let iface = Interface(0x40000001);
         assert!(iface.is_discarded());
         assert_eq!(iface.value(), 1);

@@ -164,6 +164,19 @@ pub fn build_registry_from_source(
 ) -> Result<StructRegistry, Box<dyn std::error::Error>> {
     let mut registry = HashMap::new();
 
+    // Parse core sample structures
+    let core_file = src_dir.join("models/core.rs");
+    if core_file.exists() {
+        for metadata in parse_source_file(&core_file, "sample_data")? {
+            let key = (
+                metadata.enterprise,
+                metadata.format,
+                metadata.data_type.clone(),
+            );
+            registry.insert(key, metadata);
+        }
+    }
+
     // Parse flow records
     let flows_file = src_dir.join("models/record_flows.rs");
     if flows_file.exists() {

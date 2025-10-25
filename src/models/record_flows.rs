@@ -250,24 +250,34 @@ pub struct SampledIpv6 {
 /// /* opaque = flow_data; enterprise = 0; format = 1001 */
 ///
 /// struct extended_switch {
-///     unsigned int src_vlan;     /* The 802.1Q VLAN id of incoming frame */
-///     unsigned int src_priority; /* The 802.1p priority of incoming frame */
-///     unsigned int dst_vlan;     /* The 802.1Q VLAN id of outgoing frame */
-///     unsigned int dst_priority; /* The 802.1p priority of outgoing frame */
+///     unsigned int src_vlan;     /* The 802.1Q VLAN id of incoming frame,
+///                                   0xffffffff if unknown */
+///     unsigned int src_priority; /* The 802.1p priority of incoming frame,
+///                                   0xffffffff if unknown */
+///     unsigned int dst_vlan;     /* The 802.1Q VLAN id of outgoing frame,
+///                                   0xffffffff if unknown */
+///     unsigned int dst_priority; /* The 802.1p priority of outgoing frame,
+///                                   0xffffffff if unknown */
 /// }
 /// ```
+///
+/// **ERRATUM:** The specification was updated to clarify that 0xffffffff indicates unknown values.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedSwitch {
     /// Source VLAN ID
+    /// **ERRATUM:** 0xffffffff if unknown
     pub src_vlan: u32,
 
     /// Source priority (802.1p)
+    /// **ERRATUM:** 0xffffffff if unknown
     pub src_priority: u32,
 
     /// Destination VLAN ID
+    /// **ERRATUM:** 0xffffffff if unknown
     pub dst_vlan: u32,
 
     /// Destination priority (802.1p)
+    /// **ERRATUM:** 0xffffffff if unknown
     pub dst_priority: u32,
 }
 
@@ -282,14 +292,17 @@ pub struct ExtendedSwitch {
 /// /* opaque = flow_data; enterprise = 0; format = 1002 */
 ///
 /// struct extended_router {
-///     next_hop nexthop;          /* IP address of next hop router */
+///     next_hop nexthop;          /* IP address of immediate next hop router */
 ///     unsigned int src_mask_len; /* Source address prefix mask (number of bits) */
 ///     unsigned int dst_mask_len; /* Destination address prefix mask (number of bits) */
 /// }
 /// ```
+///
+/// **ERRATUM:** The specification was clarified to specify "immediate" next hop router.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedRouter {
-    /// IP address of next hop router (spec: nexthop)
+    /// IP address of immediate next hop router (spec: nexthop)
+    /// **ERRATUM:** Clarified as "immediate" next hop router
     pub next_hop: crate::models::core::Address,
 
     /// Source subnet mask bits

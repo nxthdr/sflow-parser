@@ -301,26 +301,6 @@ pub struct VlanCounters {
     pub discards: u32,
 }
 
-/// Processor Counters - Format (0,1001)
-/// CPU and memory utilization
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ProcessorCounters {
-    /// 5 second average CPU utilization (0-100%) (spec: 5s_cpu)
-    pub cpu_5s: u32,
-
-    /// 1 minute average CPU utilization (0-100%) (spec: 1m_cpu)
-    pub cpu_1m: u32,
-
-    /// 5 minute average CPU utilization (0-100%) (spec: 5m_cpu)
-    pub cpu_5m: u32,
-
-    /// Total memory in bytes
-    pub total_memory: u64,
-
-    /// Free memory in bytes
-    pub free_memory: u64,
-}
-
 /// IEEE 802.11 Counters - Format (0,6)
 ///
 /// Wireless interface statistics
@@ -378,6 +358,42 @@ pub struct Ieee80211Counters {
     pub dot11_qos_cf_polls_lost_count: u32,
 }
 
+/// Processor Counters - Format (0,1001)
+///
+/// CPU and memory utilization
+///
+/// # XDR Definition ([sFlow v5](https://sflow.org/sflow_version_5.txt))
+///
+/// ```text
+/// /* Processor Information */
+/// /* opaque = counter_data; enterprise = 0; format = 1001 */
+///
+/// struct processor {
+///     percentage 5s_cpu;          /* 5 second average CPU utilization */
+///     percentage 1m_cpu;          /* 1 minute average CPU utilization */
+///     percentage 5m_cpu;          /* 5 minute average CPU utilization */
+///     unsigned hyper total_memory /* total memory (in bytes) */
+///     unsigned hyper free_memory  /* free memory (in bytes) */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ProcessorCounters {
+    /// 5 second average CPU utilization (0-100%) (spec: 5s_cpu)
+    pub cpu_5s: u32,
+
+    /// 1 minute average CPU utilization (0-100%) (spec: 1m_cpu)
+    pub cpu_1m: u32,
+
+    /// 5 minute average CPU utilization (0-100%) (spec: 5m_cpu)
+    pub cpu_5m: u32,
+
+    /// Total memory in bytes
+    pub total_memory: u64,
+
+    /// Free memory in bytes
+    pub free_memory: u64,
+}
+
 /// Radio Utilization - Format (0,1002)
 ///
 /// 802.11 radio channel utilization
@@ -406,6 +422,50 @@ pub struct RadioUtilization {
     pub on_channel_busy_time: u32,
 }
 
+/// OpenFlow Port - Format (0,1004)
+///
+/// OpenFlow port statistics
+///
+/// # XDR Definition ([sFlow OpenFlow](https://sflow.org/sflow_openflow.txt))
+///
+/// ```text
+/// /* OpenFlow port */
+/// /* opaque = counter_data; enterprise = 0; format = 1004 */
+///
+/// struct of_port {
+///     unsigned hyper datapath_id;
+///     unsigned int port_no;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OpenFlowPort {
+    /// Datapath ID
+    pub datapath_id: u64,
+
+    /// Port number
+    pub port_no: u32,
+}
+
+/// OpenFlow Port Name - Format (0,1005)
+///
+/// OpenFlow port name string
+///
+/// # XDR Definition ([sFlow OpenFlow](https://sflow.org/sflow_openflow.txt))
+///
+/// ```text
+/// /* Port name */
+/// /* opaque = counter_data; enterprise = 0; format = 1005 */
+///
+/// struct port_name {
+///     string name<>;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OpenFlowPortName {
+    /// Port name
+    pub port_name: String,
+}
+
 /// Host Description - Format (0,2000)
 ///
 /// Physical or virtual host description
@@ -418,18 +478,21 @@ pub struct RadioUtilization {
 ///
 /// struct host_descr {
 ///     string hostname<64>;       /* hostname, empty if unknown */
-///     opaque uuid<16>;           /* 16 bytes binary UUID, empty if unknown */
+///     opaque uuid[16];           /* 16 byte binary UUID, all zeros if unknown */
 ///     machine_type machine_type; /* the processor family */
 ///     os_name os_name;           /* Operating system */
 ///     string os_release<32>;     /* OS release version */
 /// }
 /// ```
+///
+/// **ERRATUM:** UUID field changed from `opaque uuid<16>` to `opaque uuid[16]` (fixed array).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HostDescription {
     /// Hostname
     pub hostname: String,
 
     /// UUID (16 bytes)
+    /// **ERRATUM:** All zeros if unknown (changed from variable-length to fixed-length array)
     pub uuid: [u8; 16],
 
     /// Machine type (e.g., "x86_64")
@@ -783,6 +846,7 @@ pub struct VirtualNode {
 ///
 /// ```text
 /// /* Virtual Domain CPU statistics */
+/// /* See libvirt, struct virDomainInfo */
 /// /* opaque = counter_data; enterprise = 0; format = 2101 */
 ///
 /// struct virt_cpu {
@@ -791,6 +855,8 @@ pub struct VirtualNode {
 ///     unsigned int nrVirtCpu;/* number of virtual CPUs */
 /// }
 /// ```
+///
+/// **ERRATUM:** Comment reference corrected from `virtDomainInfo` to `virDomainInfo`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VirtualCpu {
     /// CPU state (0=running, 1=idle, 2=blocked)
@@ -811,6 +877,7 @@ pub struct VirtualCpu {
 ///
 /// ```text
 /// /* Virtual Domain Memory statistics */
+/// /* See libvirt, struct virDomainInfo */
 /// /* opaque = counter_data; enterprise = 0; format = 2102 */
 ///
 /// struct virt_memory {
@@ -818,6 +885,8 @@ pub struct VirtualCpu {
 ///     unsigned hyper maxMemory; /* memory in bytes allowed */
 /// }
 /// ```
+///
+/// **ERRATUM:** Comment reference corrected from `virtDomainInfo` to `virDomainInfo`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VirtualMemory {
     /// Memory in bytes
@@ -835,12 +904,14 @@ pub struct VirtualMemory {
 ///
 /// ```text
 /// /* Virtual Domain Disk statistics */
+/// /* See libvirt, struct virDomainBlockInfo */
+/// /* See libvirt, struct virDomainBlockStatsStruct */
 /// /* opaque = counter_data; enterprise = 0; format = 2103 */
 ///
 /// struct virt_disk_io {
 ///     unsigned hyper capacity;   /* logical size in bytes */
 ///     unsigned hyper allocation; /* current allocation in bytes */
-///     unsigned hyper available;  /* remaining free bytes */
+///     unsigned hyper physical;   /* physical size in bytes of the container of the backing image */
 ///     unsigned int rd_req;       /* number of read requests */
 ///     unsigned hyper rd_bytes;   /* number of read bytes */
 ///     unsigned int wr_req;       /* number of write requests */
@@ -848,6 +919,9 @@ pub struct VirtualMemory {
 ///     unsigned int errs;         /* read/write errors */
 /// }
 /// ```
+///
+/// **ERRATUM:** Field name changed from `available` to `physical`, and comment references corrected
+/// from `virtDomainBlockInfo`/`virtDomainBlockStatsStruct` to `virDomainBlockInfo`/`virDomainBlockStatsStruct`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VirtualDiskIo {
     /// Capacity in bytes
@@ -856,7 +930,8 @@ pub struct VirtualDiskIo {
     /// Allocation in bytes
     pub allocation: u64,
 
-    /// Available in bytes
+    /// Physical size in bytes of the container of the backing image (spec: physical)
+    /// **ERRATUM:** Field renamed from `available` (remaining free bytes) to `physical`
     pub available: u64,
 
     /// Read requests
@@ -883,6 +958,7 @@ pub struct VirtualDiskIo {
 ///
 /// ```text
 /// /* Virtual Domain Network statistics */
+/// /* See libvirt, struct virDomainInterfaceStatsStruct */
 /// /* opaque = counter_data; enterprise = 0; format = 2104 */
 ///
 /// struct virt_net_io {
@@ -896,6 +972,8 @@ pub struct VirtualDiskIo {
 ///     unsigned int tx_drop;     /* total transmit drops */
 /// }
 /// ```
+///
+/// **ERRATUM:** Comment reference corrected from `virtDomainInterfaceStatsStruct` to `virDomainInterfaceStatsStruct`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VirtualNetIo {
     /// Bytes received
@@ -921,50 +999,6 @@ pub struct VirtualNetIo {
 
     /// Transmit drops
     pub tx_drop: u32,
-}
-
-/// OpenFlow Port - Format (0,1004)
-///
-/// OpenFlow port statistics
-///
-/// # XDR Definition ([sFlow OpenFlow](https://sflow.org/sflow_openflow.txt))
-///
-/// ```text
-/// /* OpenFlow port */
-/// /* opaque = counter_data; enterprise = 0; format = 1004 */
-///
-/// struct of_port {
-///     unsigned hyper datapath_id;
-///     unsigned int port_no;
-/// }
-/// ```
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct OpenFlowPort {
-    /// Datapath ID
-    pub datapath_id: u64,
-
-    /// Port number
-    pub port_no: u32,
-}
-
-/// OpenFlow Port Name - Format (0,1005)
-///
-/// OpenFlow port name string
-///
-/// # XDR Definition ([sFlow OpenFlow](https://sflow.org/sflow_openflow.txt))
-///
-/// ```text
-/// /* Port name */
-/// /* opaque = counter_data; enterprise = 0; format = 1005 */
-///
-/// struct port_name {
-///     string name<>;
-/// }
-/// ```
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct OpenFlowPortName {
-    /// Port name
-    pub port_name: String,
 }
 
 /// HTTP Counters - Format (0,2201)
