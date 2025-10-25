@@ -132,15 +132,17 @@ pub fn parse_xdr_structures(spec_content: &str, spec_name: &str) -> Vec<XdrStruc
 
     // Regex to find XDR structure definitions with format comments
     // Pattern: /* opaque = ...; enterprise = N; format = M */
+    //          [optional comments and whitespace]
     //          struct name {
     //              fields...
     //          }
 
     // Match format comment followed by struct definition
-    // Use (?s) for . to match newlines, but be careful not to match across multiple format comments
+    // Use (?s) for . to match newlines
+    // Allow for additional comments (/* ... */) between format comment and struct
     // The 'struct' keyword is optional (some specs like app_initiator don't use it)
     let format_comment_re = Regex::new(
-        r"(?s)/\*\s*opaque\s*=\s*(\w+)\s*;\s*enterprise\s*=\s*(\d+)\s*;\s*format\s*=\s*(\d+)\s*\*/\s*([^/]*?)\s*(?:struct\s+)?(\w+)\s*\{([^}]+)\}"
+        r"(?s)/\*\s*opaque\s*=\s*(\w+)\s*;\s*enterprise\s*=\s*(\d+)\s*;\s*format\s*=\s*(\d+)\s*\*/\s*(?:/\*.*?\*/\s*)*\s*(?:struct\s+)?(\w+)\s*\{([^}]+)\}"
     ).unwrap();
 
     for cap in format_comment_re.captures_iter(spec_content) {
@@ -153,9 +155,8 @@ pub fn parse_xdr_structures(spec_content: &str, spec_name: &str) -> Vec<XdrStruc
 
         let enterprise: u32 = cap.get(2).unwrap().as_str().parse().unwrap_or(0);
         let format: u32 = cap.get(3).unwrap().as_str().parse().unwrap_or(0);
-        // cap.get(4) is the text between comment and struct (ignored)
-        let name = cap.get(5).unwrap().as_str().to_string();
-        let fields_text = cap.get(6).unwrap().as_str();
+        let name = cap.get(4).unwrap().as_str().to_string();
+        let fields_text = cap.get(5).unwrap().as_str();
 
         // Extract docstring (text before the format comment)
         let match_start = cap.get(0).unwrap().start();
