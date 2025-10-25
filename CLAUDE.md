@@ -12,7 +12,7 @@ To check that the implementation is correct, please run:
 
 1. `make test` to validate the unit tests.
 2. `make test-integration` to validate the integration tests.
-3. `make specs-validate` to validate the implementation against the official sFlow specifications. If there is any warning, please check if is due to the implementation or the validation script. In any case, please fix the issue until there is no warning. Avoid doing exception to make the tests pass unless it is really justified and well documented.
+3. `make specs-validate` to validate the implementation against the official sFlow specifications. If there is any warning, please check if is due to the implementation or the validation script. In any case, please fix the issue until there is no warning. Avoid doing exception to make the tests pass unless it is really justified and well documented. Also make sure that all of the newly added models are validated.
 4. `make coverage` to validate the coverage of the implementation.
 
 Finally, run `make fmt` and `make clippy` and `make build` to validate the code quality and build the project.

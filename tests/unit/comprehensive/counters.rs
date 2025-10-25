@@ -912,6 +912,62 @@ fn test_parse_app_operations() {
         _ => panic!("Expected CountersSample"),
     }
 }
+
+#[test]
+fn test_parse_http_counters() {
+    // HTTP Counters: 15 u32 fields = 60 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x0A, // method_option_count = 10
+        0x00, 0x00, 0x03, 0xE8, // method_get_count = 1000
+        0x00, 0x00, 0x00, 0x32, // method_head_count = 50
+        0x00, 0x00, 0x01, 0xF4, // method_post_count = 500
+        0x00, 0x00, 0x00, 0x14, // method_put_count = 20
+        0x00, 0x00, 0x00, 0x05, // method_delete_count = 5
+        0x00, 0x00, 0x00, 0x02, // method_trace_count = 2
+        0x00, 0x00, 0x00, 0x01, // method_connect_count = 1
+        0x00, 0x00, 0x00, 0x03, // method_other_count = 3
+        0x00, 0x00, 0x00, 0x0F, // status_1xx_count = 15
+        0x00, 0x00, 0x04, 0xB0, // status_2xx_count = 1200
+        0x00, 0x00, 0x00, 0xC8, // status_3xx_count = 200
+        0x00, 0x00, 0x00, 0x64, // status_4xx_count = 100
+        0x00, 0x00, 0x00, 0x0A, // status_5xx_count = 10
+        0x00, 0x00, 0x00, 0x02, // status_other_count = 2
+    ];
+
+    let data = build_counter_sample_test(0x0899, &record_data); // record type = 2201
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::HttpCounters(http) => {
+                    assert_eq!(http.method_option_count, 10);
+                    assert_eq!(http.method_get_count, 1000);
+                    assert_eq!(http.method_head_count, 50);
+                    assert_eq!(http.method_post_count, 500);
+                    assert_eq!(http.method_put_count, 20);
+                    assert_eq!(http.method_delete_count, 5);
+                    assert_eq!(http.method_trace_count, 2);
+                    assert_eq!(http.method_connect_count, 1);
+                    assert_eq!(http.method_other_count, 3);
+                    assert_eq!(http.status_1xx_count, 15);
+                    assert_eq!(http.status_2xx_count, 1200);
+                    assert_eq!(http.status_3xx_count, 200);
+                    assert_eq!(http.status_4xx_count, 100);
+                    assert_eq!(http.status_5xx_count, 10);
+                    assert_eq!(http.status_other_count, 2);
+                }
+                _ => panic!("Expected HttpCounters"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
 #[test]
 fn test_parse_app_workers() {
     // App Workers: workers_active(4) + workers_idle(4) + workers_max(4) + req_delayed(4) + req_dropped(4)

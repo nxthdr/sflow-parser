@@ -305,13 +305,13 @@ pub struct VlanCounters {
 /// CPU and memory utilization
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProcessorCounters {
-    /// 5 second average CPU utilization (0-100%)
+    /// 5 second average CPU utilization (0-100%) (spec: 5s_cpu)
     pub cpu_5s: u32,
 
-    /// 1 minute average CPU utilization (0-100%)
+    /// 1 minute average CPU utilization (0-100%) (spec: 1m_cpu)
     pub cpu_1m: u32,
 
-    /// 5 minute average CPU utilization (0-100%)
+    /// 5 minute average CPU utilization (0-100%) (spec: 5m_cpu)
     pub cpu_5m: u32,
 
     /// Total memory in bytes
@@ -965,6 +965,81 @@ pub struct OpenFlowPort {
 pub struct OpenFlowPortName {
     /// Port name
     pub port_name: String,
+}
+
+/// HTTP Counters - Format (0,2201)
+///
+/// HTTP performance counters
+///
+/// # XDR Definition ([sFlow HTTP](https://sflow.org/sflow_http.txt))
+///
+/// ```text
+/// /* HTTP counters */
+/// /* opaque = counter_data; enterprise = 0; format = 2201 */
+/// struct http_counters {
+///   unsigned int method_option_count;
+///   unsigned int method_get_count;
+///   unsigned int method_head_count;
+///   unsigned int method_post_count;
+///   unsigned int method_put_count;
+///   unsigned int method_delete_count;
+///   unsigned int method_trace_count;
+///   unsigned int method_connect_count;
+///   unsigned int method_other_count;
+///   unsigned int status_1XX_count;
+///   unsigned int status_2XX_count;
+///   unsigned int status_3XX_count;
+///   unsigned int status_4XX_count;
+///   unsigned int status_5XX_count;
+///   unsigned int status_other_count;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HttpCounters {
+    /// OPTIONS method count
+    pub method_option_count: u32,
+
+    /// GET method count
+    pub method_get_count: u32,
+
+    /// HEAD method count
+    pub method_head_count: u32,
+
+    /// POST method count
+    pub method_post_count: u32,
+
+    /// PUT method count
+    pub method_put_count: u32,
+
+    /// DELETE method count
+    pub method_delete_count: u32,
+
+    /// TRACE method count
+    pub method_trace_count: u32,
+
+    /// CONNECT method count
+    pub method_connect_count: u32,
+
+    /// Other method count
+    pub method_other_count: u32,
+
+    /// 1XX status code count (spec: status_1XX_count)
+    pub status_1xx_count: u32,
+
+    /// 2XX status code count (spec: status_2XX_count)
+    pub status_2xx_count: u32,
+
+    /// 3XX status code count (spec: status_3XX_count)
+    pub status_3xx_count: u32,
+
+    /// 4XX status code count (spec: status_4XX_count)
+    pub status_4xx_count: u32,
+
+    /// 5XX status code count (spec: status_5XX_count)
+    pub status_5xx_count: u32,
+
+    /// Other status code count
+    pub status_other_count: u32,
 }
 
 /// App Operations - Format (0,2202)

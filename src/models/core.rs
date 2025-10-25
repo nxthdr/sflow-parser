@@ -231,6 +231,10 @@ pub enum FlowData {
     ExtendedSocketIpv4(crate::models::record_flows::ExtendedSocketIpv4),
     /// Extended Socket IPv6 - Format (0,2101)
     ExtendedSocketIpv6(crate::models::record_flows::ExtendedSocketIpv6),
+    /// Extended Proxy Socket IPv4 - Format (0,2102)
+    ExtendedProxySocketIpv4(crate::models::record_flows::ExtendedProxySocketIpv4),
+    /// Extended Proxy Socket IPv6 - Format (0,2103)
+    ExtendedProxySocketIpv6(crate::models::record_flows::ExtendedProxySocketIpv6),
     /// Application Operation - Format (0,2202)
     AppOperation(crate::models::record_flows::AppOperation),
     /// Application Parent Context - Format (0,2203)
@@ -239,6 +243,10 @@ pub enum FlowData {
     AppInitiator(crate::models::record_flows::AppInitiator),
     /// Application Target - Format (0,2205)
     AppTarget(crate::models::record_flows::AppTarget),
+    /// HTTP Request - Format (0,2206)
+    HttpRequest(crate::models::record_flows::HttpRequest),
+    /// Extended Proxy Request - Format (0,2207)
+    ExtendedProxyRequest(crate::models::record_flows::ExtendedProxyRequest),
     /// Unknown or unparsed format
     Unknown { format: DataFormat, data: Vec<u8> },
 }
@@ -297,6 +305,8 @@ pub enum CounterData {
     OpenFlowPort(crate::models::record_counters::OpenFlowPort),
     /// OpenFlow Port Name - Format (0,1005)
     OpenFlowPortName(crate::models::record_counters::OpenFlowPortName),
+    /// HTTP Counters - Format (0,2201)
+    HttpCounters(crate::models::record_counters::HttpCounters),
     /// App Operations - Format (0,2202)
     AppOperations(crate::models::record_counters::AppOperations),
     /// App Resources - Format (0,2203)

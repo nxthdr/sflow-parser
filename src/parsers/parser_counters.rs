@@ -409,6 +409,29 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse HTTP Counters - Format (0,2201)
+    pub(super) fn parse_http_counters(
+        &mut self,
+    ) -> Result<crate::models::record_counters::HttpCounters> {
+        Ok(crate::models::record_counters::HttpCounters {
+            method_option_count: self.read_u32()?,
+            method_get_count: self.read_u32()?,
+            method_head_count: self.read_u32()?,
+            method_post_count: self.read_u32()?,
+            method_put_count: self.read_u32()?,
+            method_delete_count: self.read_u32()?,
+            method_trace_count: self.read_u32()?,
+            method_connect_count: self.read_u32()?,
+            method_other_count: self.read_u32()?,
+            status_1xx_count: self.read_u32()?,
+            status_2xx_count: self.read_u32()?,
+            status_3xx_count: self.read_u32()?,
+            status_4xx_count: self.read_u32()?,
+            status_5xx_count: self.read_u32()?,
+            status_other_count: self.read_u32()?,
+        })
+    }
+
     /// Parse App Operations - Format (0,2202)
     pub(super) fn parse_app_operations(
         &mut self,
@@ -504,6 +527,7 @@ impl<R: Read> Parser<R> {
                 2102 => Ok(CounterData::VirtualMemory(parser.parse_virtual_memory()?)),
                 2103 => Ok(CounterData::VirtualDiskIo(parser.parse_virtual_disk_io()?)),
                 2104 => Ok(CounterData::VirtualNetIo(parser.parse_virtual_net_io()?)),
+                2201 => Ok(CounterData::HttpCounters(parser.parse_http_counters()?)),
                 2202 => Ok(CounterData::AppOperations(parser.parse_app_operations()?)),
                 2203 => Ok(CounterData::AppResources(parser.parse_app_resources()?)),
                 2206 => Ok(CounterData::AppWorkers(parser.parse_app_workers()?)),

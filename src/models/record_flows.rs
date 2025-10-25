@@ -139,7 +139,7 @@ pub struct SampledEthernet {
     /// Destination MAC address
     pub dst_mac: crate::models::MacAddress,
 
-    /// Ethernet type
+    /// Ethernet type (spec: type)
     pub eth_type: u32,
 }
 
@@ -289,7 +289,7 @@ pub struct ExtendedSwitch {
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedRouter {
-    /// IP address of next hop router
+    /// IP address of next hop router (spec: nexthop)
     pub next_hop: crate::models::core::Address,
 
     /// Source subnet mask bits
@@ -336,10 +336,10 @@ pub struct AsPathSegment {
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedGateway {
-    /// IP address of the border router
+    /// IP address of the border router (spec: nexthop)
     pub next_hop: crate::models::core::Address,
 
-    /// Autonomous system number
+    /// Autonomous system number (spec: as)
     pub as_number: u32,
 
     /// Source AS
@@ -351,10 +351,10 @@ pub struct ExtendedGateway {
     /// Autonomous system path to the destination
     pub dst_as_path: Vec<AsPathSegment>,
 
-    /// BGP communities
+    /// Communities associated with this route
     pub communities: Vec<u32>,
 
-    /// Local preference
+    /// Local preference (spec: localpref)
     pub local_pref: u32,
 }
 
@@ -443,7 +443,7 @@ pub struct ExtendedUrl {
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtendedMpls {
-    /// Next hop address
+    /// Next hop address (spec: nexthop)
     pub next_hop: crate::models::core::Address,
 
     /// Input label stack
@@ -617,7 +617,7 @@ pub struct ExtendedVlanTunnel {
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Extended80211Payload {
-    /// Cipher suite (OUI + Suite Type)
+    /// Cipher suite (OUI + Suite Type) (spec: ciphersuite)
     pub cipher_suite: u32,
 
     /// Unencrypted payload data
@@ -1407,6 +1407,111 @@ pub struct ExtendedSocketIpv6 {
     pub remote_port: u32,
 }
 
+/// HTTP method enumeration
+///
+/// # XDR Definition ([sFlow HTTP](https://sflow.org/sflow_http.txt))
+///
+/// ```text
+/// /* The http_method enumeration may be expanded over time.
+///    Applications receiving sFlow must be prepared to receive
+///    http_request structures with unknown http_method values */
+///
+/// enum http_method {
+///   OTHER    = 0;
+///   OPTIONS  = 1;
+///   GET      = 2;
+///   HEAD     = 3;
+///   POST     = 4;
+///   PUT      = 5;
+///   DELETE   = 6;
+///   TRACE    = 7;
+///   CONNECT  = 8;
+/// }
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u32)]
+pub enum HttpMethod {
+    Other = 0,
+    Options = 1,
+    Get = 2,
+    Head = 3,
+    Post = 4,
+    Put = 5,
+    Delete = 6,
+    Trace = 7,
+    Connect = 8,
+}
+
+impl From<u32> for HttpMethod {
+    fn from(value: u32) -> Self {
+        match value {
+            1 => HttpMethod::Options,
+            2 => HttpMethod::Get,
+            3 => HttpMethod::Head,
+            4 => HttpMethod::Post,
+            5 => HttpMethod::Put,
+            6 => HttpMethod::Delete,
+            7 => HttpMethod::Trace,
+            8 => HttpMethod::Connect,
+            _ => HttpMethod::Other,
+        }
+    }
+}
+
+impl std::fmt::Display for HttpMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            HttpMethod::Other => write!(f, "OTHER"),
+            HttpMethod::Options => write!(f, "OPTIONS"),
+            HttpMethod::Get => write!(f, "GET"),
+            HttpMethod::Head => write!(f, "HEAD"),
+            HttpMethod::Post => write!(f, "POST"),
+            HttpMethod::Put => write!(f, "PUT"),
+            HttpMethod::Delete => write!(f, "DELETE"),
+            HttpMethod::Trace => write!(f, "TRACE"),
+            HttpMethod::Connect => write!(f, "CONNECT"),
+        }
+    }
+}
+
+/// Extended Proxy Socket IPv4 - Format (0,2102)
+///
+/// IPv4 socket information for proxy connections
+///
+/// # XDR Definition ([sFlow HTTP](https://sflow.org/sflow_http.txt))
+///
+/// ```text
+/// /* Proxy socket IPv4 */
+/// /* opaque = flow_data; enterprise=0; format=2102 */
+/// struct extended_proxy_socket_ipv4 {
+///   extended_socket_ipv4 socket;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedProxySocketIpv4 {
+    /// Socket information
+    pub socket: ExtendedSocketIpv4,
+}
+
+/// Extended Proxy Socket IPv6 - Format (0,2103)
+///
+/// IPv6 socket information for proxy connections
+///
+/// # XDR Definition ([sFlow HTTP](https://sflow.org/sflow_http.txt))
+///
+/// ```text
+/// /* Proxy socket IPv6 */
+/// /* opaque = flow_data; enterprise=0; format=2103 */
+/// struct extended_proxy_socket_ipv6 {
+///   extended_socket_ipv6 socket;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedProxySocketIpv6 {
+    /// Socket information
+    pub socket: ExtendedSocketIpv6,
+}
+
 /// Application operation context
 ///
 /// # XDR Definition ([sFlow Application](https://sflow.org/sflow_application.txt))
@@ -1568,4 +1673,102 @@ pub struct AppInitiator {
 pub struct AppTarget {
     /// Business level identifier (e.g., customer id, vendor id)
     pub actor: String,
+}
+
+/// HTTP Request - Format (0,2206)
+///
+/// HTTP request information
+///
+/// # XDR Definition ([sFlow HTTP](https://sflow.org/sflow_http.txt))
+///
+/// ```text
+/// /* HTTP protocol version number */
+/// /* Encoded as major_number * 1000 + minor_number */
+/// /* e.g. HTTP1.1 is encoded as 1001 */
+/// typedef unsigned int version;
+///
+/// /* HTTP request */
+/// /* opaque = flow_data; enterprise = 0; format = 2206 */
+/// struct http_request {
+///   http_method method;        /* method */
+///   version protocol;          /* HTTP protocol version */
+///   string<255> uri;           /* URI exactly as it came from the client */
+///   string<64> host;           /* Host value from request header */
+///   string<255> referer;       /* Referer value from request header */
+///   string<128> useragent;     /* User-Agent value from request header */
+///   string<64> xff;            /* X-Forwarded-For value
+///                                 from request header */
+///   string<32> authuser;       /* RFC 1413 identity of user*/
+///   string<64> mime-type;      /* Mime-Type of response */
+///   unsigned hyper req_bytes;  /* Content-Length of request */
+///   unsigned hyper resp_bytes; /* Content-Length of response */
+///   unsigned int uS;           /* duration of the operation
+///                                 (in microseconds) */
+///   int status;                /* HTTP status code */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HttpRequest {
+    /// HTTP method
+    pub method: HttpMethod,
+
+    /// HTTP protocol version (major * 1000 + minor, e.g., HTTP/1.1 = 1001)
+    pub protocol: u32,
+
+    /// URI exactly as it came from the client
+    pub uri: String,
+
+    /// Host value from request header
+    pub host: String,
+
+    /// Referer value from request header
+    pub referer: String,
+
+    /// User-Agent value from request header
+    pub useragent: String,
+
+    /// X-Forwarded-For value from request header
+    pub xff: String,
+
+    /// RFC 1413 identity of user
+    pub authuser: String,
+
+    /// MIME type of response
+    pub mime_type: String,
+
+    /// Content-Length of request
+    pub req_bytes: u64,
+
+    /// Content-Length of response
+    pub resp_bytes: u64,
+
+    /// Duration of the operation in microseconds
+    pub duration_us: u32,
+
+    /// HTTP status code
+    pub status: i32,
+}
+
+/// Extended Proxy Request - Format (0,2207)
+///
+/// Rewritten URI for proxy requests
+///
+/// # XDR Definition ([sFlow HTTP](https://sflow.org/sflow_http.txt))
+///
+/// ```text
+/// /* Rewritten URI */
+/// /* Only include if host or uri are modified */
+/// /* opaque = flow_data; enterprise = 0; format = 2207 */
+/// struct extended_proxy_request {
+///   string<255> uri;           /* URI in request to downstream server */
+///   string<64>  host;          /* Host in request to downstream server */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtendedProxyRequest {
+    /// URI in request to downstream server
+    pub uri: String,
+
+    /// Host in request to downstream server
+    pub host: String,
 }

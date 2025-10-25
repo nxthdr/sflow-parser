@@ -29,7 +29,7 @@ The main specification is [sFlow Version 5](https://sflow.org/sflow_version_5.tx
 | 2004 | [sFlow Version 5](https://sflow.org/sflow_version_5.txt) | Core protocol, base flow and counter records | ✅ |
 | 2007 | [sFlow 802.11 Structures](https://sflow.org/sflow_80211.txt) | Wireless/802.11 monitoring extensions | ✅ |
 | 2010 | [sFlow Host Structures](https://sflow.org/sflow_host.txt) | Host and virtual machine performance metrics | ✅ |
-| 2011 | [sFlow HTTP Structures](https://sflow.org/sflow_http.txt) | HTTP performance metrics | ⬜ |
+| 2011 | [sFlow HTTP Structures](https://sflow.org/sflow_http.txt) | HTTP performance metrics | ✅ |
 | 2011 | [sFlow Java Virtual Machine Structures](https://sflow.org/sflow_jvm.txt) | JVM performance metrics | ⬜ |
 | 2011 | [sFlow Memcache Structures](https://sflow.org/sflow_memcache.txt) | Memcache performance metrics | ⬜ |
 | 2012 | [sFlow NVML GPU Structures](https://sflow.org/sflow_nvml.txt) | NVIDIA GPU performance, status, and health | ⬜ |
@@ -118,16 +118,16 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 2003 | Extended HTTP Transaction | [sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0282.html) | ⬜ |
 | 0 | 2100 | Extended Socket IPv4 | [sFlow Host](https://sflow.org/sflow_host.txt) | ✅ |
 | 0 | 2101 | Extended Socket IPv6 | [sFlow Host](https://sflow.org/sflow_host.txt) | ✅ |
-| 0 | 2102 | Extended Proxy Socket IPv4 | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ⬜ |
-| 0 | 2103 | Extended Proxy Socket IPv6 | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ⬜ |
+| 0 | 2102 | Extended Proxy Socket IPv4 | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ✅ |
+| 0 | 2103 | Extended Proxy Socket IPv6 | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ✅ |
 | 0 | 2200 | Memcache Operation | [sFlow Memcache](https://sflow.org/sflow_memcache.txt) | ⬜ |
 | 0 | 2201 | HTTP Request (deprecated) | [sFlow Discussion](http://groups.google.com/group/sflow/browse_thread/thread/88accb2bad594d1d) | ⬜ ⚠️ |
 | 0 | 2202 | App Operation | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
 | 0 | 2203 | App Parent Context | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
 | 0 | 2204 | App Initiator | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
 | 0 | 2205 | App Target | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
-| 0 | 2206 | HTTP Request | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ⬜ |
-| 0 | 2207 | Extended Proxy Request | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ⬜ |
+| 0 | 2206 | HTTP Request | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ✅ |
+| 0 | 2207 | Extended Proxy Request | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ✅ |
 | 0 | 2208 | Extended Nav Timing | [sFlow Discussion](https://groups.google.com/forum/) | ⬜ |
 | 0 | 2209 | Extended TCP Info | [sFlow Discussion](https://groups.google.com/forum/) | ⬜ |
 | 0 | 2210 | Extended Entities | [sFlow Discussion](https://blog.sflow.com/2018/10/systemd-traffic-marking.html) | ⬜ |
@@ -171,7 +171,7 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 2105 | JVM Runtime | [sFlow JVM](https://sflow.org/sflow_jvm.txt) | ⬜ |
 | 0 | 2106 | JVM Statistics | [sFlow JVM](https://sflow.org/sflow_jvm.txt) | ⬜ |
 | 0 | 2200 | Memcache Counters (deprecated) | [sFlow Discussion](https://groups.google.com/g/sflow/c/KDk_QrxCSJI) | ⬜ ⚠️ |
-| 0 | 2201 | HTTP Counters | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ⬜ |
+| 0 | 2201 | HTTP Counters | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ✅ |
 | 0 | 2202 | App Operations | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
 | 0 | 2203 | App Resources | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
 | 0 | 2204 | Memcache Counters | [sFlow Memcache](https://sflow.org/sflow_memcache.txt) | ⬜ |

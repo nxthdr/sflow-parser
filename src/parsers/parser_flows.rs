@@ -645,6 +645,24 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Extended Proxy Socket IPv4 - Format (0,2102)
+    pub(super) fn parse_extended_proxy_socket_ipv4(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedProxySocketIpv4> {
+        let socket = self.parse_extended_socket_ipv4()?;
+
+        Ok(crate::models::record_flows::ExtendedProxySocketIpv4 { socket })
+    }
+
+    /// Parse Extended Proxy Socket IPv6 - Format (0,2103)
+    pub(super) fn parse_extended_proxy_socket_ipv6(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedProxySocketIpv6> {
+        let socket = self.parse_extended_socket_ipv6()?;
+
+        Ok(crate::models::record_flows::ExtendedProxySocketIpv6 { socket })
+    }
+
     /// Parse Application Context
     fn parse_app_context(&mut self) -> Result<crate::models::record_flows::AppContext> {
         let application = self.read_string()?;
@@ -702,6 +720,51 @@ impl<R: Read> Parser<R> {
         let actor = self.read_string()?;
 
         Ok(crate::models::record_flows::AppTarget { actor })
+    }
+
+    /// Parse HTTP Request - Format (0,2206)
+    pub(super) fn parse_http_request(
+        &mut self,
+    ) -> Result<crate::models::record_flows::HttpRequest> {
+        let method = crate::models::record_flows::HttpMethod::from(self.read_u32()?);
+        let protocol = self.read_u32()?;
+        let uri = self.read_string()?;
+        let host = self.read_string()?;
+        let referer = self.read_string()?;
+        let useragent = self.read_string()?;
+        let xff = self.read_string()?;
+        let authuser = self.read_string()?;
+        let mime_type = self.read_string()?;
+        let req_bytes = self.read_u64()?;
+        let resp_bytes = self.read_u64()?;
+        let duration_us = self.read_u32()?;
+        let status = self.read_u32()? as i32;
+
+        Ok(crate::models::record_flows::HttpRequest {
+            method,
+            protocol,
+            uri,
+            host,
+            referer,
+            useragent,
+            xff,
+            authuser,
+            mime_type,
+            req_bytes,
+            resp_bytes,
+            duration_us,
+            status,
+        })
+    }
+
+    /// Parse Extended Proxy Request - Format (0,2207)
+    pub(super) fn parse_extended_proxy_request(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedProxyRequest> {
+        let uri = self.read_string()?;
+        let host = self.read_string()?;
+
+        Ok(crate::models::record_flows::ExtendedProxyRequest { uri, host })
     }
 
     /// Parse flow data based on format
@@ -796,12 +859,22 @@ impl<R: Read> Parser<R> {
                 2101 => Ok(FlowData::ExtendedSocketIpv6(
                     parser.parse_extended_socket_ipv6()?,
                 )),
+                2102 => Ok(FlowData::ExtendedProxySocketIpv4(
+                    parser.parse_extended_proxy_socket_ipv4()?,
+                )),
+                2103 => Ok(FlowData::ExtendedProxySocketIpv6(
+                    parser.parse_extended_proxy_socket_ipv6()?,
+                )),
                 2202 => Ok(FlowData::AppOperation(parser.parse_app_operation()?)),
                 2203 => Ok(FlowData::AppParentContext(
                     parser.parse_app_parent_context()?,
                 )),
                 2204 => Ok(FlowData::AppInitiator(parser.parse_app_initiator()?)),
                 2205 => Ok(FlowData::AppTarget(parser.parse_app_target()?)),
+                2206 => Ok(FlowData::HttpRequest(parser.parse_http_request()?)),
+                2207 => Ok(FlowData::ExtendedProxyRequest(
+                    parser.parse_extended_proxy_request()?,
+                )),
                 _ => Ok(FlowData::Unknown { format, data }),
             }
         } else {

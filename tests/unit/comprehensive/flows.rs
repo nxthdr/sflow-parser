@@ -3,7 +3,7 @@
 //! Tests for parsing all flow record types: sampled and extended flow records.
 
 use super::helpers::*;
-use sflow_parser::models::AppStatus;
+use sflow_parser::models::{AppStatus, HttpMethod};
 use sflow_parser::parsers::parse_datagram;
 
 #[test]
@@ -1408,6 +1408,187 @@ fn test_parse_extended_queue() {
                     assert_eq!(queue.depth, 1024);
                 }
                 _ => panic!("Expected ExtendedQueue"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+// Helper function to encode a string as XDR opaque with padding
+fn encode_string(s: &str) -> Vec<u8> {
+    let mut result = Vec::new();
+    let len = s.len() as u32;
+    result.extend_from_slice(&len.to_be_bytes());
+    result.extend_from_slice(s.as_bytes());
+    // Add padding to align to 4-byte boundary
+    let padding = (4 - (len % 4)) % 4;
+    result.extend(std::iter::repeat_n(0, padding as usize));
+    result
+}
+
+#[test]
+fn test_parse_extended_proxy_socket_ipv4() {
+    // Extended Proxy Socket IPv4 wraps an extended_socket_ipv4
+    // protocol(4) + local_ip(4) + remote_ip(4) + local_port(4) + remote_port(4) = 20 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x06, // protocol = 6 (TCP)
+        0xC0, 0xA8, 0x01, 0x0A, // local_ip = 192.168.1.10
+        0x0A, 0x00, 0x00, 0x0B, // remote_ip = 10.0.0.11
+        0x00, 0x00, 0x00, 0x50, // local_port = 80
+        0x00, 0x00, 0x1F, 0x90, // remote_port = 8080
+    ];
+
+    let data = build_flow_sample_test(0x0836, &record_data); // record type = 2102
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedProxySocketIpv4(proxy) => {
+                    assert_eq!(proxy.socket.protocol, 6);
+                    assert_eq!(proxy.socket.local_ip.to_string(), "192.168.1.10");
+                    assert_eq!(proxy.socket.remote_ip.to_string(), "10.0.0.11");
+                    assert_eq!(proxy.socket.local_port, 80);
+                    assert_eq!(proxy.socket.remote_port, 8080);
+                }
+                _ => panic!("Expected ExtendedProxySocketIpv4"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_proxy_socket_ipv6() {
+    // Extended Proxy Socket IPv6 wraps an extended_socket_ipv6
+    // protocol(4) + local_ip(16) + remote_ip(16) + local_port(4) + remote_port(4) = 44 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x06, // protocol = 6 (TCP)
+        // local_ip = 2001:db8::10
+        0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x10, // remote_ip = 2001:db8::20
+        0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x20, 0x00, 0x00, 0x00, 0x50, // local_port = 80
+        0x00, 0x00, 0x1F, 0x90, // remote_port = 8080
+    ];
+
+    let data = build_flow_sample_test(0x0837, &record_data); // record type = 2103
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedProxySocketIpv6(proxy) => {
+                    assert_eq!(proxy.socket.protocol, 6);
+                    assert_eq!(proxy.socket.local_ip.to_string(), "2001:db8::10");
+                    assert_eq!(proxy.socket.remote_ip.to_string(), "2001:db8::20");
+                    assert_eq!(proxy.socket.local_port, 80);
+                    assert_eq!(proxy.socket.remote_port, 8080);
+                }
+                _ => panic!("Expected ExtendedProxySocketIpv6"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_http_request() {
+    // Build HTTP request record data
+    let mut record_data = Vec::new();
+
+    // method = 2 (GET)
+    record_data.extend_from_slice(&[0x00, 0x00, 0x00, 0x02]);
+    // protocol = 1001 (HTTP/1.1)
+    record_data.extend_from_slice(&[0x00, 0x00, 0x03, 0xE9]);
+    // uri = "/api/test"
+    record_data.extend_from_slice(&encode_string("/api/test"));
+    // host = "example.com"
+    record_data.extend_from_slice(&encode_string("example.com"));
+    // referer = "https://referrer.com"
+    record_data.extend_from_slice(&encode_string("https://referrer.com"));
+    // useragent = "Mozilla/5.0"
+    record_data.extend_from_slice(&encode_string("Mozilla/5.0"));
+    // xff = "203.0.113.1"
+    record_data.extend_from_slice(&encode_string("203.0.113.1"));
+    // authuser = "testuser"
+    record_data.extend_from_slice(&encode_string("testuser"));
+    // mime_type = "application/json"
+    record_data.extend_from_slice(&encode_string("application/json"));
+    // req_bytes = 1024
+    record_data.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00]);
+    // resp_bytes = 2048
+    record_data.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00]);
+    // duration_us = 50000 (50ms)
+    record_data.extend_from_slice(&[0x00, 0x00, 0xC3, 0x50]);
+    // status = 200
+    record_data.extend_from_slice(&[0x00, 0x00, 0x00, 0xC8]);
+
+    let data = build_flow_sample_test(0x089E, &record_data); // record type = 2206
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::HttpRequest(http) => {
+                    assert_eq!(http.method, HttpMethod::Get);
+                    assert_eq!(http.protocol, 1001);
+                    assert_eq!(http.uri, "/api/test");
+                    assert_eq!(http.host, "example.com");
+                    assert_eq!(http.referer, "https://referrer.com");
+                    assert_eq!(http.useragent, "Mozilla/5.0");
+                    assert_eq!(http.xff, "203.0.113.1");
+                    assert_eq!(http.authuser, "testuser");
+                    assert_eq!(http.mime_type, "application/json");
+                    assert_eq!(http.req_bytes, 1024);
+                    assert_eq!(http.resp_bytes, 2048);
+                    assert_eq!(http.duration_us, 50000);
+                    assert_eq!(http.status, 200);
+                }
+                _ => panic!("Expected HttpRequest"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_proxy_request() {
+    // Build extended proxy request record data
+    let mut record_data = Vec::new();
+
+    // uri = "/backend/api"
+    record_data.extend_from_slice(&encode_string("/backend/api"));
+    // host = "backend.internal"
+    record_data.extend_from_slice(&encode_string("backend.internal"));
+
+    let data = build_flow_sample_test(0x089F, &record_data); // record type = 2207
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedProxyRequest(proxy) => {
+                    assert_eq!(proxy.uri, "/backend/api");
+                    assert_eq!(proxy.host, "backend.internal");
+                }
+                _ => panic!("Expected ExtendedProxyRequest"),
             }
         }
         _ => panic!("Expected FlowSample"),
