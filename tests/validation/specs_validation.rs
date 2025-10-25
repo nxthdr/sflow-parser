@@ -586,21 +586,6 @@ fn validate_fields(xdr_fields: &[XdrField], rust_fields: &[FieldMetadata]) -> (b
         return (true, Vec::new());
     }
 
-    // Special case: ExtendedGateway (0,1003) - XDR has dst_as_path as as_path_type<>
-    // which is parsed as Vec<u32>, but implementation uses Vec<AsPathSegment> for structured access
-    if xdr_fields.len() == 7
-        && rust_fields.len() == 7
-        && xdr_fields
-            .iter()
-            .any(|f| f.name == "dst_as_path" && f.xdr_type == "as_path_type<>")
-        && rust_fields
-            .iter()
-            .any(|f| f.name == "dst_as_path" && f.type_name == "Vec<AsPathSegment>")
-    {
-        // This is correct - implementation provides structured AS path segments
-        return (true, Vec::new());
-    }
-
     // Special case: OpenFlowPortName (0,1005) - XDR parser finds 0 fields (likely empty struct in spec)
     // but implementation correctly has the port_name field
     if xdr_fields.is_empty() && rust_fields.len() == 1 && rust_fields[0].name == "port_name" {
@@ -642,24 +627,6 @@ fn validate_fields(xdr_fields: &[XdrField], rust_fields: &[FieldMetadata]) -> (b
         && rust_fields.iter().any(|f| f.name == "bssid")
     {
         // This is correct - implementation adds useful timing information
-        return (true, Vec::new());
-    }
-
-    // Special case: ExtendedProxySocketIpv4 (0,2102) - wraps ExtendedSocketIpv4
-    if rust_fields.len() == 1
-        && rust_fields[0].name == "socket"
-        && rust_fields[0].type_name == "ExtendedSocketIpv4"
-    {
-        // This is correct - implementation wraps the socket structure
-        return (true, Vec::new());
-    }
-
-    // Special case: ExtendedProxySocketIpv6 (0,2103) - wraps ExtendedSocketIpv6
-    if rust_fields.len() == 1
-        && rust_fields[0].name == "socket"
-        && rust_fields[0].type_name == "ExtendedSocketIpv6"
-    {
-        // This is correct - implementation wraps the socket structure
         return (true, Vec::new());
     }
 
@@ -812,6 +779,10 @@ fn types_compatible(xdr_type: &str, rust_type: &str) -> bool {
         }
         // PDUs use structured type with nested flow records
         if rust_type == "Vec<Pdu>" {
+            return true;
+        }
+        // AS path segments use structured type
+        if rust_type == "Vec<AsPathSegment>" {
             return true;
         }
     }
