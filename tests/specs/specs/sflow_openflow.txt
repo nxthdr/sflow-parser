@@ -1,0 +1,227 @@
+
+
+
+
+
+
+sFlow.org                                                    Peter Phaal
+http://www.sFlow.org/                                        InMon Corp.
+info@sflow.org
+                                                               Ben Pfaff
+                                                            VMware, Inc.
+
+
+
+
+                                                           November 2014
+
+
+                       sFlow OpenFlow Structures
+
+
+
+Copyright Notice
+
+Copyright (C) sFlow.org (2014). All Rights Reserved.
+
+Abstract
+
+This memo describes sFlow version 5 structures for exporting OpenFlow
+related data.
+
+Table of Contents
+
+1. Overview ......................................................  1
+2. Discussion ....................................................  1
+3. sFlow Datagram Extensions .....................................  3
+4. References ....................................................  3
+5. Author's Addresses ............................................  4
+
+1. Overview
+   This document describes additional structures that allow an sFlow
+   agent to export additional information when packet forwarding
+   decisions are controlled by the OpenFlow [1] protocol.  sFlow version
+   5 is an extensible protocol that allows the addition of new data
+   structures without impacting existing collectors. This document does
+   not change the sFlow version 5 protocol [2], it simply defines
+   additional, optional, data structures that an sFlow agent can use to
+   identify OpenFlow controlled ports.
+
+2. Discussion
+
+   The OpenFlow protocol allows remote controller software to manage
+   forwarding decisions in network switches. The sFlow provides
+   complementary functionality, switches send sFlow datagrams containing
+
+
+
+FINAL                           sFlow.org                       [Page 1]
+
+FINAL                   sFlow OpenFlow Structures          November 2014
+
+
+   packet samples, forwarding information and interface counters to
+   analysis software.
+
+        +-----+        sFlow    +------------+           +---------+
+   P1 --+     | --------------> |            | Traffic   |         |
+    .   |     |                 |   sFlow    | Analytics |         |
+    .   | S 1 |                 |  Analyzer  | --------> |         |
+    .   |     |        sFlow    |            |           |         |
+   PL --+     | <-    --------> |            |           |         |
+        +-----+    \ /          +------------+           |         |
+           .        /                                    | Traffic |
+           .       / \                                   | Control |
+        +-----+   /   \OpenFlow +------------+           |         |
+   P1 --+     | --     -------> |            | Controls  |         |
+    .   |     |                 |  OpenFlow  | <-------- |         |
+    .   | S N |                 | Controller |           |         |
+    .   |     |        OpenFlow |            | Topology  |         |
+   PM --+     | <-------------> |            | --------> |         |
+        +-----+                 +------------+           +---------+
+
+      Data Plane                Control Plane            Application
+
+   In the diagram, switch S1 contains ports P1 through PL. The sFlow
+   datagrams sent from the switch to the sFlow Analyzer uniquely
+   identify the switch using an agent_address, and each port on the
+   switch is identified by means of its SNMP ifIndex. The switch also
+   maintains an OpenFlow connection to the OpenFlow Controller. The
+   switch describes its resources to the OpenFlow controller,
+   identifying 1 or more datapaths, each of which contains 1 or more
+   ports, each identified by a port number.
+
+   The Traffic Control application consumes Traffic Analytics from the
+   sFlow Analyzer and instructs the OpenFlow controller to makes changes
+   which are in turn sent as OpenFlow rules to the switches, altering
+   traffic flows in the network.
+
+   The purpose of this extension is to facilitate close coordination
+   between the sFlow analyzer and OpenFlow controller. The combination
+   of sFlow's real-time traffic monitoring and OpenFlow's real-time
+   traffic control capabilities make it possible to automatically adapt
+   the network to changing traffic conditions.
+
+   The inclusion of_port in sFlow counters_sample records facilitates
+   integration by providing the information needed link traffic flows
+   measured using sFlow with OpenFlow datapaths and ports so that these
+   flows can be controlled and an sFlow agent implementing this
+   specification must include the of_port structure when exporting
+   counters for an OpenFlow controlled port.
+
+
+
+FINAL                           sFlow.org                       [Page 2]
+
+FINAL                   sFlow OpenFlow Structures          November 2014
+
+
+   OpenFlow has a number of reserved port numbers, e.g. OFPP_LOCAL.  The
+   values of these port numbers changed from OpenFlow 1.0 [1] to
+   OpenFlow 1.1 [3] and later.  For reserved ports, of_port should use
+   the OpenFlow 1.1 port numbering, e.g. 0xfffffffe for OFPP_LOCAL,
+   regardless of the version of OpenFlow in use.
+
+   The port_name structure is optional and when exported with an of_port
+   structure in a counters_sample must contain the OpenFlow port name.
+   OpenFlow port names are a null terminated string that is a maximum of
+   16 bytes long.  When exporting this string in sFlow, the null must be
+   removed, i.e. the maximum length will be 15.
+
+   Non-OpenFlow ports may include the port_name structure to report the
+   ifName [4] associated with the port. The ifName corresponds to the
+   name used to identify the port in the device's CLI and increasingly
+   in programmatic APIs, so the inclusion of port_name provides
+   information so that configuration changes can be applied to ports
+   identified by sFlow.
+
+3. sFlow Datagram Extensions
+
+   The following structures are defined to identify ports:
+
+/* OpenFlow port */
+/* opaque = counter_data; enterprise = 0; format = 1004 */
+struct of_port {
+  unsigned hyper datapath_id;
+  unsigned int port_no;
+}
+
+/* Port name */
+/* opaque = counter_data; enterprise = 0; format = 1005 */
+struct port_name {
+  string<255> name;
+}
+
+4. References
+
+[1]  "OpenFlow Switch Specification, Version 1.0.0 (Wire Protocol
+     0x01)", December 31, 2009
+
+[2]  Phaal, P. and Lavine, M., "sFlow Version 5",
+     http://www.sflow.org/sflow_version_5.txt, July 2006
+
+[3]  "OpenFlow Switch Specification, Version 1.1.0 (Wire Protocol
+     0x02)", February 28, 2011
+
+
+
+
+
+FINAL                           sFlow.org                       [Page 3]
+
+FINAL                   sFlow OpenFlow Structures          November 2014
+
+
+[4]  McCloghrie, K. and Kastenholz, F., "The Interfaces Group MIB", RFC
+     2863, June 2000
+
+5. Author's Address
+
+   Peter Phaal
+   InMon Corp.
+   1 Sansome Street, 35th Floor
+   San Francisco, CA 94104
+
+   Phone: (415) 946-8901
+   EMail: peter.phaal@inmon.com
+
+   Ben Pfaff
+   VMware, Inc.
+   3401 Hillview Ave
+   Palo Alto CA 94304
+
+   Phone: (650) 427-8169
+   Email: blp@nicira.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+FINAL                           sFlow.org                       [Page 4]
+

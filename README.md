@@ -197,7 +197,7 @@ make test-unit         # Run unit tests only
 make test-integration  # Run integration tests only
 ```
 
-### Fuzz Testing
+### Fuzz Tests
 
 The project includes comprehensive fuzz testing using `cargo-fuzz`:
 

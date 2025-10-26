@@ -32,7 +32,7 @@ test-lib:
 specs-validate:
 	@echo "Validating implementation against official sFlow specifications..."
 	@echo "Note: This requires network access to download spec documents"
-	cargo test validation::specs_validation::tests::test_validate_against_specs -- --nocapture --ignored
+	cargo test --test specs_test -- --nocapture --ignored
 
 bench:
 	@echo "Running performance benchmarks..."

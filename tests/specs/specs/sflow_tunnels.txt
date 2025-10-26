@@ -1,0 +1,283 @@
+
+
+
+
+
+
+sFlow.org                                                    Peter Phaal
+http://www.sFlow.org/                                        InMon Corp.
+info@sflow.org
+                                                           Sunil Chitnis
+                                                                 Brocade
+
+                                                               Bob Combs
+                                                               Microsoft
+
+
+
+                                                           November 2012
+
+
+                        sFlow Tunnel Structures
+
+
+
+Copyright Notice
+
+Copyright (C) sFlow.org (2012). All Rights Reserved.
+
+Abstract
+
+This memo describes an sFlow version 5 structures to report on tunneled
+traffic.
+
+Table of Contents
+
+1. Overview ......................................................  1
+2. Reference Model ...............................................  1
+3. sFlow Datagram Extension ......................................  3
+4. References ....................................................  4
+5. Author's Addresses ............................................  5
+
+1. Overview
+
+   This document describes additional structures that allow a tunnel end
+   point to export information relating to the tunnel.  sFlow version 5
+   is an extensible protocol that allows the addition of new data
+   structures without impacting existing collectors. This document does
+   not change the sFlow version 5 protocol [1], it simply defines an
+   additional, optional, data structure that a network device can use to
+   report on tunnel attributes.
+
+2. Reference Model
+
+   The sFlow version 5 protocol [1] defines a number of structures for
+
+
+
+FINAL                           sFlow.org                       [Page 1]
+
+FINAL                    sFlow Tunnel Structure                July 2012
+
+
+   describing layer 2 network virtualization, including VLANs, VLAN
+   stacks, and MPLS. More recently network virtualization protocols such
+   as VxLAN[2], NVGRE[3] and GRE[4] have been developed to virtualize
+   networking by encapsulating layer 2 frames over layer 3 and layer 4
+   tunnels.
+
+   The figure below shows the basic elements of a layer 3/4 tunnel. An
+   Ethernet frame sent by Host A to Host B is encapsulated by ingress
+   switch S1. The encapsulated frame is sent via transit switches S2 and
+   S3 to egress switch S4. The frame is decapsulated and delivered to
+   Host B.
+
+ +--------+   +-------+   +-------+   +-------+   +-------+   +--------+
+ | Host A +---+   S1  +---+  S2   +---+  S3   +---+  S4   +---+ Host B |
+ +--------+ ^ |ingress| ^ |transit| ^ |transit| ^ |egress | ^ +--------+
+            | +-------+ | +-------+ | +-------+ | +-------+ |
+           (1)         (3)          |          (2)         (4)
+            |           |           |           |           |
+            |    +------------------------------------+     |
+            |    |            Outer Header            |     |
+            |    |     (source S1, destination S4)    |     |
+         +-------+------------------------------------+--------+
+         |                    Inner Header                     |
+         |         (source Host A, destination Host B)         |
+         +-----------------------------------------------------+
+         |                     Payload                         |
+         |                                                     |
+         +-----------------------------------------------------+
+
+   The sampled packet headers reported by sFlow agents on transit
+   switches S2 and S3 allow an sFlow analyzer to decode the inner and
+   outer source and destination addresses - provided that the tunneling
+   protocol does not encrypt the inner header and payload. However,
+   layer 4 tunneling does significantly increase the number of bytes of
+   header needed to report on tunneled traffic. The default 128 byte
+   header size specified in sFlow version 5 [1] will typically provide
+   sufficient header data, but it is recommended that sFlow
+   implementations in transit switches support captured header size up
+   to 256 bytes in order to fully capture deeply nested IPv6 headers.
+
+   This document describes additional sFlow structures that allow sFlow
+   agents in ingress and egress switches to describe outer headers that
+   are being added or removed as packets transit the switch.
+
+   There are four cases to consider (each marked in the diagram above):
+
+      1. Ingress packet sampled before encapsulation (i.e. Host A -> S1)
+         - one or more egress extended flow structure(s)
+
+
+
+FINAL                           sFlow.org                       [Page 2]
+
+FINAL                    sFlow Tunnel Structure                July 2012
+
+
+         (extended_L2_tunnel_egress, extended_ipv4_tunnel_egress,
+         extended_ipv6_tunnel_egress) are added to the sample to report
+         the outer headers that will be added on egress.
+
+      2. Ingress packet sampled before decapsulation (i.e. S3 -> S4) -
+         the extended_decapsulate_egress structure is added to the
+         sample to indicate the end of the tunnel and point to the start
+         of inner header.
+
+      3. Egress packet sampled after encapsulation (i.e. S1 -> S2) - the
+          extended_decapsulate_ingress structure is added to the sample
+         to indicate the start of tunnel and extended egress flow
+         structure(s) (extended_L2_tunnel_egress,
+         extended_ipv4_tunnel_egress, extended_ipv6_tunnel_egress)  may
+         be added to report encapsulation headers that will be added if
+         these are not present in the sampled packet header.
+
+      4. Egress packet sampled after decapsulation (i.e. S4 -> Host B) -
+         one or more ingress extended sFlow structure(s)
+         (extended_L2_tunnel_ingress, extended_ipv4_tunnel_ingress,
+         extended_ipv6_tunnel_ingress) are added to the sample to report
+         headers that were present on ingress and are no longer present
+         in sampled packet header.
+
+   For sFlow data sources performing ingress packet sampling, only cases
+   1 and 2 apply.  For sFlow data sources performing egress sampling,
+   only cases 3 and 4 apply.  A data source performing bi-directional
+   packet sampling must consider all four cases.
+
+   A Virtual Network Identifier (VNI) may be associated with a packet
+   flow. The VNI may be explicitly included in the tunneling protocol,
+   or it may be implicit (similar to VLAN information on an untagged
+   switch port). The extended_vni_ingress and extended_vni_egress
+   structures allow encapsulating, decapsulating and edge switches to
+   report VNIs.
+
+3. sFlow Datagram Extension
+
+/* opaque = flow_data; enterprise = 0; format = 1021 */
+struct extended_L2_tunnel_egress {
+     sampled_ethernet header;
+}
+
+/* opaque = flow_data; enterprise = 0; format = 1022 */
+struct extended_L2_tunnel_ingress {
+     sampled_ethernet header;
+}
+
+
+
+
+FINAL                           sFlow.org                       [Page 3]
+
+FINAL                    sFlow Tunnel Structure                July 2012
+
+
+/* opaque = flow_data; enterprise = 0; format = 1023 */
+struct extended_ipv4_tunnel_egress {
+    sampled_ipv4 header;
+}
+
+/* opaque = flow_data; enterprise = 0; format = 1024 */
+struct extended_ipv4_tunnel_ingress {
+    sampled_ipv4 header;
+}
+
+ /* opaque = flow_data; enterprise = 0; format = 1025 */
+struct extended_ipv6_tunnel_egress {
+    sampled_ipv6 header;
+}
+
+/* opaque = flow_data; enterprise = 0; format = 1026 */
+struct extended_ipv6_tunnel_ingress {
+    sampled_ipv6 header;
+}
+
+/* opaque = flow_data; enterprise = 0; format = 1027 */
+struct extended_decapsulate_egress {
+   unsigned int inner_header_offset;
+}
+
+/* opaque = flow_data; enterprise = 0; format = 1028 */
+struct extended_decapsulate_ingress {
+   unsigned int inner_header_offset;
+}
+
+/* opaque_flow_data; enterprise = 0; format = 1029 */
+struct extended_vni_egress {
+   unsigned int vni;
+}
+
+/* opaque_flow_data; enterprise = 0; format = 1030 */
+struct extended_vni_ingress {
+   unsigned int vni;
+}
+
+4. References
+
+[1]  Phaal, P. and Lavine, M., "sFlow Version 5",
+     http://www.sflow.org/sflow_version_5.txt, July 2006
+
+[2]  Mahalingam, M., Dutt, D., Duda, K., Agarwal, P., Kreeger, L., Srid-
+     har, T., Bursell, M., and Wright, C., "VXLAN: A Framework for Over-
+     laying Virtualization Layer 2 Networks over Layer 3 Networks",
+
+
+
+FINAL                           sFlow.org                       [Page 4]
+
+FINAL                    sFlow Tunnel Structure                July 2012
+
+
+     draft-mahalingam-dutt-dcops-vxlan-01.txt, February 2012
+
+[3]  Sridharan, M., Duda, K., Ganga, I, Greenberg, A., Lin, G., Pearson,
+     M., Thaler, P., Tumuluri, C., Venkataramiah, N., and Wang, Y.,
+     "NVGRE: Network Virtualization using Generic Routing Encapsula-
+     tion", draft-sridharan-virtualization-nvgre-01.txt July 2012
+
+[4]  Farinacci, D., Hanks, S., Meyer, D., and Traina, P., "Generic Rout-
+     ing Encapsulation (GRE)", RFC 2784, March 2000
+
+5. Author's Address
+
+   Peter Phaal
+   InMon Corp.
+   580 California Street, 5th Floor
+   San Francisco, CA 94104
+
+   Phone: (415) 283-3263
+   EMail: peter.phaal@inmon.com
+
+   Sunil Chitnis
+   Brocade Communications Systems, Inc.
+   130 Holger Way
+   San Jose, CA 95134
+
+   Phone: (408) 333-8000
+   EMail: schitnis@brocade.com
+
+   Bob Combs
+   Microsoft Corporation
+   One Microsoft Way
+   Redmond, WA 98052
+
+   EMail: bcombs@exchange.microsoft.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+FINAL                           sFlow.org                       [Page 5]
+

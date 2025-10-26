@@ -1,0 +1,283 @@
+
+
+
+
+
+
+sFlow.org                                                    Peter Phaal
+http://www.sFlow.org/                                        InMon Corp.
+info@sflow.org
+                                                             Dave Mangot
+                                                             Tagged Inc.
+
+
+
+                                                           December 2011
+
+
+                         sFlow HTTP Structures
+
+
+
+Copyright Notice
+
+Copyright (C) sFlow.org (2010,2011). All Rights Reserved.
+
+Abstract
+
+This memo describes sFlow version 5 structures for exporting HTTP
+related data.
+
+Table of Contents
+
+1. Overview ......................................................  1
+2. Discussion ....................................................  1
+3. sFlow Datagram Extensions .....................................  2
+4. References ....................................................  4
+5. Author's Addresses ............................................  5
+
+1. Overview
+
+   This document describes additional structures that allow an sFlow
+   agent to export information from HTTP [1] entities.  sFlow version 5
+   is an extensible protocol that allows the addition of new data
+   structures without impacting existing collectors. This document does
+   not change the sFlow version 5 protocol [2], it simply defines
+   additional, optional, data structures that an HTTP aware entity can
+   use to report performance.
+
+2. Discussion
+
+   The HTTP protocol is supported in a wide range of network devices,
+   servers and applications. Defining standard sFlow structures
+   simplifies management of HTTP by providing centralized monitoring of
+   performance across the diverse range of entities exhanging
+
+
+
+FINAL                           sFlow.org                       [Page 1]
+
+FINAL                     sFlow HTTP Structures            December 2011
+
+
+   information using the HTTP protocol.  In addition to providing
+   visibility into the HTTP protocol, sFlow export links HTTP
+   performance to the performance of the underlying network and system
+   resources required to deliver the HTTP service, providing the
+   complete set of metrics need to manage performance.
+
+   The sFlow Host Structures [3] specification defines a framework
+   implementing sFlow in application layer protocols such as HTTP. This
+   document builds on that framework by defining structures specific to
+   the HTTP protocol.
+
+3. sFlow Datagram Extensions
+
+   The http_counters structure is used to export a standard set of HTTP
+   counters.
+
+   The http_request structure is used to export attributes of randomly
+   sampled HTTP requests. Each HTTP flow_sample includes a http_request
+   structure as well as an extended_socket_ip4 or extended_socket_ipv6
+   structure [3].
+
+   The flow_sample input and output interface fields [2] are used to
+   indicate service direction. If the sFlow agent is running on a HTTP
+   server then the input interface must be set to the ifIndex
+   corresponding to the interface the request was received on (0 if
+   unknown) and the output interface must be set to 0x3FFFFFFF,
+   indicating that the target of the operation is the local HTTP server.
+   If the sFlow agent is running as part of the HTTP client, then the
+   input interface must be set to 0x3FFFFFFF and the output interface
+   set to the ifIndex corresponding to the interface the request was
+   sent on (0 if unknown).
+
+   An sFlow sub-agent embedded within the HTTP entity is responsible for
+   reporting on the HTTP logical entity data source. The sub_agent_id
+   and the data source index must be unique within the host. To ensure
+   uniqueness and provide persistence, an embedded sub-agent should use
+   the lowest port number that is being used to receive HTTP requests as
+   the sub_agent_id and data source index. For example, if a web server
+   is listening for HTTP requests on TCP port 80 then sub_agent_id = 80
+   and the data source type = 3 (entLogicalEntry) and index = 80.
+
+   In the case of intermediate HTTP entities, such as load balancers and
+   proxies, the entity may act as both an HTTP server and an HTTP
+   client. An intermediate entitity must report itself as the HTTP
+   server and should include an extended_proxy_socket structure
+   indicating the connection used to retrieve the response from the
+   downstream server. If the URI or Host was modified by the
+   intermediate entity, an extended_proxy_request structure should be
+
+
+
+FINAL                           sFlow.org                       [Page 2]
+
+FINAL                     sFlow HTTP Structures            December 2011
+
+
+   included containing the modified values in the downstream request.
+
+/* The http_method enumeration may be expanded over time.
+   Applications receiving sFlow must be prepared to receive
+   http_request structures with unknown http_method values */
+
+enum http_method {
+  OTHER    = 0;
+  OPTIONS  = 1;
+  GET      = 2;
+  HEAD     = 3;
+  POST     = 4;
+  PUT      = 5;
+  DELETE   = 6;
+  TRACE    = 7;
+  CONNECT  = 8;
+}
+
+/* HTTP protocol version number */
+/* Encoded as major_number * 1000 + minor_number */
+/* e.g. HTTP1.1 is encoded as 1001 */
+typedef unsigned int version;
+
+/* HTTP request */
+/* opaque = flow_data; enterprise = 0; format = 2206 */
+struct http_request {
+  http_method method;        /* method */
+  version protocol;          /* HTTP protocol version */
+  string<255> uri;           /* URI exactly as it came from the client */
+  string<64> host;           /* Host value from request header */
+  string<255> referer;       /* Referer value from request header */
+  string<128> useragent;     /* User-Agent value from request header */
+  string<64> xff;            /* X-Forwarded-For value
+                                from request header */
+  string<32> authuser;       /* RFC 1413 identity of user*/
+  string<64> mime-type;      /* Mime-Type of response */
+  unsigned hyper req_bytes;  /* Content-Length of request */
+  unsigned hyper resp_bytes; /* Content-Length of response */
+  unsigned int uS;           /* duration of the operation
+                                (in microseconds) */
+  int status;                /* HTTP status code */
+}
+
+/* Rewritten URI */
+/* Only include if host or uri are modified */
+/* opaque = flow_data; enterprise = 0; format = 2207 */
+struct extended_proxy_request {
+  string<255> uri;           /* URI in request to downstream server */
+
+
+
+FINAL                           sFlow.org                       [Page 3]
+
+FINAL                     sFlow HTTP Structures            December 2011
+
+
+  string<64>  host;          /* Host in request to downstream server */
+}
+
+/* Proxy socket IPv4 */
+/* opaque = flow_data; enterprise=0; format=2102 */
+struct extended_proxy_socket_ipv4 {
+  extended_socket_ipv4 socket;
+}
+
+/* Proxy socket IPv6 */
+/* opaque = flow_data; enterprise=0; format=2103 */
+struct extended_proxy_socket_ipv6 {
+  extended_socket_ipv6 socket;
+}
+
+/* HTTP counters */
+/* opaque = counter_data; enterprise = 0; format = 2201 */
+struct http_counters {
+  unsigned int method_option_count;
+  unsigned int method_get_count;
+  unsigned int method_head_count;
+  unsigned int method_post_count;
+  unsigned int method_put_count;
+  unsigned int method_delete_count;
+  unsigned int method_trace_count;
+  unsigned int method_connect_count;
+  unsigned int method_other_count;
+  unsigned int status_1XX_count;
+  unsigned int status_2XX_count;
+  unsigned int status_3XX_count;
+  unsigned int status_4XX_count;
+  unsigned int status_5XX_count;
+  unsigned int status_other_count;
+}
+
+
+4. References
+
+[1]  Fielding, R., Gettys, S., Mogul, J., Frystyk, H., Masinter, L.,
+     Leach, P., and Berners-Lee, T., "Hypertext Transfer Protocol --
+     HTTP/1.1", RFC 2616, June 1999
+
+[2]  Phaal, P. and Lavine, M., "sFlow Version 5",
+     http://www.sflow.org/sflow_version_5.txt, July 2006
+
+[3]  Phaal, P. and Jordan, R., "sFlow Host Structures",
+     http://www.sflow.org/sflow_host.txt July 2010
+
+
+
+
+FINAL                           sFlow.org                       [Page 4]
+
+FINAL                     sFlow HTTP Structures            December 2011
+
+
+5. Author's Address
+
+   Peter Phaal
+   InMon Corp.
+   580 California Street, 5th Floor
+   San Francisco, CA 94104
+
+   Phone: (415) 283-3263
+   EMail: peter.phaal@inmon.com
+
+   Dave Mangot
+   Tagged Inc.
+   110 Pacific Ave Mail Box #117
+   San Francisco, CA 94111
+
+   Phone: (415) 283-3263
+   EMail: dmangot@tagged.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+FINAL                           sFlow.org                       [Page 5]
+

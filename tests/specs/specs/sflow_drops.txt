@@ -1,0 +1,395 @@
+
+
+
+
+
+
+sFlow.org                                                   Ido Schimmel
+https://sFlow.org/                                          NVIDIA Corp.
+info@sflow.org
+                                                             Andy Roulin
+                                                            NVIDIA Corp.
+
+                                                             Peter Phaal
+                                                             InMon Corp.
+
+                                                            October 2020
+
+
+              sFlow Dropped Packet Notification Structures
+
+
+
+Copyright Notice
+
+Copyright (C) sFlow.org (2020). All Rights Reserved.
+
+Abstract
+
+This memo describes an sFlow version 5 structure for exporting
+information about dropped packets.
+
+Table of Contents
+
+1. Overview ......................................................  1
+2. sFlow Datagram Extension ......................................  1
+3. References ....................................................  6
+4. Author's Addresses ............................................  6
+
+1. Overview
+
+   This document describes additional structures that allow an sFlow
+   agent to export information about a packet dropped by a network
+   device.  sFlow version 5 is an extensible protocol that allows the
+   addition of new data structures without impacting existing
+   collectors. This document does not change the sFlow version 5
+   protocol [1], it simply defines additional, optional, data structures
+   that a network device can use to export packet drop information in
+   sFlow.
+
+2. sFlow Datagram Extension
+
+   There are currently two types of measurement: periodic export of
+   counters exported as Counter Records and randomly sampled packets
+   exported as Packet Flow Records. The existing mechanisms provide
+
+
+
+FINAL                           sFlow.org                       [Page 1]
+
+FINAL         sFlow Dropped Packet Notification Structures  October 2020
+
+
+   visibility into traffic flowing across the network and the resources
+   consumed on the network devices. However, visibility into dropped
+   packets is limited. Basic if_counter records include ingress and
+   egress discard and error counters that are useful for identifying
+   switch ports discarding packets, but don't provide insight into the
+   specific applications being affected, or the reasons for the
+   discards. Analysis of flow_sample records identifies traffic flowing
+   through the port and provides a method of reporting dropped packets,
+   but the discarded packets are rare and so are unlikely to be sampled.
+
+   Dropped packets have a profound impact on network performance and
+   availability. Packet discards due to congestion can significantly
+   impact application performance. Dropped packets due to black hole
+   routes, expired TTLs, MTU mismatches, etc can result in insidious
+   connection failures that are time consuming and difficult to
+   diagnose.
+
+   Extending sFlow to provide visibility into dropped packets offers
+   significant benefits for network troubleshooting, providing real-time
+   network wide visibility into the specific packets that were dropped
+   as well the reason the packet was dropped. This visibility instantly
+   reveals the root cause of drops and the impacted connections.
+
+   This document describes a third record type that can be used to
+   export asynchronous notifications associated with packet drop events
+   on network devices.  There are constraints to using sFlow to carry
+   asynchronous notifications:
+
+   o The sFlow protocol provides no delivery guarantees.
+
+   o Transmission of notification records may be delayed by up to 1 sec-
+     ond.
+
+   o A rate limit must be imposed on the number of notifications gener-
+     ated by each Data Source in order to protect the sFlow Agent, net-
+     work, and sFlow Collector from a flood of notification messages.
+
+   Best practice for sFlow packet sampling is to use a dedicated
+   hardware queue to rate limit packet samples and prevent overload of
+   the control plane.  Similarly, discard notification messages should
+   have their own dedicated hardware queue to prevent interference with
+   packet sampling and protect the management plane.
+
+   A default rate limit of 10 notifications per second per Data Source
+   is sufficient to satisfy this specification. The rate limit should be
+   configurable, but care should be taken to limit the maximum value to
+   protect the sFlow Agent, network, and sFlow Collector from overload.
+   Dropped packet notifications should be disabled by default to prevent
+
+
+
+FINAL                           sFlow.org                       [Page 2]
+
+FINAL         sFlow Dropped Packet Notification Structures  October 2020
+
+
+   issues with sFlow Collectors that do not yet support this mechanism.
+   However, sFlow Collectors should ignore records that they do not
+   support and should therefore be unaffected if they do receive
+   notification records.
+
+   Packet drop notifications are carried in discarded_packet records.
+   Each discarded_packet record contains one or more flow_record
+   structures describing the discarded packet. A discarded_packet record
+   must contain packet header information. The preferred format for
+   reporting packet header information is the sampled_header.  However,
+   if the packet header is not available then one or more of
+   sampled_ethernet, sampled_ipv4, sampled_ipv6 formats may be used.
+
+   Devlink Trap [2] is a standard method of delivering dropped packet
+   notifications to user space processes on Linux based systems that can
+   be used by an sFlow agent to implement this specification. The set of
+   drop_reason codes defined in discarded_packet records have been
+   expanded to include Devlink Trap drop reasons.
+
+   Packet discard records complement existing counter polling and packet
+   sampling mechanisms and share a common data model so that all three
+   sources of data can be correlated.  For example, if packets are being
+   discarded because of buffer exhaustion, the discard records don't
+   necessarily tell the whole story. The discarded packets may be part
+   of mice flows that are victims of an elephant flow. Packet samples
+   will reveal the traffic that isn't being dropped and provide a more
+   complete picture. Counter data adds additional information such as
+   interface speed, utilization, packet and discard rates that further
+   completes the picture.
+
+/* The drop_reason enumeration may be expanded over time.
+   sFlow collectors must be prepared to receive discard_packet
+   structures with unrecognized drop_reason values.
+
+   This document expands on the discard reason codes 0-262 defined
+   in the sFlow Version 5 [1] interface typedef and this expanded list
+   should be regarded as an expansion of the reason codes in the
+   interface typdef and are valid anywhere the typedef is referenced.
+
+   Codes 263-288 are defined in Devlink Trap [2]. Drop reason / group
+   names from the Devlink Trap document are preserved where they define
+   new reason codes, or referenced as comments where they map to existing
+   codes.
+
+   Codes 289-303 are reasons that have yet to be upstreamed to Devlink Trap,
+   but the intent is that they will eventually be upstreamed and documented as
+   part of the Linux API [2], and so they have been reserved.
+
+
+
+
+FINAL                           sFlow.org                       [Page 3]
+
+FINAL         sFlow Dropped Packet Notification Structures  October 2020
+
+
+   The authoritative list of drop reasons will be maintained
+   at sflow.org */
+
+enum drop_reason {
+   net_unreachable      = 0,
+   host_unreachable     = 1,
+   protocol_unreachable = 2,
+   port_unreachable     = 3,
+   frag_needed          = 4,
+   src_route_failed     = 5,
+   dst_net_unknown      = 6, /* ipv4_lpm_miss, ipv6_lpm_miss */
+   dst_host_unknown     = 7,
+   src_host_isolated    = 8,
+   dst_net_prohibited   = 9, /* reject_route */
+   dst_host_prohibited  = 10,
+   dst_net_tos_unreachable  = 11,
+   dst_host_tos_unreacheable = 12,
+   comm_admin_prohibited = 13,
+   host_precedence_violation = 14,
+   precedence_cutoff    = 15,
+   unknown              = 256,
+   ttl_exceeded         = 257, /* ttl_value_is_too_small */
+   acl                  = 258, /* ingress_flow_action_drop,
+                                  egress_flow_action_drop
+                                  group acl_drops */
+   no_buffer_space      = 259, /* tail_drop */
+   red                  = 260, /* early_drop */
+   traffic_shaping      = 261,
+   pkt_too_big          = 262, /* mtu_value_is_too_small */
+   src_mac_is_multicast = 263,
+   vlan_tag_mismatch    = 264,
+   ingress_vlan_filter  = 265,
+   ingress_spanning_tree_filter = 266,
+   port_list_is_empty   = 267,
+   port_loopback_filter = 268,
+   blackhole_route      = 269,
+   non_ip               = 270,
+   uc_dip_over_mc_dmac  = 271,
+   dip_is_loopback_address = 272,
+   sip_is_mc            = 273,
+   sip_is_loopback_address = 274,
+   ip_header_corrupted  = 275,
+   ipv4_sip_is_limited_bc = 276,
+   ipv6_mc_dip_reserved_scope = 277,
+   ipv6_mc_dip_interface_local_scope = 278,
+   unresolved_neigh     = 279,
+   mc_reverse_path_forwarding = 280,
+   non_routable_packet  = 281,
+
+
+
+FINAL                           sFlow.org                       [Page 4]
+
+FINAL         sFlow Dropped Packet Notification Structures  October 2020
+
+
+   decap_error          = 282,
+   overlay_smac_is_mc   = 283,
+   unknown_l2           = 284, /* group l2_drops */
+   unknown_l3           = 285, /* group l3_drops */
+   unknown_l3_exception = 286, /* group l3_exceptions */
+   unknown_buffer       = 287, /* group buffer_drops */
+   unknown_tunnel       = 288, /* group tunnel_drops */
+   unknown_l4           = 289,
+   sip_is_unspecified   = 290,
+   mlag_port_isolation  = 291,
+   blackhole_arp_neigh  = 292,
+   src_mac_is_dmac      = 293,
+   dmac_is_reserved     = 294,
+   sip_is_class_e       = 295,
+   mc_dmac_mismatch     = 296,
+   sip_is_dip           = 297,
+   dip_is_local_network = 298,
+   dip_is_link_local    = 299,
+   overlay_smac_is_dmac = 300,
+   egress_vlan_filter   = 301,
+   uc_reverse_path_forwarding = 302,
+   split_horizon        = 303
+}
+
+/* Format of a single discarded packet event */
+/* opaque = sample_data; enterprise = 0; format = 5 */
+struct discarded_packet {
+   unsigned int sequence_number;  /* Incremented with each discarded packet
+                                     record generated by this source_id. */
+   sflow_data_source_expanded source_id; /* sFlowDataSource */
+   unsigned int drops;            /* Number of times that the sFlow agent
+                                     detected that a discarded packet record
+                                     was dropped by the rate limit, or because
+                                     of a lack of resources. The drops counter
+                                     reports the total number of drops detected
+                                     since the agent was last reset. Note: An
+                                     agent that cannot detect drops will always
+                                     report zero. */
+   unsigned int inputifindex;     /* If set, ifIndex of interface packet was
+                                     received on. Zero if unknown. Must identify
+                                     physical port consistent with flow_sample
+                                     input interface. */
+   unsigned int outputifindex;    /* If set, ifIndex for egress drops. Zero
+                                     otherwise. Must identify physical port
+                                     consistent with flow_sample output
+                                     interface. */
+   drop_reason reason;            /* Reason for dropping packet. */
+   flow_record discard_records<>; /* Information about the discarded packet. */
+
+
+
+FINAL                           sFlow.org                       [Page 5]
+
+FINAL         sFlow Dropped Packet Notification Structures  October 2020
+
+
+}
+
+/* Selected egress queue */
+/* Output port number must be provided in enclosing structure */
+/* opaque = flow_data; enterprise = 0; format = 1036 */
+struct extended_egress_queue {
+  unsigned int queue;  /* eqress queue number selected for sampled packet */
+}
+
+/* ACL information */
+/* Information about ACL rule that matched this packet
+/* opaque = flow_data; enterprise = 0; format = 1037 */
+struct extended_acl {
+  unsigned int number; /* access list number */
+  string name<>; /* access list name */
+  unsigned int direction; /* unknown = 0, ingress = 1, egress = 2 */
+}
+
+/* Software function */
+/* Name of the function in software network stack that discarded the packet */
+/* opaque = flow_data; enterprise = 0; format = 1038 */
+struct extended_function {
+  string symbol<>;
+}
+
+3. References
+
+[1]  Phaal, P. and Lavine, M., "sFlow Version 5",
+     https://sflow.org/sflow_version_5.txt, July 2006
+
+[2]  Linux Kernel, "Devlink Trap",
+     https://www.kernel.org/doc/html/latest/networking/devlink/devlink-
+     trap.html, May 2020
+
+4. Author's Address
+
+   Ido Schimmel
+   NVIDIA Corp.
+   13 Zarchin St.
+   Raanana, Israel
+   Zip code 4366241
+
+   EMail: idosch@nvidia.com
+
+   Andy Roulin
+   NVIDIA Corp.
+   185 E. Dana Street
+   Mountain View, CA 94041
+
+
+
+FINAL                           sFlow.org                       [Page 6]
+
+FINAL         sFlow Dropped Packet Notification Structures  October 2020
+
+
+   EMail: aroulin@nvidia.com
+
+   Peter Phaal
+   InMon Corp.
+   1 Sansome Street, 35th Floor
+   San Francisco, CA 94104
+
+   EMail: peter.phaal@inmon.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+FINAL                           sFlow.org                       [Page 7]
+
