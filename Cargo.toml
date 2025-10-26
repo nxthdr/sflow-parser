@@ -16,11 +16,19 @@ exclude = [
     "renovate.json",
 ]
 
+[dependencies]
+serde = { version = "1.0", features = ["derive"], optional = true }
+
+[features]
+default = []
+serde = ["dep:serde"]
+
 [dev-dependencies]
 criterion = "0.5"
 regex = "1"
 syn = { version = "2", features = ["full", "parsing"] }
 ureq = "3"
+serde_json = "1.0"
 
 [[bench]]
 name = "parser_benchmark"

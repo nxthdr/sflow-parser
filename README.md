@@ -186,6 +186,29 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 4413 | 3 | Broadcom ASIC Tables | [sFlow Broadcom](https://sflow.org/sflow_broadcom_tables.txt) | ⬜ |
 | 5703 | 1 | NVIDIA GPU | [sFlow NVML](https://sflow.org/sflow_nvml.txt) | ⬜ |
 
+## Serialization / Deserialization support
+
+Enables serialization and deserialization support for all sFlow data structures using [serde](https://serde.rs/). This allows you to easily convert parsed sFlow data to/from JSON, YAML, or any other format supported by serde.
+
+```toml
+[dependencies]
+sflow-parser = { version = "0.3", features = ["serde"] }
+serde_json = "1.0"
+```
+
+Example usage:
+```rust
+use sflow_parser::parse_datagram;
+
+let datagram = parse_datagram(&data)?;
+
+// Serialize to JSON
+let json = serde_json::to_string(&datagram)?;
+
+// Deserialize from JSON
+let datagram: SFlowDatagram = serde_json::from_str(&json)?;
+```
+
 ## Testing
 
 ### Unit & Integration Tests

@@ -36,6 +36,7 @@
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct GenericInterfaceCounters {
     /// Interface index
     pub if_index: u32,
@@ -122,6 +123,7 @@ pub struct GenericInterfaceCounters {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct EthernetInterfaceCounters {
     /// Alignment errors
     pub dot3_stats_alignment_errors: u32,
@@ -195,6 +197,7 @@ pub struct EthernetInterfaceCounters {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TokenRingCounters {
     pub dot5_stats_line_errors: u32,
     pub dot5_stats_burst_errors: u32,
@@ -244,6 +247,7 @@ pub struct TokenRingCounters {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Vg100InterfaceCounters {
     pub dot12_in_high_priority_frames: u32,
     pub dot12_in_high_priority_octets: u64,
@@ -281,6 +285,7 @@ pub struct Vg100InterfaceCounters {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct VlanCounters {
     /// VLAN ID
     pub vlan_id: u32,
@@ -335,6 +340,7 @@ pub struct VlanCounters {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Ieee80211Counters {
     pub dot11_transmitted_fragment_count: u32,
     pub dot11_multicast_transmitted_frame_count: u32,
@@ -377,6 +383,7 @@ pub struct Ieee80211Counters {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ProcessorCounters {
     /// 5 second average CPU utilization (0-100%) (spec: 5s_cpu)
     pub cpu_5s: u32,
@@ -411,6 +418,7 @@ pub struct ProcessorCounters {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct RadioUtilization {
     /// Elapsed time in milliseconds
     pub elapsed_time: u32,
@@ -438,6 +446,7 @@ pub struct RadioUtilization {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OpenFlowPort {
     /// Datapath ID
     pub datapath_id: u64,
@@ -461,6 +470,7 @@ pub struct OpenFlowPort {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OpenFlowPortName {
     /// Port name
     pub port_name: String,
@@ -487,6 +497,7 @@ pub struct OpenFlowPortName {
 ///
 /// **ERRATUM:** UUID field changed from `opaque uuid<16>` to `opaque uuid[16]` (fixed array).
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HostDescription {
     /// Hostname
     pub hostname: String,
@@ -520,12 +531,14 @@ pub struct HostDescription {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HostAdapters {
     /// Adapters
     pub adapters: Vec<HostAdapter>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HostAdapter {
     /// Interface index
     pub if_index: u32,
@@ -550,6 +563,7 @@ pub struct HostAdapter {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HostParent {
     /// Container type (e.g., "docker", "lxc")
     pub container_type: u32,
@@ -589,6 +603,7 @@ pub struct HostParent {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HostCpu {
     /// Load average (1 minute) - stored as hundredths (multiply by 100)
     pub load_one: u32,
@@ -667,6 +682,7 @@ pub struct HostCpu {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HostMemory {
     /// Total memory in bytes
     pub mem_total: u64,
@@ -725,6 +741,7 @@ pub struct HostMemory {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HostDiskIo {
     /// Total disk capacity in bytes
     pub disk_total: u64,
@@ -776,6 +793,7 @@ pub struct HostDiskIo {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HostNetIo {
     /// Bytes received
     pub bytes_in: u64,
@@ -821,6 +839,7 @@ pub struct HostNetIo {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct VirtualNode {
     /// Expected CPU frequency in MHz
     pub mhz: u32,
@@ -858,6 +877,7 @@ pub struct VirtualNode {
 ///
 /// **ERRATUM:** Comment reference corrected from `virtDomainInfo` to `virDomainInfo`.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct VirtualCpu {
     /// CPU state (0=running, 1=idle, 2=blocked)
     pub state: u32,
@@ -888,6 +908,7 @@ pub struct VirtualCpu {
 ///
 /// **ERRATUM:** Comment reference corrected from `virtDomainInfo` to `virDomainInfo`.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct VirtualMemory {
     /// Memory in bytes
     pub memory: u64,
@@ -923,6 +944,7 @@ pub struct VirtualMemory {
 /// **ERRATUM:** Field name changed from `available` to `physical`, and comment references corrected
 /// from `virtDomainBlockInfo`/`virtDomainBlockStatsStruct` to `virDomainBlockInfo`/`virDomainBlockStatsStruct`.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct VirtualDiskIo {
     /// Capacity in bytes
     pub capacity: u64,
@@ -975,6 +997,7 @@ pub struct VirtualDiskIo {
 ///
 /// **ERRATUM:** Comment reference corrected from `virtDomainInterfaceStatsStruct` to `virDomainInterfaceStatsStruct`.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct VirtualNetIo {
     /// Bytes received
     pub rx_bytes: u64,
@@ -1029,6 +1052,7 @@ pub struct VirtualNetIo {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HttpCounters {
     /// OPTIONS method count
     pub method_option_count: u32,
@@ -1102,6 +1126,7 @@ pub struct HttpCounters {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AppOperations {
     /// Application identifier
     pub application: String,
@@ -1162,6 +1187,7 @@ pub struct AppOperations {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AppResources {
     /// User time in milliseconds
     pub user_time: u32,
@@ -1207,6 +1233,7 @@ pub struct AppResources {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AppWorkers {
     /// Number of active workers
     pub workers_active: u32,

@@ -7,6 +7,7 @@ use std::net::{Ipv4Addr, Ipv6Addr};
 
 /// Header protocol types for sampled headers
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum HeaderProtocol {
     EthernetIso88023 = 1,
     Iso88024TokenBus = 2,
@@ -95,6 +96,7 @@ impl std::fmt::Display for HeaderProtocol {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SampledHeader {
     /// Protocol of the sampled packet
     pub protocol: HeaderProtocol,
@@ -129,6 +131,7 @@ pub struct SampledHeader {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SampledEthernet {
     /// Length of MAC packet in bytes
     pub length: u32,
@@ -165,6 +168,7 @@ pub struct SampledEthernet {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SampledIpv4 {
     /// Length of IP packet in bytes
     pub length: u32,
@@ -213,6 +217,7 @@ pub struct SampledIpv4 {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SampledIpv6 {
     /// Length of IP packet in bytes
     pub length: u32,
@@ -263,6 +268,7 @@ pub struct SampledIpv6 {
 ///
 /// **ERRATUM:** The specification was updated to clarify that 0xffffffff indicates unknown values.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedSwitch {
     /// Source VLAN ID
     /// **ERRATUM:** 0xffffffff if unknown
@@ -300,6 +306,7 @@ pub struct ExtendedSwitch {
 ///
 /// **ERRATUM:** The specification was clarified to specify "immediate" next hop router.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedRouter {
     /// IP address of immediate next hop router (spec: nexthop)
     /// **ERRATUM:** Clarified as "immediate" next hop router
@@ -314,6 +321,7 @@ pub struct ExtendedRouter {
 
 /// AS Path Type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum AsPathType {
     AsSet = 1,
     AsSequence = 2,
@@ -321,6 +329,7 @@ pub enum AsPathType {
 
 /// AS Path Segment
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AsPathSegment {
     pub path_type: u32,
     pub path_length: u32,
@@ -348,6 +357,7 @@ pub struct AsPathSegment {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedGateway {
     /// IP address of the border router (spec: nexthop)
     pub next_hop: crate::models::core::Address,
@@ -389,6 +399,7 @@ pub struct ExtendedGateway {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedUser {
     /// Source character set (MIBEnum)
     pub src_charset: u32,
@@ -405,6 +416,7 @@ pub struct ExtendedUser {
 
 /// URL Direction
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum UrlDirection {
     Source = 1,
     Destination = 2,
@@ -427,6 +439,7 @@ pub enum UrlDirection {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedUrl {
     /// Direction (source or destination)
     pub direction: u32,
@@ -455,6 +468,7 @@ pub struct ExtendedUrl {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedMpls {
     /// Next hop address (spec: nexthop)
     pub next_hop: crate::models::core::Address,
@@ -482,6 +496,7 @@ pub struct ExtendedMpls {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedNat {
     /// Source address type
     pub src_address: crate::models::core::Address,
@@ -507,6 +522,7 @@ pub struct ExtendedNat {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedMplsTunnel {
     /// Tunnel LSP name
     pub tunnel_lsp_name: String,
@@ -535,6 +551,7 @@ pub struct ExtendedMplsTunnel {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedMplsVc {
     /// VC instance name
     pub vc_instance_name: String,
@@ -565,6 +582,7 @@ pub struct ExtendedMplsVc {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedMplsFec {
     /// FEC address prefix
     pub fec_addr_prefix: crate::models::core::Address,
@@ -588,6 +606,7 @@ pub struct ExtendedMplsFec {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedMplsLvpFec {
     /// FEC address prefix length
     pub mpls_fec_addr_prefix_length: u32,
@@ -608,6 +627,7 @@ pub struct ExtendedMplsLvpFec {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedVlanTunnel {
     /// List of stripped 802.1Q TPID/TCI layers
     pub stack: Vec<u32>,
@@ -629,6 +649,7 @@ pub struct ExtendedVlanTunnel {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Extended80211Payload {
     /// Cipher suite (OUI + Suite Type) (spec: ciphersuite)
     pub cipher_suite: u32,
@@ -659,6 +680,7 @@ pub struct Extended80211Payload {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Extended80211Rx {
     /// SSID string (max 32 bytes)
     pub ssid: String,
@@ -708,6 +730,7 @@ pub struct Extended80211Rx {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Extended80211Tx {
     /// SSID string (max 32 bytes)
     pub ssid: String,
@@ -747,6 +770,7 @@ pub struct Extended80211Tx {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Pdu {
     /// Flow records for this PDU
     pub flow_records: Vec<crate::models::FlowRecord>,
@@ -767,6 +791,7 @@ pub struct Pdu {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Extended80211Aggregation {
     /// Array of PDUs in the aggregation
     pub pdus: Vec<Pdu>,
@@ -793,6 +818,7 @@ pub struct Extended80211Aggregation {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedOpenFlowV1 {
     /// Flow cookie set by the OpenFlow controller
     pub flow_cookie: u64,
@@ -820,6 +846,7 @@ pub struct ExtendedOpenFlowV1 {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedL2TunnelEgress {
     /// Outer Ethernet header that will be added on egress
     pub header: SampledEthernet,
@@ -839,6 +866,7 @@ pub struct ExtendedL2TunnelEgress {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedL2TunnelIngress {
     /// Outer Ethernet header that was present on ingress
     pub header: SampledEthernet,
@@ -858,6 +886,7 @@ pub struct ExtendedL2TunnelIngress {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedIpv4TunnelEgress {
     /// Outer IPv4 header that will be added on egress
     pub header: SampledIpv4,
@@ -877,6 +906,7 @@ pub struct ExtendedIpv4TunnelEgress {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedIpv4TunnelIngress {
     /// Outer IPv4 header that was present on ingress
     pub header: SampledIpv4,
@@ -896,6 +926,7 @@ pub struct ExtendedIpv4TunnelIngress {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedIpv6TunnelEgress {
     /// Outer IPv6 header that will be added on egress
     pub header: SampledIpv6,
@@ -915,6 +946,7 @@ pub struct ExtendedIpv6TunnelEgress {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedIpv6TunnelIngress {
     /// Outer IPv6 header that was present on ingress
     pub header: SampledIpv6,
@@ -934,6 +966,7 @@ pub struct ExtendedIpv6TunnelIngress {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedDecapsulateEgress {
     /// Offset in bytes to the inner header within the sampled packet header
     pub inner_header_offset: u32,
@@ -953,6 +986,7 @@ pub struct ExtendedDecapsulateEgress {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedDecapsulateIngress {
     /// Offset in bytes to the inner header within the sampled packet header
     pub inner_header_offset: u32,
@@ -972,6 +1006,7 @@ pub struct ExtendedDecapsulateIngress {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedVniEgress {
     /// Virtual Network Identifier
     pub vni: u32,
@@ -994,6 +1029,7 @@ pub struct ExtendedVniEgress {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedVniIngress {
     /// Virtual Network Identifier
     pub vni: u32,
@@ -1095,6 +1131,7 @@ pub struct ExtendedVniIngress {
 /// }
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(u32)]
 pub enum DropReason {
     NetUnreachable = 0,
@@ -1255,6 +1292,7 @@ impl DropReason {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedEgressQueue {
     /// Egress queue number selected for sampled packet
     pub queue: u32,
@@ -1277,6 +1315,7 @@ pub struct ExtendedEgressQueue {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedAcl {
     /// Access list number
     pub number: u32,
@@ -1303,6 +1342,7 @@ pub struct ExtendedAcl {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedFunction {
     /// Function symbol name
     pub symbol: String,
@@ -1323,6 +1363,7 @@ pub struct ExtendedFunction {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedTransit {
     /// Transit delay in nanoseconds (0xffffffff indicates value >= 0xffffffff)
     pub delay: u32,
@@ -1343,6 +1384,7 @@ pub struct ExtendedTransit {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedQueue {
     /// Queue depth in bytes
     pub depth: u32,
@@ -1367,6 +1409,7 @@ pub struct ExtendedQueue {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedSocketIpv4 {
     /// IP Protocol type (e.g., TCP = 6, UDP = 17)
     pub protocol: u32,
@@ -1403,6 +1446,7 @@ pub struct ExtendedSocketIpv4 {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedSocketIpv6 {
     /// IP Protocol type (e.g., TCP = 6, UDP = 17)
     pub protocol: u32,
@@ -1442,6 +1486,7 @@ pub struct ExtendedSocketIpv6 {
 /// }
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(u32)]
 pub enum HttpMethod {
     Other = 0,
@@ -1501,6 +1546,7 @@ impl std::fmt::Display for HttpMethod {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedProxySocketIpv4 {
     /// Socket information
     pub socket: ExtendedSocketIpv4,
@@ -1520,6 +1566,7 @@ pub struct ExtendedProxySocketIpv4 {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedProxySocketIpv6 {
     /// Socket information
     pub socket: ExtendedSocketIpv6,
@@ -1537,6 +1584,7 @@ pub struct ExtendedProxySocketIpv6 {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AppContext {
     /// Application name (e.g., "payment", "mail.smtp", "db.oracle")
     pub application: String,
@@ -1552,6 +1600,7 @@ pub struct AppContext {
 ///
 /// # XDR Definition ([sFlow Application](https://sflow.org/sflow_application.txt))
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(u32)]
 pub enum AppStatus {
     Success = 0,
@@ -1606,6 +1655,7 @@ impl From<u32> for AppStatus {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AppOperation {
     /// Operation context
     pub context: AppContext,
@@ -1641,6 +1691,7 @@ pub struct AppOperation {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AppParentContext {
     /// Parent operation context
     pub context: AppContext,
@@ -1662,6 +1713,7 @@ pub struct AppParentContext {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AppInitiator {
     /// Business level identifier (e.g., customer id, vendor id)
     pub actor: String,
@@ -1683,6 +1735,7 @@ pub struct AppInitiator {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AppTarget {
     /// Business level identifier (e.g., customer id, vendor id)
     pub actor: String,
@@ -1721,6 +1774,7 @@ pub struct AppTarget {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HttpRequest {
     /// HTTP method
     pub method: HttpMethod,
@@ -1778,6 +1832,7 @@ pub struct HttpRequest {
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedProxyRequest {
     /// URI in request to downstream server
     pub uri: String,
