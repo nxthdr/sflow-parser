@@ -476,6 +476,92 @@ pub struct OpenFlowPortName {
     pub port_name: String,
 }
 
+/// Machine Type enumeration
+///
+/// Processor family types as defined in sFlow v5 specification
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u32)]
+pub enum MachineType {
+    Unknown = 0,
+    Other = 1,
+    X86 = 2,
+    X86_64 = 3,
+    Ia64 = 4,
+    Sparc = 5,
+    Alpha = 6,
+    Powerpc = 7,
+    M68k = 8,
+    Mips = 9,
+    Arm = 10,
+    Hppa = 11,
+    S390 = 12,
+}
+
+impl From<u32> for MachineType {
+    fn from(value: u32) -> Self {
+        match value {
+            0 => MachineType::Unknown,
+            1 => MachineType::Other,
+            2 => MachineType::X86,
+            3 => MachineType::X86_64,
+            4 => MachineType::Ia64,
+            5 => MachineType::Sparc,
+            6 => MachineType::Alpha,
+            7 => MachineType::Powerpc,
+            8 => MachineType::M68k,
+            9 => MachineType::Mips,
+            10 => MachineType::Arm,
+            11 => MachineType::Hppa,
+            12 => MachineType::S390,
+            _ => MachineType::Unknown,
+        }
+    }
+}
+
+/// Operating System Name enumeration
+///
+/// OS types as defined in sFlow v5 specification
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u32)]
+pub enum OsName {
+    Unknown = 0,
+    Other = 1,
+    Linux = 2,
+    Windows = 3,
+    Darwin = 4,
+    Hpux = 5,
+    Aix = 6,
+    Dragonfly = 7,
+    Freebsd = 8,
+    Netbsd = 9,
+    Openbsd = 10,
+    Osf = 11,
+    Solaris = 12,
+}
+
+impl From<u32> for OsName {
+    fn from(value: u32) -> Self {
+        match value {
+            0 => OsName::Unknown,
+            1 => OsName::Other,
+            2 => OsName::Linux,
+            3 => OsName::Windows,
+            4 => OsName::Darwin,
+            5 => OsName::Hpux,
+            6 => OsName::Aix,
+            7 => OsName::Dragonfly,
+            8 => OsName::Freebsd,
+            9 => OsName::Netbsd,
+            10 => OsName::Openbsd,
+            11 => OsName::Osf,
+            12 => OsName::Solaris,
+            _ => OsName::Unknown,
+        }
+    }
+}
+
 /// Host Description - Format (0,2000)
 ///
 /// Physical or virtual host description
@@ -487,11 +573,11 @@ pub struct OpenFlowPortName {
 /// /* opaque = counter_data; enterprise = 0; format = 2000 */
 ///
 /// struct host_descr {
-///     string hostname<64>;       /* hostname, empty if unknown */
-///     opaque uuid[16];           /* 16 byte binary UUID, all zeros if unknown */
-///     machine_type machine_type; /* the processor family */
-///     os_name os_name;           /* Operating system */
-///     string os_release<32>;     /* OS release version */
+///    string hostname<64>;       /* hostname, empty if unknown */
+///    opaque uuid<16>;           /* 16 bytes binary UUID, empty if unknown */
+///    machine_type machine_type; /* the processor family */
+///    os_name os_name;           /* Operating system */
+///    string os_release<32>;     /* e.g. 2.6.9-42.ELsmp,xp-sp3, empty if unknown */
 /// }
 /// ```
 ///
@@ -506,11 +592,11 @@ pub struct HostDescription {
     /// **ERRATUM:** All zeros if unknown (changed from variable-length to fixed-length array)
     pub uuid: [u8; 16],
 
-    /// Machine type (e.g., "x86_64")
-    pub machine_type: String,
+    /// Machine type (processor family)
+    pub machine_type: MachineType,
 
-    /// OS name (e.g., "Linux")
-    pub os_name: String,
+    /// Operating system name
+    pub os_name: OsName,
 
     /// OS release (e.g., "5.10.0")
     pub os_release: String,

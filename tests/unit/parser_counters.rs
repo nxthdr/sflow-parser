@@ -5,6 +5,7 @@
 
 use sflow_parser::models::record_counters::*;
 use sflow_parser::models::MacAddress;
+use sflow_parser::models::{MachineType, OsName};
 
 #[test]
 fn test_token_ring_counters_structure() {
@@ -244,14 +245,14 @@ fn test_host_description() {
     let counters = HostDescription {
         hostname: "server01.example.com".to_string(),
         uuid: uuid_bytes,
-        machine_type: "x86_64".to_string(),
-        os_name: "Linux".to_string(),
+        machine_type: MachineType::X86_64,
+        os_name: OsName::Linux,
         os_release: "5.15.0-56-generic".to_string(),
     };
 
     assert_eq!(counters.hostname, "server01.example.com");
     assert_eq!(counters.uuid[0], 0x55);
     assert_eq!(counters.uuid[1], 0x0e);
-    assert_eq!(counters.machine_type, "x86_64");
-    assert_eq!(counters.os_name, "Linux");
+    assert_eq!(counters.machine_type, MachineType::X86_64);
+    assert_eq!(counters.os_name, OsName::Linux);
 }

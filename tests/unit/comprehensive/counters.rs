@@ -3,6 +3,8 @@
 //! Tests for parsing all counter record types: interface, host, virtual, and app counters.
 
 use super::helpers::*;
+use sflow_parser::models::*;
+use sflow_parser::models::{MachineType, OsName};
 use sflow_parser::parsers::parse_datagram;
 
 #[test]
@@ -338,17 +340,15 @@ fn test_parse_openflow_port() {
 
 #[test]
 fn test_parse_host_description() {
-    // Host Description: hostname + uuid(16) + machine_type + os_name + os_release
+    // Host Description: hostname + uuid(16) + machine_type(u32) + os_name(u32) + os_release
     let record_data = [
         0x00, 0x00, 0x00, 0x09, // hostname length = 9
         b's', b'e', b'r', b'v', b'e', b'r', b'-', b'0', b'1', 0x00, 0x00,
         0x00, // "server-01" + padding
         0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0, // uuid (16 bytes)
         0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x00, 0x00, 0x00,
-        0x06, // machine_type length = 6
-        b'x', b'8', b'6', b'_', b'6', b'4', 0x00, 0x00, // "x86_64" + padding
-        0x00, 0x00, 0x00, 0x05, // os_name length = 5
-        b'L', b'i', b'n', b'u', b'x', 0x00, 0x00, 0x00, // "Linux" + padding
+        0x03, // machine_type = 3 (x86_64)
+        0x00, 0x00, 0x00, 0x02, // os_name = 2 (Linux)
         0x00, 0x00, 0x00, 0x06, // os_release length = 6
         b'6', b'.', b'5', b'.', b'1', b'0', 0x00, 0x00, // "6.5.10" + padding
     ];
@@ -368,8 +368,8 @@ fn test_parse_host_description() {
             match &counters.counters[0].counter_data {
                 CounterData::HostDescription(host) => {
                     assert_eq!(host.hostname, "server-01");
-                    assert_eq!(host.machine_type, "x86_64");
-                    assert_eq!(host.os_name, "Linux");
+                    assert_eq!(host.machine_type, MachineType::X86_64);
+                    assert_eq!(host.os_name, OsName::Linux);
                     assert_eq!(host.os_release, "6.5.10");
                 }
                 _ => panic!("Expected HostDescription"),

@@ -216,8 +216,8 @@ impl<R: Read> Parser<R> {
         let hostname = self.read_string()?;
         let mut uuid = [0u8; 16];
         self.reader.read_exact(&mut uuid)?;
-        let machine_type = self.read_string()?;
-        let os_name = self.read_string()?;
+        let machine_type = self.read_u32()?.into(); // Convert u32 to MachineType enum
+        let os_name = self.read_u32()?.into(); // Convert u32 to OsName enum
         let os_release = self.read_string()?;
 
         Ok(crate::models::record_counters::HostDescription {
