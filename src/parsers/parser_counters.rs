@@ -246,6 +246,9 @@ impl<R: Read> Parser<R> {
             for _ in 0..num_macs {
                 let mut mac_bytes = [0u8; 6];
                 self.reader.read_exact(&mut mac_bytes)?;
+                // Skip 2 bytes of padding (MAC addresses are padded to 8 bytes for 4-byte alignment)
+                let mut padding = [0u8; 2];
+                self.reader.read_exact(&mut padding)?;
                 mac_addresses.push(crate::models::MacAddress::from(mac_bytes));
             }
 

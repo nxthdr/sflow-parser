@@ -409,17 +409,17 @@ fn test_parse_openflow_port_name() {
 
 #[test]
 fn test_parse_host_adapters() {
-    // Host Adapters: num_adapters(4) + 2 adapters * (if_index(4) + num_macs(4) + mac(6)) = 32 bytes
+    // Host Adapters: num_adapters(4) + 2 adapters * (if_index(4) + num_macs(4) + mac(6) + padding(2)) = 36 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x02, // num_adapters = 2
         // Adapter 1
         0x00, 0x00, 0x00, 0x01, // if_index = 1
         0x00, 0x00, 0x00, 0x01, // num_macs = 1
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, // MAC address
+        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x00, 0x00, // MAC address + 2 bytes padding
         // Adapter 2
         0x00, 0x00, 0x00, 0x02, // if_index = 2
         0x00, 0x00, 0x00, 0x01, // num_macs = 1
-        0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, // MAC address
+        0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x00, // MAC address + 2 bytes padding
     ];
 
     let data = build_counter_sample_test(0x07D1, &record_data); // record type = 2001
