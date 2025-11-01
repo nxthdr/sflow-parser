@@ -266,6 +266,16 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Extended NAT Port - Format (0,1020)
+    pub(super) fn parse_extended_nat_port(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedNatPort> {
+        Ok(crate::models::record_flows::ExtendedNatPort {
+            src_port: self.read_u32()?,
+            dst_port: self.read_u32()?,
+        })
+    }
+
     /// Parse Extended MPLS Tunnel - Format (0,1008)
     pub(super) fn parse_extended_mpls_tunnel(
         &mut self,
@@ -814,6 +824,7 @@ impl<R: Read> Parser<R> {
                 1017 => Ok(FlowData::ExtendedOpenFlowV1(
                     parser.parse_extended_openflow_v1()?,
                 )),
+                1020 => Ok(FlowData::ExtendedNatPort(parser.parse_extended_nat_port()?)),
                 1021 => Ok(FlowData::ExtendedL2TunnelEgress(
                     parser.parse_extended_l2_tunnel_egress()?,
                 )),

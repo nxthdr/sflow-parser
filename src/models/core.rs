@@ -301,6 +301,8 @@ pub enum FlowData {
     Extended80211Aggregation(crate::models::record_flows::Extended80211Aggregation),
     /// Extended OpenFlow v1 - Format (0,1017) - DEPRECATED
     ExtendedOpenFlowV1(crate::models::record_flows::ExtendedOpenFlowV1),
+    /// Extended NAT Port - Format (0,1020)
+    ExtendedNatPort(crate::models::record_flows::ExtendedNatPort),
     /// Extended L2 Tunnel Egress - Format (0,1021)
     ExtendedL2TunnelEgress(crate::models::record_flows::ExtendedL2TunnelEgress),
     /// Extended L2 Tunnel Ingress - Format (0,1022)

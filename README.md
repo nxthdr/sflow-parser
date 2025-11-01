@@ -36,7 +36,7 @@ The main specification is [sFlow Version 5](https://sflow.org/sflow_version_5.tx
 | 2012 | [sFlow Application Structures](https://sflow.org/sflow_application.txt) | Application resource monitoring | ✅ |
 | 2012 | [sFlow LAG Counters Structure](https://sflow.org/sflow_lag.txt) | IEEE 802.1AX Link Aggregation (LACP) | ✅ |
 | 2012 | [sFlow Tunnel Structures](https://sflow.org/sflow_tunnels.txt) | Encapsulation/decapsulation (VXLAN, GRE, etc.) | ✅ |
-| 2012 | [sFlow Port NAT Structures](https://sflow.org/sflow_pnat.txt) | Port-based NAT mapping | ⬜ |
+| 2012 | [sFlow Port NAT Structures](https://sflow.org/sflow_pnat.txt) | Port-based NAT mapping | ✅ |
 | 2013 | [sFlow InfiniBand Structures](https://sflow.org/draft_sflow_infiniband_2.txt) | InfiniBand network monitoring | ⬜ |
 | 2014 | [sFlow OpenFlow Structures](https://sflow.org/sflow_openflow.txt) | OpenFlow port monitoring | ✅ |
 | 2015 | [sFlow Host TCP/IP Counters](https://sflow.org/sflow_host_ip.txt) | Host IP, ICMP, TCP, and UDP counters | ✅ |
@@ -89,7 +89,7 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 1017 | Extended OpenFlow v1 (deprecated) | [sFlow OpenFlow Draft](https://sflow.org/draft-sflow-openflow.txt) | ✅ 🪦 |
 | 0 | 1018 | Extended Fibre Channel | [sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0244.html) | ⬜ |
 | 0 | 1019 | Extended Queue Length | [sFlow Discussion](http://groups.google.com/group/sflow/browse_thread/thread/773d27b17a81600c) | ⬜ |
-| 0 | 1020 | Extended NAT Port | [sFlow Port NAT](https://sflow.org/sflow_pnat.txt) | ⬜ |
+| 0 | 1020 | Extended NAT Port | [sFlow Port NAT](https://sflow.org/sflow_pnat.txt) | ✅ |
 | 0 | 1021 | Extended L2 Tunnel Egress | [sFlow Tunnel](https://sflow.org/sflow_tunnels.txt) | ✅ |
 | 0 | 1022 | Extended L2 Tunnel Ingress | [sFlow Tunnel](https://sflow.org/sflow_tunnels.txt) | ✅ |
 | 0 | 1023 | Extended IPv4 Tunnel Egress | [sFlow Tunnel](https://sflow.org/sflow_tunnels.txt) | ✅ |

@@ -505,6 +505,35 @@ pub struct ExtendedNat {
     pub dst_address: crate::models::core::Address,
 }
 
+/// Extended NAT Port Data - Format (0,1020)
+///
+/// Layer 4 port translation information for NAT
+///
+/// # XDR Definition ([sFlow Port NAT](https://sflow.org/sflow_pnat.txt))
+///
+/// ```text
+/// /* Extended NAT L4 Port Data
+///    Packet header reports ports as seen at the sFlowDataSource.
+///    The extended_nat_port structure reports on translated source and/or
+///    destination layer 4 (TCP/UDP) ports for this packet. If port was not
+///    translated it should be equal to that reported for the header. */
+/// /* opaque = flow_data; enterprise = 0; format = 1020 */
+///
+/// struct extended_nat_port {
+///      unsigned int src_port;            /* Source port */
+///      unsigned int dst_port;            /* Destination port */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedNatPort {
+    /// Translated source port
+    pub src_port: u32,
+
+    /// Translated destination port
+    pub dst_port: u32,
+}
+
 /// Extended MPLS Tunnel - Format (0,1008)
 ///
 /// MPLS tunnel information

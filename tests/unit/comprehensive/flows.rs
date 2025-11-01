@@ -328,6 +328,35 @@ fn test_parse_extended_nat() {
 }
 
 #[test]
+fn test_parse_extended_nat_port() {
+    // Extended NAT Port data: src_port(4) + dst_port(4) = 8 bytes
+    let record_data = [
+        0x00, 0x00, 0x1F, 0x90, // src_port = 8080
+        0x00, 0x00, 0x00, 0x50, // dst_port = 80
+    ];
+
+    let data = build_flow_sample_test(0x03FC, &record_data); // record type = 1020
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedNatPort(nat_port) => {
+                    assert_eq!(nat_port.src_port, 8080);
+                    assert_eq!(nat_port.dst_port, 80);
+                }
+                _ => panic!("Expected ExtendedNatPort"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
 fn test_parse_extended_vlan_tunnel() {
     // Extended VLAN Tunnel data: num_vlans(4) + vlans(4*4=16) = 20 bytes
     let record_data = [

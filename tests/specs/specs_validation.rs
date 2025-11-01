@@ -109,6 +109,11 @@ pub const SFLOW_SPECS: &[SpecDocument] = &[
         url: "https://sflow.org/sflow_lag.txt",
         year: 2012,
     },
+    SpecDocument {
+        name: "sflow_pnat",
+        url: "https://sflow.org/sflow_pnat.txt",
+        year: 2012,
+    },
 ];
 
 /// XDR structure definition parsed from spec
