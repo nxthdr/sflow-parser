@@ -39,7 +39,7 @@ The main specification is [sFlow Version 5](https://sflow.org/sflow_version_5.tx
 | 2012 | [sFlow Port NAT Structures](https://sflow.org/sflow_pnat.txt) | Port-based NAT mapping | ⬜ |
 | 2013 | [sFlow InfiniBand Structures](https://sflow.org/draft_sflow_infiniband_2.txt) | InfiniBand network monitoring | ⬜ |
 | 2014 | [sFlow OpenFlow Structures](https://sflow.org/sflow_openflow.txt) | OpenFlow port monitoring | ✅ |
-| 2015 | [sFlow Host TCP/IP Counters](https://sflow.org/sflow_host_ip.txt) | Host IP, ICMP, TCP, and UDP counters | ⬜ |
+| 2015 | [sFlow Host TCP/IP Counters](https://sflow.org/sflow_host_ip.txt) | Host IP, ICMP, TCP, and UDP counters | ✅ |
 | 2015 | [sFlow Broadcom ASIC Table Utilization](https://sflow.org/sflow_broadcom_tables.txt) | Hardware table utilization for Broadcom ASICs | ⬜ |
 | 2015 | [sFlow Broadcom Buffer Utilization](https://sflow.org/bv-sflow.txt) | Buffer utilization for Broadcom switches | ⬜ |
 | 2016 | [sFlow Optical Interface Structures](https://sflow.org/sflow_optics.txt) | Pluggable optical modules (SFP, QSFP, etc.) | ⬜ |
@@ -159,10 +159,10 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 2004 | Host Memory | [sFlow Host](https://sflow.org/sflow_host.txt) | ✅ |
 | 0 | 2005 | Host Disk I/O | [sFlow Host](https://sflow.org/sflow_host.txt) | ✅ |
 | 0 | 2006 | Host Network I/O | [sFlow Host](https://sflow.org/sflow_host.txt) | ✅ |
-| 0 | 2007 | MIB2 IP Group | [sFlow Host TCP/IP](https://sflow.org/sflow_host_ip.txt) | ⬜ |
-| 0 | 2008 | MIB2 ICMP Group | [sFlow Host TCP/IP](https://sflow.org/sflow_host_ip.txt) | ⬜ |
-| 0 | 2009 | MIB2 TCP Group | [sFlow Host TCP/IP](https://sflow.org/sflow_host_ip.txt) | ⬜ |
-| 0 | 2010 | MIB2 UDP Group | [sFlow Host TCP/IP](https://sflow.org/sflow_host_ip.txt) | ⬜ |
+| 0 | 2007 | MIB2 IP Group | [sFlow Host TCP/IP](https://sflow.org/sflow_host_ip.txt) | ✅ |
+| 0 | 2008 | MIB2 ICMP Group | [sFlow Host TCP/IP](https://sflow.org/sflow_host_ip.txt) | ✅ |
+| 0 | 2009 | MIB2 TCP Group | [sFlow Host TCP/IP](https://sflow.org/sflow_host_ip.txt) | ✅ |
+| 0 | 2010 | MIB2 UDP Group | [sFlow Host TCP/IP](https://sflow.org/sflow_host_ip.txt) | ✅ |
 | 0 | 2100 | Virtual Node | [sFlow Host](https://sflow.org/sflow_host.txt) | ✅ |
 | 0 | 2101 | Virtual CPU | [sFlow Host](https://sflow.org/sflow_host.txt) | ✅ |
 | 0 | 2102 | Virtual Memory | [sFlow Host](https://sflow.org/sflow_host.txt) | ✅ |

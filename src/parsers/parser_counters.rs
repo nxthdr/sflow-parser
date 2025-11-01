@@ -346,6 +346,104 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse MIB-2 IP Group - Format (0,2007)
+    pub(super) fn parse_mib2_ip_group(
+        &mut self,
+    ) -> Result<crate::models::record_counters::Mib2IpGroup> {
+        Ok(crate::models::record_counters::Mib2IpGroup {
+            ip_forwarding: self.read_u32()?,
+            ip_default_ttl: self.read_u32()?,
+            ip_in_receives: self.read_u32()?,
+            ip_in_hdr_errors: self.read_u32()?,
+            ip_in_addr_errors: self.read_u32()?,
+            ip_forw_datagrams: self.read_u32()?,
+            ip_in_unknown_protos: self.read_u32()?,
+            ip_in_discards: self.read_u32()?,
+            ip_in_delivers: self.read_u32()?,
+            ip_out_requests: self.read_u32()?,
+            ip_out_discards: self.read_u32()?,
+            ip_out_no_routes: self.read_u32()?,
+            ip_reasm_timeout: self.read_u32()?,
+            ip_reasm_reqds: self.read_u32()?,
+            ip_reasm_oks: self.read_u32()?,
+            ip_reasm_fails: self.read_u32()?,
+            ip_frag_oks: self.read_u32()?,
+            ip_frag_fails: self.read_u32()?,
+            ip_frag_creates: self.read_u32()?,
+        })
+    }
+
+    /// Parse MIB-2 ICMP Group - Format (0,2008)
+    pub(super) fn parse_mib2_icmp_group(
+        &mut self,
+    ) -> Result<crate::models::record_counters::Mib2IcmpGroup> {
+        Ok(crate::models::record_counters::Mib2IcmpGroup {
+            icmp_in_msgs: self.read_u32()?,
+            icmp_in_errors: self.read_u32()?,
+            icmp_in_dest_unreachs: self.read_u32()?,
+            icmp_in_time_excds: self.read_u32()?,
+            icmp_in_param_probs: self.read_u32()?,
+            icmp_in_src_quenchs: self.read_u32()?,
+            icmp_in_redirects: self.read_u32()?,
+            icmp_in_echos: self.read_u32()?,
+            icmp_in_echo_reps: self.read_u32()?,
+            icmp_in_timestamps: self.read_u32()?,
+            icmp_in_addr_masks: self.read_u32()?,
+            icmp_in_addr_mask_reps: self.read_u32()?,
+            icmp_out_msgs: self.read_u32()?,
+            icmp_out_errors: self.read_u32()?,
+            icmp_out_dest_unreachs: self.read_u32()?,
+            icmp_out_time_excds: self.read_u32()?,
+            icmp_out_param_probs: self.read_u32()?,
+            icmp_out_src_quenchs: self.read_u32()?,
+            icmp_out_redirects: self.read_u32()?,
+            icmp_out_echos: self.read_u32()?,
+            icmp_out_echo_reps: self.read_u32()?,
+            icmp_out_timestamps: self.read_u32()?,
+            icmp_out_timestamp_reps: self.read_u32()?,
+            icmp_out_addr_masks: self.read_u32()?,
+            icmp_out_addr_mask_reps: self.read_u32()?,
+        })
+    }
+
+    /// Parse MIB-2 TCP Group - Format (0,2009)
+    pub(super) fn parse_mib2_tcp_group(
+        &mut self,
+    ) -> Result<crate::models::record_counters::Mib2TcpGroup> {
+        Ok(crate::models::record_counters::Mib2TcpGroup {
+            tcp_rto_algorithm: self.read_u32()?,
+            tcp_rto_min: self.read_u32()?,
+            tcp_rto_max: self.read_u32()?,
+            tcp_max_conn: self.read_u32()?,
+            tcp_active_opens: self.read_u32()?,
+            tcp_passive_opens: self.read_u32()?,
+            tcp_attempt_fails: self.read_u32()?,
+            tcp_estab_resets: self.read_u32()?,
+            tcp_curr_estab: self.read_u32()?,
+            tcp_in_segs: self.read_u32()?,
+            tcp_out_segs: self.read_u32()?,
+            tcp_retrans_segs: self.read_u32()?,
+            tcp_in_errs: self.read_u32()?,
+            tcp_out_rsts: self.read_u32()?,
+            tcp_in_csum_errs: self.read_u32()?,
+        })
+    }
+
+    /// Parse MIB-2 UDP Group - Format (0,2010)
+    pub(super) fn parse_mib2_udp_group(
+        &mut self,
+    ) -> Result<crate::models::record_counters::Mib2UdpGroup> {
+        Ok(crate::models::record_counters::Mib2UdpGroup {
+            udp_in_datagrams: self.read_u32()?,
+            udp_no_ports: self.read_u32()?,
+            udp_in_errors: self.read_u32()?,
+            udp_out_datagrams: self.read_u32()?,
+            udp_rcvbuf_errors: self.read_u32()?,
+            udp_sndbuf_errors: self.read_u32()?,
+            udp_in_csum_errors: self.read_u32()?,
+        })
+    }
+
     /// Parse Virtual Node - Format (0,2100)
     pub(super) fn parse_virtual_node(
         &mut self,
@@ -525,6 +623,10 @@ impl<R: Read> Parser<R> {
                 2004 => Ok(CounterData::HostMemory(parser.parse_host_memory()?)),
                 2005 => Ok(CounterData::HostDiskIo(parser.parse_host_disk_io()?)),
                 2006 => Ok(CounterData::HostNetIo(parser.parse_host_net_io()?)),
+                2007 => Ok(CounterData::Mib2IpGroup(parser.parse_mib2_ip_group()?)),
+                2008 => Ok(CounterData::Mib2IcmpGroup(parser.parse_mib2_icmp_group()?)),
+                2009 => Ok(CounterData::Mib2TcpGroup(parser.parse_mib2_tcp_group()?)),
+                2010 => Ok(CounterData::Mib2UdpGroup(parser.parse_mib2_udp_group()?)),
                 2100 => Ok(CounterData::VirtualNode(parser.parse_virtual_node()?)),
                 2101 => Ok(CounterData::VirtualCpu(parser.parse_virtual_cpu()?)),
                 2102 => Ok(CounterData::VirtualMemory(parser.parse_virtual_memory()?)),

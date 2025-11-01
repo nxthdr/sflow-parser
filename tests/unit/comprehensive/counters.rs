@@ -649,6 +649,217 @@ fn test_parse_host_net_io_counters() {
 }
 
 #[test]
+fn test_parse_mib2_ip_group() {
+    // MIB-2 IP Group: 19 u32 = 76 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x01, // ip_forwarding = 1
+        0x00, 0x00, 0x00, 0x40, // ip_default_ttl = 64
+        0x00, 0x00, 0x27, 0x10, // ip_in_receives = 10000
+        0x00, 0x00, 0x00, 0x05, // ip_in_hdr_errors = 5
+        0x00, 0x00, 0x00, 0x02, // ip_in_addr_errors = 2
+        0x00, 0x00, 0x00, 0x64, // ip_forw_datagrams = 100
+        0x00, 0x00, 0x00, 0x01, // ip_in_unknown_protos = 1
+        0x00, 0x00, 0x00, 0x0A, // ip_in_discards = 10
+        0x00, 0x00, 0x1F, 0x40, // ip_in_delivers = 8000
+        0x00, 0x00, 0x1D, 0x4C, // ip_out_requests = 7500
+        0x00, 0x00, 0x00, 0x03, // ip_out_discards = 3
+        0x00, 0x00, 0x00, 0x01, // ip_out_no_routes = 1
+        0x00, 0x00, 0x00, 0x1E, // ip_reasm_timeout = 30
+        0x00, 0x00, 0x00, 0x14, // ip_reasm_reqds = 20
+        0x00, 0x00, 0x00, 0x12, // ip_reasm_oks = 18
+        0x00, 0x00, 0x00, 0x02, // ip_reasm_fails = 2
+        0x00, 0x00, 0x00, 0x32, // ip_frag_oks = 50
+        0x00, 0x00, 0x00, 0x01, // ip_frag_fails = 1
+        0x00, 0x00, 0x00, 0x64, // ip_frag_creates = 100
+    ];
+
+    let data = build_counter_sample_test(0x07D7, &record_data); // record type = 2007
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::Mib2IpGroup(ip) => {
+                    assert_eq!(ip.ip_forwarding, 1);
+                    assert_eq!(ip.ip_default_ttl, 64);
+                    assert_eq!(ip.ip_in_receives, 10000);
+                    assert_eq!(ip.ip_in_hdr_errors, 5);
+                    assert_eq!(ip.ip_in_addr_errors, 2);
+                    assert_eq!(ip.ip_forw_datagrams, 100);
+                    assert_eq!(ip.ip_in_delivers, 8000);
+                    assert_eq!(ip.ip_out_requests, 7500);
+                    assert_eq!(ip.ip_reasm_reqds, 20);
+                    assert_eq!(ip.ip_reasm_oks, 18);
+                    assert_eq!(ip.ip_frag_oks, 50);
+                    assert_eq!(ip.ip_frag_creates, 100);
+                }
+                _ => panic!("Expected Mib2IpGroup"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_mib2_icmp_group() {
+    // MIB-2 ICMP Group: 26 u32 = 104 bytes
+    let record_data = [
+        0x00, 0x00, 0x03, 0xE8, // icmp_in_msgs = 1000
+        0x00, 0x00, 0x00, 0x05, // icmp_in_errors = 5
+        0x00, 0x00, 0x00, 0x0A, // icmp_in_dest_unreachs = 10
+        0x00, 0x00, 0x00, 0x02, // icmp_in_time_excds = 2
+        0x00, 0x00, 0x00, 0x01, // icmp_in_param_probs = 1
+        0x00, 0x00, 0x00, 0x00, // icmp_in_src_quenchs = 0
+        0x00, 0x00, 0x00, 0x03, // icmp_in_redirects = 3
+        0x00, 0x00, 0x01, 0x90, // icmp_in_echos = 400
+        0x00, 0x00, 0x01, 0x90, // icmp_in_echo_reps = 400
+        0x00, 0x00, 0x00, 0x14, // icmp_in_timestamps = 20
+        0x00, 0x00, 0x00, 0x00, // icmp_in_addr_masks = 0
+        0x00, 0x00, 0x00, 0x00, // icmp_in_addr_mask_reps = 0
+        0x00, 0x00, 0x03, 0x20, // icmp_out_msgs = 800
+        0x00, 0x00, 0x00, 0x02, // icmp_out_errors = 2
+        0x00, 0x00, 0x00, 0x08, // icmp_out_dest_unreachs = 8
+        0x00, 0x00, 0x00, 0x01, // icmp_out_time_excds = 1
+        0x00, 0x00, 0x00, 0x00, // icmp_out_param_probs = 0
+        0x00, 0x00, 0x00, 0x00, // icmp_out_src_quenchs = 0
+        0x00, 0x00, 0x00, 0x02, // icmp_out_redirects = 2
+        0x00, 0x00, 0x01, 0x2C, // icmp_out_echos = 300
+        0x00, 0x00, 0x01, 0x2C, // icmp_out_echo_reps = 300
+        0x00, 0x00, 0x00, 0x0A, // icmp_out_timestamps = 10
+        0x00, 0x00, 0x00, 0x00, // icmp_out_timestamp_reps = 0
+        0x00, 0x00, 0x00, 0x00, // icmp_out_addr_masks = 0
+        0x00, 0x00, 0x00, 0x00, // icmp_out_addr_mask_reps = 0
+    ];
+
+    let data = build_counter_sample_test(0x07D8, &record_data); // record type = 2008
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::Mib2IcmpGroup(icmp) => {
+                    assert_eq!(icmp.icmp_in_msgs, 1000);
+                    assert_eq!(icmp.icmp_in_errors, 5);
+                    assert_eq!(icmp.icmp_in_dest_unreachs, 10);
+                    assert_eq!(icmp.icmp_in_time_excds, 2);
+                    assert_eq!(icmp.icmp_in_echos, 400);
+                    assert_eq!(icmp.icmp_in_echo_reps, 400);
+                    assert_eq!(icmp.icmp_out_msgs, 800);
+                    assert_eq!(icmp.icmp_out_errors, 2);
+                    assert_eq!(icmp.icmp_out_dest_unreachs, 8);
+                    assert_eq!(icmp.icmp_out_echos, 300);
+                    assert_eq!(icmp.icmp_out_echo_reps, 300);
+                }
+                _ => panic!("Expected Mib2IcmpGroup"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_mib2_tcp_group() {
+    // MIB-2 TCP Group: 15 u32 = 60 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x01, // tcp_rto_algorithm = 1
+        0x00, 0x00, 0x00, 0xC8, // tcp_rto_min = 200
+        0x00, 0x00, 0x1D, 0x4C, // tcp_rto_max = 7500
+        0x00, 0x00, 0x00, 0x64, // tcp_max_conn = 100
+        0x00, 0x00, 0x03, 0xE8, // tcp_active_opens = 1000
+        0x00, 0x00, 0x01, 0xF4, // tcp_passive_opens = 500
+        0x00, 0x00, 0x00, 0x0A, // tcp_attempt_fails = 10
+        0x00, 0x00, 0x00, 0x05, // tcp_estab_resets = 5
+        0x00, 0x00, 0x00, 0x32, // tcp_curr_estab = 50
+        0x00, 0x00, 0x27, 0x10, // tcp_in_segs = 10000
+        0x00, 0x00, 0x1F, 0x40, // tcp_out_segs = 8000
+        0x00, 0x00, 0x00, 0x14, // tcp_retrans_segs = 20
+        0x00, 0x00, 0x00, 0x02, // tcp_in_errs = 2
+        0x00, 0x00, 0x00, 0x0F, // tcp_out_rsts = 15
+        0x00, 0x00, 0x00, 0x01, // tcp_in_csum_errs = 1
+    ];
+
+    let data = build_counter_sample_test(0x07D9, &record_data); // record type = 2009
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::Mib2TcpGroup(tcp) => {
+                    assert_eq!(tcp.tcp_rto_algorithm, 1);
+                    assert_eq!(tcp.tcp_rto_min, 200);
+                    assert_eq!(tcp.tcp_rto_max, 7500);
+                    assert_eq!(tcp.tcp_max_conn, 100);
+                    assert_eq!(tcp.tcp_active_opens, 1000);
+                    assert_eq!(tcp.tcp_passive_opens, 500);
+                    assert_eq!(tcp.tcp_attempt_fails, 10);
+                    assert_eq!(tcp.tcp_estab_resets, 5);
+                    assert_eq!(tcp.tcp_curr_estab, 50);
+                    assert_eq!(tcp.tcp_in_segs, 10000);
+                    assert_eq!(tcp.tcp_out_segs, 8000);
+                    assert_eq!(tcp.tcp_retrans_segs, 20);
+                    assert_eq!(tcp.tcp_in_errs, 2);
+                    assert_eq!(tcp.tcp_out_rsts, 15);
+                    assert_eq!(tcp.tcp_in_csum_errs, 1);
+                }
+                _ => panic!("Expected Mib2TcpGroup"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_mib2_udp_group() {
+    // MIB-2 UDP Group: 7 u32 = 28 bytes
+    let record_data = [
+        0x00, 0x00, 0x27, 0x10, // udp_in_datagrams = 10000
+        0x00, 0x00, 0x00, 0x05, // udp_no_ports = 5
+        0x00, 0x00, 0x00, 0x02, // udp_in_errors = 2
+        0x00, 0x00, 0x1F, 0x40, // udp_out_datagrams = 8000
+        0x00, 0x00, 0x00, 0x01, // udp_rcvbuf_errors = 1
+        0x00, 0x00, 0x00, 0x01, // udp_sndbuf_errors = 1
+        0x00, 0x00, 0x00, 0x03, // udp_in_csum_errors = 3
+    ];
+
+    let data = build_counter_sample_test(0x07DA, &record_data); // record type = 2010
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::Mib2UdpGroup(udp) => {
+                    assert_eq!(udp.udp_in_datagrams, 10000);
+                    assert_eq!(udp.udp_no_ports, 5);
+                    assert_eq!(udp.udp_in_errors, 2);
+                    assert_eq!(udp.udp_out_datagrams, 8000);
+                    assert_eq!(udp.udp_rcvbuf_errors, 1);
+                    assert_eq!(udp.udp_sndbuf_errors, 1);
+                    assert_eq!(udp.udp_in_csum_errors, 3);
+                }
+                _ => panic!("Expected Mib2UdpGroup"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
 fn test_parse_virtual_node() {
     // Virtual Node: mhz(4) + cpus(4) + memory(8) + memory_free(8) + num_domains(4) = 28 bytes
     let record_data = [

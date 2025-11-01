@@ -949,6 +949,210 @@ pub struct HostNetIo {
     pub drops_out: u32,
 }
 
+/// MIB-2 IP Group - Format (0,2007)
+///
+/// IP protocol statistics from MIB-II
+///
+/// # XDR Definition ([sFlow Host TCP/IP](https://sflow.org/sflow_host_ip.txt))
+///
+/// ```text
+/// /* IP Group - see MIB-II */
+/// /* opaque = counter_data; enterprise = 0; format = 2007 */
+///
+/// struct mib2_ip_group {
+///   unsigned int ipForwarding;
+///   unsigned int ipDefaultTTL;
+///   unsigned int ipInReceives;
+///   unsigned int ipInHdrErrors;
+///   unsigned int ipInAddrErrors;
+///   unsigned int ipForwDatagrams;
+///   unsigned int ipInUnknownProtos;
+///   unsigned int ipInDiscards;
+///   unsigned int ipInDelivers;
+///   unsigned int ipOutRequests;
+///   unsigned int ipOutDiscards;
+///   unsigned int ipOutNoRoutes;
+///   unsigned int ipReasmTimeout;
+///   unsigned int ipReasmReqds;
+///   unsigned int ipReasmOKs;
+///   unsigned int ipReasmFails;
+///   unsigned int ipFragOKs;
+///   unsigned int ipFragFails;
+///   unsigned int ipFragCreates;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct Mib2IpGroup {
+    pub ip_forwarding: u32,
+    pub ip_default_ttl: u32,
+    pub ip_in_receives: u32,
+    pub ip_in_hdr_errors: u32,
+    pub ip_in_addr_errors: u32,
+    pub ip_forw_datagrams: u32,
+    pub ip_in_unknown_protos: u32,
+    pub ip_in_discards: u32,
+    pub ip_in_delivers: u32,
+    pub ip_out_requests: u32,
+    pub ip_out_discards: u32,
+    pub ip_out_no_routes: u32,
+    pub ip_reasm_timeout: u32,
+    pub ip_reasm_reqds: u32,
+    pub ip_reasm_oks: u32,
+    pub ip_reasm_fails: u32,
+    pub ip_frag_oks: u32,
+    pub ip_frag_fails: u32,
+    pub ip_frag_creates: u32,
+}
+
+/// MIB-2 ICMP Group - Format (0,2008)
+///
+/// ICMP protocol statistics from MIB-II
+///
+/// # XDR Definition ([sFlow Host TCP/IP](https://sflow.org/sflow_host_ip.txt))
+///
+/// ```text
+/// /* ICMP Group - see MIB-II */
+/// /* opaque = counter_data; enterprise = 0; format = 2008 */
+///
+/// struct mib2_icmp_group {
+///   unsigned int icmpInMsgs;
+///   unsigned int icmpInErrors;
+///   unsigned int icmpInDestUnreachs;
+///   unsigned int icmpInTimeExcds;
+///   unsigned int icmpInParamProbs;
+///   unsigned int icmpInSrcQuenchs;
+///   unsigned int icmpInRedirects;
+///   unsigned int icmpInEchos;
+///   unsigned int icmpInEchoReps;
+///   unsigned int icmpInTimestamps;
+///   unsigned int icmpInAddrMasks;
+///   unsigned int icmpInAddrMaskReps;
+///   unsigned int icmpOutMsgs;
+///   unsigned int icmpOutErrors;
+///   unsigned int icmpOutDestUnreachs;
+///   unsigned int icmpOutTimeExcds;
+///   unsigned int icmpOutParamProbs;
+///   unsigned int icmpOutSrcQuenchs;
+///   unsigned int icmpOutRedirects;
+///   unsigned int icmpOutEchos;
+///   unsigned int icmpOutEchoReps;
+///   unsigned int icmpOutTimestamps;
+///   unsigned int icmpOutTimestampReps;
+///   unsigned int icmpOutAddrMasks;
+///   unsigned int icmpOutAddrMaskReps;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct Mib2IcmpGroup {
+    pub icmp_in_msgs: u32,
+    pub icmp_in_errors: u32,
+    pub icmp_in_dest_unreachs: u32,
+    pub icmp_in_time_excds: u32,
+    pub icmp_in_param_probs: u32,
+    pub icmp_in_src_quenchs: u32,
+    pub icmp_in_redirects: u32,
+    pub icmp_in_echos: u32,
+    pub icmp_in_echo_reps: u32,
+    pub icmp_in_timestamps: u32,
+    pub icmp_in_addr_masks: u32,
+    pub icmp_in_addr_mask_reps: u32,
+    pub icmp_out_msgs: u32,
+    pub icmp_out_errors: u32,
+    pub icmp_out_dest_unreachs: u32,
+    pub icmp_out_time_excds: u32,
+    pub icmp_out_param_probs: u32,
+    pub icmp_out_src_quenchs: u32,
+    pub icmp_out_redirects: u32,
+    pub icmp_out_echos: u32,
+    pub icmp_out_echo_reps: u32,
+    pub icmp_out_timestamps: u32,
+    pub icmp_out_timestamp_reps: u32,
+    pub icmp_out_addr_masks: u32,
+    pub icmp_out_addr_mask_reps: u32,
+}
+
+/// MIB-2 TCP Group - Format (0,2009)
+///
+/// TCP protocol statistics from MIB-II
+///
+/// # XDR Definition ([sFlow Host TCP/IP](https://sflow.org/sflow_host_ip.txt))
+///
+/// ```text
+/// /* TCP Group - see MIB-II */
+/// /* opaque = counter_data; enterprise = 0; format = 2009 */
+///
+/// struct mib2_tcp_group {
+///   unsigned int tcpRtoAlgorithm;
+///   unsigned int tcpRtoMin;
+///   unsigned int tcpRtoMax;
+///   unsigned int tcpMaxConn;
+///   unsigned int tcpActiveOpens;
+///   unsigned int tcpPassiveOpens;
+///   unsigned int tcpAttemptFails;
+///   unsigned int tcpEstabResets;
+///   unsigned int tcpCurrEstab;
+///   unsigned int tcpInSegs;
+///   unsigned int tcpOutSegs;
+///   unsigned int tcpRetransSegs;
+///   unsigned int tcpInErrs;
+///   unsigned int tcpOutRsts;
+///   unsigned int tcpInCsumErrs;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct Mib2TcpGroup {
+    pub tcp_rto_algorithm: u32,
+    pub tcp_rto_min: u32,
+    pub tcp_rto_max: u32,
+    pub tcp_max_conn: u32,
+    pub tcp_active_opens: u32,
+    pub tcp_passive_opens: u32,
+    pub tcp_attempt_fails: u32,
+    pub tcp_estab_resets: u32,
+    pub tcp_curr_estab: u32,
+    pub tcp_in_segs: u32,
+    pub tcp_out_segs: u32,
+    pub tcp_retrans_segs: u32,
+    pub tcp_in_errs: u32,
+    pub tcp_out_rsts: u32,
+    pub tcp_in_csum_errs: u32,
+}
+
+/// MIB-2 UDP Group - Format (0,2010)
+///
+/// UDP protocol statistics from MIB-II
+///
+/// # XDR Definition ([sFlow Host TCP/IP](https://sflow.org/sflow_host_ip.txt))
+///
+/// ```text
+/// /* UDP Group - see MIB-II */
+/// /* opaque = counter_data; enterprise = 0; format = 2010 */
+///
+/// struct mib2_udp_group {
+///   unsigned int udpInDatagrams;
+///   unsigned int udpNoPorts;
+///   unsigned int udpInErrors;
+///   unsigned int udpOutDatagrams;
+///   unsigned int udpRcvbufErrors;
+///   unsigned int udpSndbufErrors;
+///   unsigned int udpInCsumErrors;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct Mib2UdpGroup {
+    pub udp_in_datagrams: u32,
+    pub udp_no_ports: u32,
+    pub udp_in_errors: u32,
+    pub udp_out_datagrams: u32,
+    pub udp_rcvbuf_errors: u32,
+    pub udp_sndbuf_errors: u32,
+    pub udp_in_csum_errors: u32,
+}
+
 /// Virtual Node - Format (0,2100)
 ///
 /// Hypervisor statistics

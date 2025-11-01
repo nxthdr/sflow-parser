@@ -99,6 +99,11 @@ pub const SFLOW_SPECS: &[SpecDocument] = &[
         url: "https://sflow.org/sflow_transit.txt",
         year: 2021,
     },
+    SpecDocument {
+        name: "sflow_host_ip",
+        url: "https://sflow.org/sflow_host_ip.txt",
+        year: 2015,
+    },
 ];
 
 /// XDR structure definition parsed from spec

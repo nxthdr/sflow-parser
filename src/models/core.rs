@@ -397,6 +397,14 @@ pub enum CounterData {
     HostDiskIo(crate::models::record_counters::HostDiskIo),
     /// Host Network I/O - Format (0,2006)
     HostNetIo(crate::models::record_counters::HostNetIo),
+    /// MIB-2 IP Group - Format (0,2007)
+    Mib2IpGroup(crate::models::record_counters::Mib2IpGroup),
+    /// MIB-2 ICMP Group - Format (0,2008)
+    Mib2IcmpGroup(crate::models::record_counters::Mib2IcmpGroup),
+    /// MIB-2 TCP Group - Format (0,2009)
+    Mib2TcpGroup(crate::models::record_counters::Mib2TcpGroup),
+    /// MIB-2 UDP Group - Format (0,2010)
+    Mib2UdpGroup(crate::models::record_counters::Mib2UdpGroup),
     /// Virtual Node - Format (0,2100)
     VirtualNode(crate::models::record_counters::VirtualNode),
     /// Virtual CPU - Format (0,2101)
