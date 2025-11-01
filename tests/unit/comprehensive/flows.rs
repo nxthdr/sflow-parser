@@ -357,6 +357,133 @@ fn test_parse_extended_nat_port() {
 }
 
 #[test]
+fn test_parse_extended_infiniband_lrh() {
+    // Extended InfiniBand LRH: 10 u32 = 40 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x01, // src_vl = 1
+        0x00, 0x00, 0x00, 0x02, // src_sl = 2
+        0x00, 0x00, 0x00, 0x64, // src_dlid = 100
+        0x00, 0x00, 0x00, 0x32, // src_slid = 50
+        0x00, 0x00, 0x00, 0x03, // src_lnh = 3
+        0x00, 0x00, 0x00, 0x02, // dst_vl = 2
+        0x00, 0x00, 0x00, 0x03, // dst_sl = 3
+        0x00, 0x00, 0x00, 0xC8, // dst_dlid = 200
+        0x00, 0x00, 0x00, 0x96, // dst_slid = 150
+        0x00, 0x00, 0x00, 0x04, // dst_lnh = 4
+    ];
+
+    let data = build_flow_sample_test(0x0407, &record_data); // record type = 1031
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedInfiniBandLrh(ib_lrh) => {
+                    assert_eq!(ib_lrh.src_vl, 1);
+                    assert_eq!(ib_lrh.src_sl, 2);
+                    assert_eq!(ib_lrh.src_dlid, 100);
+                    assert_eq!(ib_lrh.src_slid, 50);
+                    assert_eq!(ib_lrh.src_lnh, 3);
+                    assert_eq!(ib_lrh.dst_vl, 2);
+                    assert_eq!(ib_lrh.dst_sl, 3);
+                    assert_eq!(ib_lrh.dst_dlid, 200);
+                    assert_eq!(ib_lrh.dst_slid, 150);
+                    assert_eq!(ib_lrh.dst_lnh, 4);
+                }
+                _ => panic!("Expected ExtendedInfiniBandLrh"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_infiniband_grh() {
+    // Extended InfiniBand GRH: 2 u32 + 2 GID (16 bytes each) + 2 u32 = 40 bytes
+    let record_data = [
+        0x00, 0x01, 0x23, 0x45, // flow_label = 0x12345
+        0x00, 0x00, 0x00, 0x05, // tc = 5
+        // Source GID (16 bytes)
+        0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
+        0x77, // Destination GID (16 bytes)
+        0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF,
+        0x00, 0x00, 0x00, 0x00, 0x11, // next_header = 17 (UDP)
+        0x00, 0x00, 0x05, 0xDC, // length = 1500
+    ];
+
+    let data = build_flow_sample_test(0x0408, &record_data); // record type = 1032
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedInfiniBandGrh(ib_grh) => {
+                    assert_eq!(ib_grh.flow_label, 0x12345);
+                    assert_eq!(ib_grh.tc, 5);
+                    assert_eq!(
+                        ib_grh.s_gid,
+                        [
+                            0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x22, 0x33,
+                            0x44, 0x55, 0x66, 0x77
+                        ]
+                    );
+                    assert_eq!(
+                        ib_grh.d_gid,
+                        [
+                            0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xAA, 0xBB, 0xCC,
+                            0xDD, 0xEE, 0xFF, 0x00
+                        ]
+                    );
+                    assert_eq!(ib_grh.next_header, 17);
+                    assert_eq!(ib_grh.length, 1500);
+                }
+                _ => panic!("Expected ExtendedInfiniBandGrh"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_infiniband_bth() {
+    // Extended InfiniBand BTH: 3 u32 = 12 bytes
+    let record_data = [
+        0x00, 0x00, 0xFF, 0xFF, // pkey = 0xFFFF
+        0x00, 0x00, 0x00, 0x01, // dst_qp = 1
+        0x00, 0x00, 0x00, 0x64, // opcode = 100
+    ];
+
+    let data = build_flow_sample_test(0x0409, &record_data); // record type = 1033
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedInfiniBandBth(ib_bth) => {
+                    assert_eq!(ib_bth.pkey, 0xFFFF);
+                    assert_eq!(ib_bth.dst_qp, 1);
+                    assert_eq!(ib_bth.opcode, 100);
+                }
+                _ => panic!("Expected ExtendedInfiniBandBth"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
 fn test_parse_extended_vlan_tunnel() {
     // Extended VLAN Tunnel data: num_vlans(4) + vlans(4*4=16) = 20 bytes
     let record_data = [

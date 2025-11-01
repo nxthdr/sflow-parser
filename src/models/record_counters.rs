@@ -439,6 +439,79 @@ pub struct LagPortStats {
     pub dot3ad_agg_port_stats_marker_response_pdus_tx: u32,
 }
 
+/// InfiniBand Counters - Format (0,9)
+///
+/// InfiniBand port statistics
+///
+/// # XDR Definition ([sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt))
+///
+/// ```text
+/// /* IB Counters */
+/// /* opaque = counter_data; enterprise = 0; format = 9 */
+///
+/// struct ib_counters {
+///    unsigned hyper PortXmitPkts; /* Total packets transmitted on all VLs */
+///    unsigned hyper PortRcvPkts;  /* Total packets (may include packets containing errors */
+///    unsigned int SymbolErrorCounter;
+///    unsigned int LinkErrorRecoveryCounter;
+///    unsigned int LinkDownedCounter;
+///    unsigned int PortRcvErrors;
+///    unsigned int PortRcvRemotePhysicalErrors;
+///    unsigned int PortRcvSwitchRelayErrors;
+///    unsigned int PortXmitDiscards;
+///    unsigned int PortXmitConstraintErrors;
+///    unsigned int PortRcvConstraintErrors;
+///    unsigned int LocalLinkIntegrityErrors;
+///    unsigned int ExcessiveBufferOverrunErrors;
+///    unsigned int VL15Dropped;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct InfiniBandCounters {
+    /// Total packets transmitted on all virtual lanes
+    pub port_xmit_pkts: u64,
+
+    /// Total packets received (may include packets containing errors)
+    pub port_rcv_pkts: u64,
+
+    /// Symbol error counter
+    pub symbol_error_counter: u32,
+
+    /// Link error recovery counter
+    pub link_error_recovery_counter: u32,
+
+    /// Link downed counter
+    pub link_downed_counter: u32,
+
+    /// Port receive errors
+    pub port_rcv_errors: u32,
+
+    /// Port receive remote physical errors
+    pub port_rcv_remote_physical_errors: u32,
+
+    /// Port receive switch relay errors
+    pub port_rcv_switch_relay_errors: u32,
+
+    /// Port transmit discards
+    pub port_xmit_discards: u32,
+
+    /// Port transmit constraint errors
+    pub port_xmit_constraint_errors: u32,
+
+    /// Port receive constraint errors
+    pub port_rcv_constraint_errors: u32,
+
+    /// Local link integrity errors
+    pub local_link_integrity_errors: u32,
+
+    /// Excessive buffer overrun errors
+    pub excessive_buffer_overrun_errors: u32,
+
+    /// VL15 dropped packets
+    pub vl15_dropped: u32,
+}
+
 /// Processor Counters - Format (0,1001)
 ///
 /// CPU and memory utilization

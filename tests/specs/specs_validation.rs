@@ -114,6 +114,11 @@ pub const SFLOW_SPECS: &[SpecDocument] = &[
         url: "https://sflow.org/sflow_pnat.txt",
         year: 2012,
     },
+    SpecDocument {
+        name: "sflow_infiniband",
+        url: "https://sflow.org/draft_sflow_infiniband_2.txt",
+        year: 2013,
+    },
 ];
 
 /// XDR structure definition parsed from spec

@@ -203,6 +203,28 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse InfiniBand Counters - Format (0,9)
+    pub(super) fn parse_infiniband_counters(
+        &mut self,
+    ) -> Result<crate::models::record_counters::InfiniBandCounters> {
+        Ok(crate::models::record_counters::InfiniBandCounters {
+            port_xmit_pkts: self.read_u64()?,
+            port_rcv_pkts: self.read_u64()?,
+            symbol_error_counter: self.read_u32()?,
+            link_error_recovery_counter: self.read_u32()?,
+            link_downed_counter: self.read_u32()?,
+            port_rcv_errors: self.read_u32()?,
+            port_rcv_remote_physical_errors: self.read_u32()?,
+            port_rcv_switch_relay_errors: self.read_u32()?,
+            port_xmit_discards: self.read_u32()?,
+            port_xmit_constraint_errors: self.read_u32()?,
+            port_rcv_constraint_errors: self.read_u32()?,
+            local_link_integrity_errors: self.read_u32()?,
+            excessive_buffer_overrun_errors: self.read_u32()?,
+            vl15_dropped: self.read_u32()?,
+        })
+    }
+
     /// Parse Processor Counters - Format (0,1001)
     pub(super) fn parse_processor_counters(
         &mut self,
@@ -644,6 +666,9 @@ impl<R: Read> Parser<R> {
                 5 => Ok(CounterData::Vlan(parser.parse_vlan_counters()?)),
                 6 => Ok(CounterData::Ieee80211(parser.parse_ieee80211_counters()?)),
                 7 => Ok(CounterData::LagPortStats(parser.parse_lag_port_stats()?)),
+                9 => Ok(CounterData::InfiniBandCounters(
+                    parser.parse_infiniband_counters()?,
+                )),
                 1001 => Ok(CounterData::Processor(parser.parse_processor_counters()?)),
                 1002 => Ok(CounterData::RadioUtilization(
                     parser.parse_radio_utilization()?,

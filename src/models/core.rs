@@ -303,6 +303,12 @@ pub enum FlowData {
     ExtendedOpenFlowV1(crate::models::record_flows::ExtendedOpenFlowV1),
     /// Extended NAT Port - Format (0,1020)
     ExtendedNatPort(crate::models::record_flows::ExtendedNatPort),
+    /// Extended InfiniBand LRH - Format (0,1031)
+    ExtendedInfiniBandLrh(crate::models::record_flows::ExtendedInfiniBandLrh),
+    /// Extended InfiniBand GRH - Format (0,1032)
+    ExtendedInfiniBandGrh(crate::models::record_flows::ExtendedInfiniBandGrh),
+    /// Extended InfiniBand BTH - Format (0,1033)
+    ExtendedInfiniBandBth(crate::models::record_flows::ExtendedInfiniBandBth),
     /// Extended L2 Tunnel Egress - Format (0,1021)
     ExtendedL2TunnelEgress(crate::models::record_flows::ExtendedL2TunnelEgress),
     /// Extended L2 Tunnel Ingress - Format (0,1022)
@@ -383,6 +389,8 @@ pub enum CounterData {
     Ieee80211(crate::models::record_counters::Ieee80211Counters),
     /// LAG Port Statistics - Format (0,7)
     LagPortStats(crate::models::record_counters::LagPortStats),
+    /// InfiniBand Counters - Format (0,9)
+    InfiniBandCounters(crate::models::record_counters::InfiniBandCounters),
     /// Processor Counters - Format (0,1001)
     Processor(crate::models::record_counters::ProcessorCounters),
     /// Radio Utilization - Format (0,1002)

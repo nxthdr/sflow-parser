@@ -534,6 +534,129 @@ pub struct ExtendedNatPort {
     pub dst_port: u32,
 }
 
+/// Extended InfiniBand LRH - Format (0,1031)
+///
+/// InfiniBand Local Routing Header information
+///
+/// # XDR Definition ([sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt))
+///
+/// ```text
+/// /* Extended IB LRH Data
+///    - Local Routing Header definition from InfiniBand Architecture
+///      Specification */
+///
+/// /* opaque = ib_lrh_data; enterprise = 0; format = 1031 */
+///
+/// struct extended_ib_lrh {
+///    unsigned int src_vl;       /* source virtual lane               */
+///    unsigned int src_sl;       /* source service level              */
+///    unsigned int src_dlid;     /* source destination-local-ID       */
+///    unsigned int src_slid;     /* source source-local-ID            */
+///    unsigned int src_lnh;      /* source link next header           */
+///    unsigned int dst_vl;       /* Destination virtual lane          */
+///    unsigned int dst_sl;       /* Destination service level         */
+///    unsigned int dst_dlid;     /* Destination destination-local-ID  */
+///    unsigned int dst_slid;     /* Destination source-local-ID       */
+///    unsigned int dst_lnh;      /* Destination link next header      */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedInfiniBandLrh {
+    /// Source virtual lane
+    pub src_vl: u32,
+    /// Source service level
+    pub src_sl: u32,
+    /// Source destination-local-ID
+    pub src_dlid: u32,
+    /// Source source-local-ID
+    pub src_slid: u32,
+    /// Source link next header
+    pub src_lnh: u32,
+    /// Destination virtual lane
+    pub dst_vl: u32,
+    /// Destination service level
+    pub dst_sl: u32,
+    /// Destination destination-local-ID
+    pub dst_dlid: u32,
+    /// Destination source-local-ID
+    pub dst_slid: u32,
+    /// Destination link next header
+    pub dst_lnh: u32,
+}
+
+/// Extended InfiniBand GRH - Format (0,1032)
+///
+/// InfiniBand Global Routing Header information
+///
+/// # XDR Definition ([sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt))
+///
+/// ```text
+/// /* GID type  16 bytes long */
+/// typedef opaque gid[16];
+///
+/// /* Extended IB GRH Data
+///    - Global Routing Header definition from InfiniBand Architecture
+///      Specification */
+///
+/// /* opaque = ib_grh_data; enterprise = 0; format = 1032 */
+///
+/// struct extended_ib_grh {
+///    unsigned int flow_label; /* flow label          */
+///    unsigned int tc;         /* Traffic Class       */
+///    gid s_gid;               /* source GID          */
+///    gid d_gid;               /* destination GID     */
+///    unsigned int next_header /* next header type    */
+///    unsigned int length      /* payload length      */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedInfiniBandGrh {
+    /// Flow label
+    pub flow_label: u32,
+    /// Traffic class
+    pub tc: u32,
+    /// Source GID (16 bytes)
+    pub s_gid: [u8; 16],
+    /// Destination GID (16 bytes)
+    pub d_gid: [u8; 16],
+    /// Next header type
+    pub next_header: u32,
+    /// Payload length
+    pub length: u32,
+}
+
+/// Extended InfiniBand BTH - Format (0,1033)
+///
+/// InfiniBand Base Transport Header information
+///
+/// # XDR Definition ([sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt))
+///
+/// ```text
+/// /* Extended IB BTH Data
+///    - Base Transport Header definition from InfiniBand Architecture
+///      Specification */
+///
+/// /* opaque = ib_bth_data; enterprise = 0; format = 1033 */
+///
+/// struct extended_ib_bth {
+///    unsigned int pkey;   /* Partition key                */
+///    unsigned int dst_qp; /* Destination Queue Pair       */
+///    unsigned int opcode; /* IBA packet type              */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedInfiniBandBth {
+    /// Partition key
+    pub pkey: u32,
+    /// Destination Queue Pair
+    pub dst_qp: u32,
+    /// IBA packet type (opcode)
+    pub opcode: u32,
+}
+
 /// Extended MPLS Tunnel - Format (0,1008)
 ///
 /// MPLS tunnel information

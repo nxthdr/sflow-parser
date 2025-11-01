@@ -307,6 +307,59 @@ fn test_parse_lag_port_stats() {
 }
 
 #[test]
+fn test_parse_infiniband_counters() {
+    // InfiniBand Counters: 2 u64 + 12 u32 = 64 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x42, 0x40, // port_xmit_pkts = 1000000
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x0E, 0x7E, 0xF0, // port_rcv_pkts = 950000
+        0x00, 0x00, 0x00, 0x05, // symbol_error_counter = 5
+        0x00, 0x00, 0x00, 0x02, // link_error_recovery_counter = 2
+        0x00, 0x00, 0x00, 0x01, // link_downed_counter = 1
+        0x00, 0x00, 0x00, 0x0A, // port_rcv_errors = 10
+        0x00, 0x00, 0x00, 0x03, // port_rcv_remote_physical_errors = 3
+        0x00, 0x00, 0x00, 0x02, // port_rcv_switch_relay_errors = 2
+        0x00, 0x00, 0x00, 0x04, // port_xmit_discards = 4
+        0x00, 0x00, 0x00, 0x01, // port_xmit_constraint_errors = 1
+        0x00, 0x00, 0x00, 0x01, // port_rcv_constraint_errors = 1
+        0x00, 0x00, 0x00, 0x02, // local_link_integrity_errors = 2
+        0x00, 0x00, 0x00, 0x00, // excessive_buffer_overrun_errors = 0
+        0x00, 0x00, 0x00, 0x01, // vl15_dropped = 1
+    ];
+
+    let data = build_counter_sample_test(0x0009, &record_data); // record type = 9
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::InfiniBandCounters(ib) => {
+                    assert_eq!(ib.port_xmit_pkts, 1_000_000);
+                    assert_eq!(ib.port_rcv_pkts, 950_000);
+                    assert_eq!(ib.symbol_error_counter, 5);
+                    assert_eq!(ib.link_error_recovery_counter, 2);
+                    assert_eq!(ib.link_downed_counter, 1);
+                    assert_eq!(ib.port_rcv_errors, 10);
+                    assert_eq!(ib.port_rcv_remote_physical_errors, 3);
+                    assert_eq!(ib.port_rcv_switch_relay_errors, 2);
+                    assert_eq!(ib.port_xmit_discards, 4);
+                    assert_eq!(ib.port_xmit_constraint_errors, 1);
+                    assert_eq!(ib.port_rcv_constraint_errors, 1);
+                    assert_eq!(ib.local_link_integrity_errors, 2);
+                    assert_eq!(ib.excessive_buffer_overrun_errors, 0);
+                    assert_eq!(ib.vl15_dropped, 1);
+                }
+                _ => panic!("Expected InfiniBandCounters"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
 fn test_parse_processor_counters() {
     // Processor counters: 3 u32 + 2 u64 = 28 bytes
     let record_data = [

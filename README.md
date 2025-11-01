@@ -37,7 +37,7 @@ The main specification is [sFlow Version 5](https://sflow.org/sflow_version_5.tx
 | 2012 | [sFlow LAG Counters Structure](https://sflow.org/sflow_lag.txt) | IEEE 802.1AX Link Aggregation (LACP) | ✅ |
 | 2012 | [sFlow Tunnel Structures](https://sflow.org/sflow_tunnels.txt) | Encapsulation/decapsulation (VXLAN, GRE, etc.) | ✅ |
 | 2012 | [sFlow Port NAT Structures](https://sflow.org/sflow_pnat.txt) | Port-based NAT mapping | ✅ |
-| 2013 | [sFlow InfiniBand Structures](https://sflow.org/draft_sflow_infiniband_2.txt) | InfiniBand network monitoring | ⬜ |
+| 2013 | [sFlow InfiniBand Structures](https://sflow.org/draft_sflow_infiniband_2.txt) | InfiniBand network monitoring | ✅ |
 | 2014 | [sFlow OpenFlow Structures](https://sflow.org/sflow_openflow.txt) | OpenFlow port monitoring | ✅ |
 | 2015 | [sFlow Host TCP/IP Counters](https://sflow.org/sflow_host_ip.txt) | Host IP, ICMP, TCP, and UDP counters | ✅ |
 | 2015 | [sFlow Broadcom ASIC Table Utilization](https://sflow.org/sflow_broadcom_tables.txt) | Hardware table utilization for Broadcom ASICs | ⬜ |
@@ -100,9 +100,9 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 1028 | Extended Decapsulate Ingress | [sFlow Tunnel](https://sflow.org/sflow_tunnels.txt) | ✅ |
 | 0 | 1029 | Extended VNI Egress | [sFlow Tunnel](https://sflow.org/sflow_tunnels.txt) | ✅ |
 | 0 | 1030 | Extended VNI Ingress | [sFlow Tunnel](https://sflow.org/sflow_tunnels.txt) | ✅ |
-| 0 | 1031 | Extended InfiniBand LRH | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ⬜ |
-| 0 | 1032 | Extended InfiniBand GRH | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ⬜ |
-| 0 | 1033 | Extended InfiniBand BRH | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ⬜ |
+| 0 | 1031 | Extended InfiniBand LRH | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ✅ |
+| 0 | 1032 | Extended InfiniBand GRH | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ✅ |
+| 0 | 1033 | Extended InfiniBand BTH | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ✅ |
 | 0 | 1034 | Extended VLAN In | [sFlow Discussion](https://groups.google.com/forum/) | ⬜ |
 | 0 | 1035 | Extended VLAN Out | [sFlow Discussion](https://groups.google.com/forum/) | ⬜ |
 | 0 | 1036 | Extended Egress Queue | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ✅ |
@@ -145,7 +145,7 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 6 | IEEE 802.11 Counters | [sFlow 802.11](https://sflow.org/sflow_80211.txt) | ✅ |
 | 0 | 7 | LAG Port Stats | [sFlow LAG](https://sflow.org/sflow_lag.txt) | ✅ |
 | 0 | 8 | Slow Path Counts | [sFlow Discussion](https://groups.google.com/g/sflow/c/4JM1_Mmoz7w) | ⬜ |
-| 0 | 9 | InfiniBand Counters | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ⬜ |
+| 0 | 9 | InfiniBand Counters | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ✅ |
 | 0 | 10 | Optical SFP/QSFP | [sFlow Optics](https://sflow.org/sflow_optics.txt) | ⬜ |
 | 0 | 1001 | Processor | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
 | 0 | 1002 | Radio Utilization | [sFlow 802.11](https://sflow.org/sflow_80211.txt) | ✅ |
