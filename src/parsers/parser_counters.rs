@@ -569,6 +569,44 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse JVM Runtime - Format (0,2105)
+    pub(super) fn parse_jvm_runtime(
+        &mut self,
+    ) -> Result<crate::models::record_counters::JvmRuntime> {
+        Ok(crate::models::record_counters::JvmRuntime {
+            vm_name: self.read_string()?,
+            vm_vendor: self.read_string()?,
+            vm_version: self.read_string()?,
+        })
+    }
+
+    /// Parse JVM Statistics - Format (0,2106)
+    pub(super) fn parse_jvm_statistics(
+        &mut self,
+    ) -> Result<crate::models::record_counters::JvmStatistics> {
+        Ok(crate::models::record_counters::JvmStatistics {
+            heap_initial: self.read_u64()?,
+            heap_used: self.read_u64()?,
+            heap_committed: self.read_u64()?,
+            heap_max: self.read_u64()?,
+            non_heap_initial: self.read_u64()?,
+            non_heap_used: self.read_u64()?,
+            non_heap_committed: self.read_u64()?,
+            non_heap_max: self.read_u64()?,
+            gc_count: self.read_u32()?,
+            gc_time: self.read_u32()?,
+            classes_loaded: self.read_u32()?,
+            classes_total: self.read_u32()?,
+            classes_unloaded: self.read_u32()?,
+            compilation_time: self.read_u32()?,
+            thread_num_live: self.read_u32()?,
+            thread_num_daemon: self.read_u32()?,
+            thread_num_started: self.read_u32()?,
+            fd_open_count: self.read_u32()?,
+            fd_max_count: self.read_u32()?,
+        })
+    }
+
     /// Parse HTTP Counters - Format (0,2201)
     pub(super) fn parse_http_counters(
         &mut self,
@@ -628,6 +666,45 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Memcache Counters - Format (0,2204)
+    pub(super) fn parse_memcache_counters(
+        &mut self,
+    ) -> Result<crate::models::record_counters::MemcacheCounters> {
+        Ok(crate::models::record_counters::MemcacheCounters {
+            cmd_set: self.read_u32()?,
+            cmd_touch: self.read_u32()?,
+            cmd_flush: self.read_u32()?,
+            get_hits: self.read_u32()?,
+            get_misses: self.read_u32()?,
+            delete_hits: self.read_u32()?,
+            delete_misses: self.read_u32()?,
+            incr_hits: self.read_u32()?,
+            incr_misses: self.read_u32()?,
+            decr_hits: self.read_u32()?,
+            decr_misses: self.read_u32()?,
+            cas_hits: self.read_u32()?,
+            cas_misses: self.read_u32()?,
+            cas_badval: self.read_u32()?,
+            auth_cmds: self.read_u32()?,
+            auth_errors: self.read_u32()?,
+            threads: self.read_u32()?,
+            conn_yields: self.read_u32()?,
+            listen_disabled_num: self.read_u32()?,
+            curr_connections: self.read_u32()?,
+            rejected_connections: self.read_u32()?,
+            total_connections: self.read_u32()?,
+            connection_structures: self.read_u32()?,
+            evictions: self.read_u32()?,
+            reclaimed: self.read_u32()?,
+            curr_items: self.read_u32()?,
+            total_items: self.read_u32()?,
+            bytes_read: self.read_u64()?,
+            bytes_written: self.read_u64()?,
+            bytes: self.read_u64()?,
+            limit_maxbytes: self.read_u64()?,
+        })
+    }
+
     /// Parse App Workers - Format (0,2206)
     pub(super) fn parse_app_workers(
         &mut self,
@@ -638,44 +715,6 @@ impl<R: Read> Parser<R> {
             workers_max: self.read_u32()?,
             req_delayed: self.read_u32()?,
             req_dropped: self.read_u32()?,
-        })
-    }
-
-    /// Parse JVM Runtime - Format (0,2105)
-    pub(super) fn parse_jvm_runtime(
-        &mut self,
-    ) -> Result<crate::models::record_counters::JvmRuntime> {
-        Ok(crate::models::record_counters::JvmRuntime {
-            vm_name: self.read_string()?,
-            vm_vendor: self.read_string()?,
-            vm_version: self.read_string()?,
-        })
-    }
-
-    /// Parse JVM Statistics - Format (0,2106)
-    pub(super) fn parse_jvm_statistics(
-        &mut self,
-    ) -> Result<crate::models::record_counters::JvmStatistics> {
-        Ok(crate::models::record_counters::JvmStatistics {
-            heap_initial: self.read_u64()?,
-            heap_used: self.read_u64()?,
-            heap_committed: self.read_u64()?,
-            heap_max: self.read_u64()?,
-            non_heap_initial: self.read_u64()?,
-            non_heap_used: self.read_u64()?,
-            non_heap_committed: self.read_u64()?,
-            non_heap_max: self.read_u64()?,
-            gc_count: self.read_u32()?,
-            gc_time: self.read_u32()?,
-            classes_loaded: self.read_u32()?,
-            classes_total: self.read_u32()?,
-            classes_unloaded: self.read_u32()?,
-            compilation_time: self.read_u32()?,
-            thread_num_live: self.read_u32()?,
-            thread_num_daemon: self.read_u32()?,
-            thread_num_started: self.read_u32()?,
-            fd_open_count: self.read_u32()?,
-            fd_max_count: self.read_u32()?,
         })
     }
 
@@ -736,6 +775,9 @@ impl<R: Read> Parser<R> {
                 2105 => Ok(CounterData::JvmRuntime(parser.parse_jvm_runtime()?)),
                 2106 => Ok(CounterData::JvmStatistics(parser.parse_jvm_statistics()?)),
                 2201 => Ok(CounterData::HttpCounters(parser.parse_http_counters()?)),
+                2204 => Ok(CounterData::MemcacheCounters(
+                    parser.parse_memcache_counters()?,
+                )),
                 2202 => Ok(CounterData::AppOperations(parser.parse_app_operations()?)),
                 2203 => Ok(CounterData::AppResources(parser.parse_app_resources()?)),
                 2206 => Ok(CounterData::AppWorkers(parser.parse_app_workers()?)),

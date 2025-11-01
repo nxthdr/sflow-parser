@@ -1439,3 +1439,99 @@ fn test_parse_jvm_statistics() {
         _ => panic!("Expected CountersSample"),
     }
 }
+
+#[test]
+fn test_parse_memcache_counters() {
+    // Memcache Counters: 27 u32 + 4 u64 = 140 bytes
+    let record_data = [
+        // Command counters (3 u32)
+        0x00, 0x00, 0x27, 0x10, // cmd_set = 10000
+        0x00, 0x00, 0x03, 0xE8, // cmd_touch = 1000
+        0x00, 0x00, 0x00, 0x64, // cmd_flush = 100
+        // Get counters (2 u32)
+        0x00, 0x00, 0x75, 0x30, // get_hits = 30000
+        0x00, 0x00, 0x13, 0x88, // get_misses = 5000
+        // Delete counters (2 u32)
+        0x00, 0x00, 0x03, 0xE8, // delete_hits = 1000
+        0x00, 0x00, 0x00, 0x64, // delete_misses = 100
+        // Increment counters (2 u32)
+        0x00, 0x00, 0x01, 0xF4, // incr_hits = 500
+        0x00, 0x00, 0x00, 0x32, // incr_misses = 50
+        // Decrement counters (2 u32)
+        0x00, 0x00, 0x01, 0x90, // decr_hits = 400
+        0x00, 0x00, 0x00, 0x28, // decr_misses = 40
+        // CAS counters (3 u32)
+        0x00, 0x00, 0x07, 0xD0, // cas_hits = 2000
+        0x00, 0x00, 0x00, 0xC8, // cas_misses = 200
+        0x00, 0x00, 0x00, 0x0A, // cas_badval = 10
+        // Auth counters (2 u32)
+        0x00, 0x00, 0x00, 0x64, // auth_cmds = 100
+        0x00, 0x00, 0x00, 0x05, // auth_errors = 5
+        // Thread and connection counters (11 u32)
+        0x00, 0x00, 0x00, 0x04, // threads = 4
+        0x00, 0x00, 0x00, 0x0A, // conn_yields = 10
+        0x00, 0x00, 0x00, 0x02, // listen_disabled_num = 2
+        0x00, 0x00, 0x00, 0x64, // curr_connections = 100
+        0x00, 0x00, 0x00, 0x05, // rejected_connections = 5
+        0x00, 0x00, 0x27, 0x10, // total_connections = 10000
+        0x00, 0x00, 0x00, 0x6E, // connection_structures = 110
+        0x00, 0x00, 0x00, 0x32, // evictions = 50
+        0x00, 0x00, 0x00, 0x14, // reclaimed = 20
+        0x00, 0x00, 0x03, 0xE8, // curr_items = 1000
+        0x00, 0x00, 0x27, 0x10, // total_items = 10000
+        // Byte counters (4 u64)
+        0x00, 0x00, 0x00, 0x00, 0x3B, 0x9A, 0xCA, 0x00, // bytes_read = 1GB
+        0x00, 0x00, 0x00, 0x00, 0x1D, 0xCD, 0x65, 0x00, // bytes_written = 500MB
+        0x00, 0x00, 0x00, 0x00, 0x05, 0xF5, 0xE1, 0x00, // bytes = 100MB
+        0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, // limit_maxbytes = 1GB
+    ];
+
+    let data = build_counter_sample_test(0x089C, &record_data); // record type = 2204
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::MemcacheCounters(mc) => {
+                    assert_eq!(mc.cmd_set, 10000);
+                    assert_eq!(mc.cmd_touch, 1000);
+                    assert_eq!(mc.cmd_flush, 100);
+                    assert_eq!(mc.get_hits, 30000);
+                    assert_eq!(mc.get_misses, 5000);
+                    assert_eq!(mc.delete_hits, 1000);
+                    assert_eq!(mc.delete_misses, 100);
+                    assert_eq!(mc.incr_hits, 500);
+                    assert_eq!(mc.incr_misses, 50);
+                    assert_eq!(mc.decr_hits, 400);
+                    assert_eq!(mc.decr_misses, 40);
+                    assert_eq!(mc.cas_hits, 2000);
+                    assert_eq!(mc.cas_misses, 200);
+                    assert_eq!(mc.cas_badval, 10);
+                    assert_eq!(mc.auth_cmds, 100);
+                    assert_eq!(mc.auth_errors, 5);
+                    assert_eq!(mc.threads, 4);
+                    assert_eq!(mc.conn_yields, 10);
+                    assert_eq!(mc.listen_disabled_num, 2);
+                    assert_eq!(mc.curr_connections, 100);
+                    assert_eq!(mc.rejected_connections, 5);
+                    assert_eq!(mc.total_connections, 10000);
+                    assert_eq!(mc.connection_structures, 110);
+                    assert_eq!(mc.evictions, 50);
+                    assert_eq!(mc.reclaimed, 20);
+                    assert_eq!(mc.curr_items, 1000);
+                    assert_eq!(mc.total_items, 10000);
+                    assert_eq!(mc.bytes_read, 1_000_000_000); // 1GB
+                    assert_eq!(mc.bytes_written, 500_000_000); // 500MB
+                    assert_eq!(mc.bytes, 100_000_000); // 100MB
+                    assert_eq!(mc.limit_maxbytes, 1_073_741_824); // 1GB
+                }
+                _ => panic!("Expected MemcacheCounters"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}

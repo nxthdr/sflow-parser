@@ -1505,6 +1505,141 @@ pub struct VirtualNetIo {
     pub tx_drop: u32,
 }
 
+/// JVM Runtime - Format (0,2105)
+///
+/// Java Virtual Machine runtime attributes
+///
+/// # XDR Definition ([sFlow JVM](https://sflow.org/sflow_jvm.txt))
+///
+/// ```text
+/// /* JVM Runtime Attributes */
+/// /* See RuntimeMXBean */
+/// /* opaque = counter_data; enterprise = 0; format = 2105 */
+///
+/// struct jvm_runtime {
+///   string vm_name<64>;      /* vm name */
+///   string vm_vendor<32>;    /* the vendor for the JVM */
+///   string vm_version<32>;   /* the version for the JVM */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct JvmRuntime {
+    /// JVM name
+    pub vm_name: String,
+
+    /// JVM vendor
+    pub vm_vendor: String,
+
+    /// JVM version
+    pub vm_version: String,
+}
+
+/// JVM Statistics - Format (0,2106)
+///
+/// Java Virtual Machine performance statistics
+///
+/// # XDR Definition ([sFlow JVM](https://sflow.org/sflow_jvm.txt))
+///
+/// ```text
+/// /* JVM Statistics */
+/// /* See MemoryMXBean, GarbageCollectorMXBean, ClassLoadingMXBean, */
+/// /* CompilationMXBean, ThreadMXBean and UnixOperatingSystemMXBean */
+/// /* opaque = counter_data; enterprise = 0; format = 2106 */
+///
+/// struct jvm_statistics {
+///   unsigned hyper heap_initial;    /* initial heap memory requested */
+///   unsigned hyper heap_used;       /* current heap memory usage  */
+///   unsigned hyper heap_committed;  /* heap memory currently committed */
+///   unsigned hyper heap_max;        /* max heap space */
+///   unsigned hyper non_heap_initial; /* initial non heap memory
+///                                       requested */
+///   unsigned hyper non_heap_used;   /* current non heap memory usage  */
+///   unsigned hyper non_heap_committed; /* non heap memory currently
+///                                         committed */
+///   unsigned hyper non_heap_max;    /* max non-heap space */
+///   unsigned int gc_count;          /* total number of collections that
+///                                      have occurred */
+///   unsigned int gc_time;           /* approximate accumulated collection
+///                                      elapsed time in milliseconds */
+///   unsigned int classes_loaded;    /* number of classes currently loaded
+///                                      in vm */
+///   unsigned int classes_total;     /* total number of classes loaded
+///                                      since vm started */
+///   unsigned int classes_unloaded;  /* total number of classe unloaded
+///                                      since vm started */
+///   unsigned int compilation_time;  /* total accumulated time spent in
+///                                      compilation (in milliseconds) */
+///   unsigned int thread_num_live;   /* current number of live threads */
+///   unsigned int thread_num_daemon; /* current number of live daemon
+///                                      threads */
+///   unsigned int thread_num_started; /* total threads started since
+///                                       vm started */
+///   unsigned int fd_open_count;     /* number of open file descriptors */
+///   unsigned int fd_max_count;      /* max number of file descriptors */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct JvmStatistics {
+    /// Initial heap memory requested
+    pub heap_initial: u64,
+
+    /// Current heap memory usage
+    pub heap_used: u64,
+
+    /// Heap memory currently committed
+    pub heap_committed: u64,
+
+    /// Maximum heap space
+    pub heap_max: u64,
+
+    /// Initial non-heap memory requested
+    pub non_heap_initial: u64,
+
+    /// Current non-heap memory usage
+    pub non_heap_used: u64,
+
+    /// Non-heap memory currently committed
+    pub non_heap_committed: u64,
+
+    /// Maximum non-heap space
+    pub non_heap_max: u64,
+
+    /// Total number of garbage collections that have occurred
+    pub gc_count: u32,
+
+    /// Approximate accumulated collection elapsed time in milliseconds
+    pub gc_time: u32,
+
+    /// Number of classes currently loaded in VM
+    pub classes_loaded: u32,
+
+    /// Total number of classes loaded since VM started
+    pub classes_total: u32,
+
+    /// Total number of classes unloaded since VM started
+    pub classes_unloaded: u32,
+
+    /// Total accumulated time spent in compilation (in milliseconds)
+    pub compilation_time: u32,
+
+    /// Current number of live threads
+    pub thread_num_live: u32,
+
+    /// Current number of live daemon threads
+    pub thread_num_daemon: u32,
+
+    /// Total threads started since VM started
+    pub thread_num_started: u32,
+
+    /// Number of open file descriptors
+    pub fd_open_count: u32,
+
+    /// Maximum number of file descriptors
+    pub fd_max_count: u32,
+}
+
 /// HTTP Counters - Format (0,2201)
 ///
 /// HTTP performance counters
@@ -1695,6 +1830,148 @@ pub struct AppResources {
     pub conn_max: u32,
 }
 
+/// Memcache Counters - Format (0,2204)
+///
+/// Memcache server performance counters
+///
+/// # XDR Definition ([sFlow Memcache](https://sflow.org/sflow_memcache.txt))
+///
+/// ```text
+/// /* Memcache counters */
+/// /* See Memcached protocol.txt */
+/// /* opaque = counter_data; enterprise = 0; format = 2204 */
+///
+/// struct memcache_counters {
+///   unsigned int cmd_set;
+///   unsigned int cmd_touch;
+///   unsigned int cmd_flush;
+///   unsigned int get_hits;
+///   unsigned int get_misses;
+///   unsigned int delete_hits;
+///   unsigned int delete_misses;
+///   unsigned int incr_hits;
+///   unsigned int incr_misses;
+///   unsigned int decr_hits;
+///   unsigned int decr_misses;
+///   unsigned int cas_hits;
+///   unsigned int cas_misses;
+///   unsigned int cas_badval;
+///   unsigned int auth_cmds;
+///   unsigned int auth_errors;
+///   unsigned int threads;
+///   unsigned int conn_yields;
+///   unsigned int listen_disabled_num;
+///   unsigned int curr_connections;
+///   unsigned int rejected_connections;
+///   unsigned int total_connections;
+///   unsigned int connection_structures;
+///   unsigned int evictions;
+///   unsigned int reclaimed;
+///   unsigned int curr_items;
+///   unsigned int total_items;
+///   unsigned hyper bytes_read;
+///   unsigned hyper bytes_written;
+///   unsigned hyper bytes;
+///   unsigned hyper limit_maxbytes;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct MemcacheCounters {
+    /// Number of set commands
+    pub cmd_set: u32,
+
+    /// Number of touch commands
+    pub cmd_touch: u32,
+
+    /// Number of flush commands
+    pub cmd_flush: u32,
+
+    /// Number of get hits
+    pub get_hits: u32,
+
+    /// Number of get misses
+    pub get_misses: u32,
+
+    /// Number of delete hits
+    pub delete_hits: u32,
+
+    /// Number of delete misses
+    pub delete_misses: u32,
+
+    /// Number of increment hits
+    pub incr_hits: u32,
+
+    /// Number of increment misses
+    pub incr_misses: u32,
+
+    /// Number of decrement hits
+    pub decr_hits: u32,
+
+    /// Number of decrement misses
+    pub decr_misses: u32,
+
+    /// Number of CAS hits
+    pub cas_hits: u32,
+
+    /// Number of CAS misses
+    pub cas_misses: u32,
+
+    /// Number of CAS bad value errors
+    pub cas_badval: u32,
+
+    /// Number of authentication commands
+    pub auth_cmds: u32,
+
+    /// Number of authentication errors
+    pub auth_errors: u32,
+
+    /// Number of threads
+    pub threads: u32,
+
+    /// Number of connection yields
+    pub conn_yields: u32,
+
+    /// Number of times listen was disabled
+    pub listen_disabled_num: u32,
+
+    /// Current number of connections
+    pub curr_connections: u32,
+
+    /// Number of rejected connections
+    pub rejected_connections: u32,
+
+    /// Total number of connections
+    pub total_connections: u32,
+
+    /// Number of connection structures
+    pub connection_structures: u32,
+
+    /// Number of evictions
+    pub evictions: u32,
+
+    /// Number of reclaimed items
+    pub reclaimed: u32,
+
+    /// Current number of items
+    pub curr_items: u32,
+
+    /// Total number of items
+    pub total_items: u32,
+
+    /// Total bytes read
+    pub bytes_read: u64,
+
+    /// Total bytes written
+    pub bytes_written: u64,
+
+    /// Current bytes used
+    pub bytes: u64,
+
+    /// Maximum bytes limit
+    pub limit_maxbytes: u64,
+}
+
 /// App Workers - Format (0,2206)
 ///
 /// Application worker thread/process statistics
@@ -1730,139 +2007,4 @@ pub struct AppWorkers {
 
     /// Number of dropped requests
     pub req_dropped: u32,
-}
-
-/// JVM Runtime - Format (0,2105)
-///
-/// Java Virtual Machine runtime attributes
-///
-/// # XDR Definition ([sFlow JVM](https://sflow.org/sflow_jvm.txt))
-///
-/// ```text
-/// /* JVM Runtime Attributes */
-/// /* See RuntimeMXBean */
-/// /* opaque = counter_data; enterprise = 0; format = 2105 */
-///
-/// struct jvm_runtime {
-///   string vm_name<64>;      /* vm name */
-///   string vm_vendor<32>;    /* the vendor for the JVM */
-///   string vm_version<32>;   /* the version for the JVM */
-/// }
-/// ```
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct JvmRuntime {
-    /// JVM name
-    pub vm_name: String,
-
-    /// JVM vendor
-    pub vm_vendor: String,
-
-    /// JVM version
-    pub vm_version: String,
-}
-
-/// JVM Statistics - Format (0,2106)
-///
-/// Java Virtual Machine performance statistics
-///
-/// # XDR Definition ([sFlow JVM](https://sflow.org/sflow_jvm.txt))
-///
-/// ```text
-/// /* JVM Statistics */
-/// /* See MemoryMXBean, GarbageCollectorMXBean, ClassLoadingMXBean, */
-/// /* CompilationMXBean, ThreadMXBean and UnixOperatingSystemMXBean */
-/// /* opaque = counter_data; enterprise = 0; format = 2106 */
-///
-/// struct jvm_statistics {
-///   unsigned hyper heap_initial;    /* initial heap memory requested */
-///   unsigned hyper heap_used;       /* current heap memory usage  */
-///   unsigned hyper heap_committed;  /* heap memory currently committed */
-///   unsigned hyper heap_max;        /* max heap space */
-///   unsigned hyper non_heap_initial; /* initial non heap memory
-///                                       requested */
-///   unsigned hyper non_heap_used;   /* current non heap memory usage  */
-///   unsigned hyper non_heap_committed; /* non heap memory currently
-///                                         committed */
-///   unsigned hyper non_heap_max;    /* max non-heap space */
-///   unsigned int gc_count;          /* total number of collections that
-///                                      have occurred */
-///   unsigned int gc_time;           /* approximate accumulated collection
-///                                      elapsed time in milliseconds */
-///   unsigned int classes_loaded;    /* number of classes currently loaded
-///                                      in vm */
-///   unsigned int classes_total;     /* total number of classes loaded
-///                                      since vm started */
-///   unsigned int classes_unloaded;  /* total number of classe unloaded
-///                                      since vm started */
-///   unsigned int compilation_time;  /* total accumulated time spent in
-///                                      compilation (in milliseconds) */
-///   unsigned int thread_num_live;   /* current number of live threads */
-///   unsigned int thread_num_daemon; /* current number of live daemon
-///                                      threads */
-///   unsigned int thread_num_started; /* total threads started since
-///                                       vm started */
-///   unsigned int fd_open_count;     /* number of open file descriptors */
-///   unsigned int fd_max_count;      /* max number of file descriptors */
-/// }
-/// ```
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct JvmStatistics {
-    /// Initial heap memory requested
-    pub heap_initial: u64,
-
-    /// Current heap memory usage
-    pub heap_used: u64,
-
-    /// Heap memory currently committed
-    pub heap_committed: u64,
-
-    /// Maximum heap space
-    pub heap_max: u64,
-
-    /// Initial non-heap memory requested
-    pub non_heap_initial: u64,
-
-    /// Current non-heap memory usage
-    pub non_heap_used: u64,
-
-    /// Non-heap memory currently committed
-    pub non_heap_committed: u64,
-
-    /// Maximum non-heap space
-    pub non_heap_max: u64,
-
-    /// Total number of garbage collections that have occurred
-    pub gc_count: u32,
-
-    /// Approximate accumulated collection elapsed time in milliseconds
-    pub gc_time: u32,
-
-    /// Number of classes currently loaded in VM
-    pub classes_loaded: u32,
-
-    /// Total number of classes loaded since VM started
-    pub classes_total: u32,
-
-    /// Total number of classes unloaded since VM started
-    pub classes_unloaded: u32,
-
-    /// Total accumulated time spent in compilation (in milliseconds)
-    pub compilation_time: u32,
-
-    /// Current number of live threads
-    pub thread_num_live: u32,
-
-    /// Current number of live daemon threads
-    pub thread_num_daemon: u32,
-
-    /// Total threads started since VM started
-    pub thread_num_started: u32,
-
-    /// Number of open file descriptors
-    pub fd_open_count: u32,
-
-    /// Maximum number of file descriptors
-    pub fd_max_count: u32,
 }

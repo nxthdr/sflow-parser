@@ -1750,3 +1750,49 @@ fn test_parse_extended_proxy_request() {
         _ => panic!("Expected FlowSample"),
     }
 }
+
+#[test]
+fn test_parse_memcache_operation() {
+    // Memcache Operation: protocol(4) + cmd(4) + key(string) + nkeys(4) + value_bytes(4) + duration_us(4) + status(4)
+    // key = "user:12345" (10 chars) -> 4 (length) + 10 (data) + 2 (padding) = 16 bytes
+    // Total: 4 + 4 + 16 + 4 + 4 + 4 + 4 = 40 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x01, // protocol = 1 (ASCII)
+        0x00, 0x00, 0x00, 0x07, // cmd = 7 (GET)
+        // key string
+        0x00, 0x00, 0x00, 0x0A, // length = 10
+        b'u', b's', b'e', b'r', b':', b'1', b'2', b'3', b'4', b'5', 0x00, 0x00, // padding
+        0x00, 0x00, 0x00, 0x01, // nkeys = 1
+        0x00, 0x00, 0x04, 0x00, // value_bytes = 1024
+        0x00, 0x00, 0x00, 0x64, // duration_us = 100
+        0x00, 0x00, 0x00, 0x01, // status = 1 (OK)
+    ];
+
+    let data = build_flow_sample_test(0x0898, &record_data); // record type = 2200
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::MemcacheOperation(mc) => {
+                    use sflow_parser::models::record_flows::{
+                        MemcacheCommand, MemcacheProtocol, MemcacheStatus,
+                    };
+                    assert_eq!(mc.protocol, MemcacheProtocol::Ascii);
+                    assert_eq!(mc.cmd, MemcacheCommand::Get);
+                    assert_eq!(mc.key, "user:12345");
+                    assert_eq!(mc.nkeys, 1);
+                    assert_eq!(mc.value_bytes, 1024);
+                    assert_eq!(mc.duration_us, 100);
+                    assert_eq!(mc.status, MemcacheStatus::Ok);
+                }
+                _ => panic!("Expected MemcacheOperation"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}

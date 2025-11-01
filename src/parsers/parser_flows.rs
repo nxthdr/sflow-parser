@@ -740,6 +740,31 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Memcache Operation - Format (0,2200)
+    pub(super) fn parse_memcache_operation(
+        &mut self,
+    ) -> Result<crate::models::record_flows::MemcacheOperation> {
+        use crate::models::record_flows::{MemcacheCommand, MemcacheProtocol, MemcacheStatus};
+
+        let protocol = MemcacheProtocol::from_u32(self.read_u32()?);
+        let cmd = MemcacheCommand::from_u32(self.read_u32()?);
+        let key = self.read_string()?;
+        let nkeys = self.read_u32()?;
+        let value_bytes = self.read_u32()?;
+        let duration_us = self.read_u32()?;
+        let status = MemcacheStatus::from_u32(self.read_u32()?);
+
+        Ok(crate::models::record_flows::MemcacheOperation {
+            protocol,
+            cmd,
+            key,
+            nkeys,
+            value_bytes,
+            duration_us,
+            status,
+        })
+    }
+
     /// Parse Application Operation - Format (0,2202)
     pub(super) fn parse_app_operation(
         &mut self,
@@ -825,10 +850,10 @@ impl<R: Read> Parser<R> {
     pub(super) fn parse_extended_proxy_request(
         &mut self,
     ) -> Result<crate::models::record_flows::ExtendedProxyRequest> {
-        let uri = self.read_string()?;
-        let host = self.read_string()?;
-
-        Ok(crate::models::record_flows::ExtendedProxyRequest { uri, host })
+        Ok(crate::models::record_flows::ExtendedProxyRequest {
+            uri: self.read_string()?,
+            host: self.read_string()?,
+        })
     }
 
     /// Parse flow data based on format
@@ -942,6 +967,9 @@ impl<R: Read> Parser<R> {
                 2202 => Ok(FlowData::AppOperation(parser.parse_app_operation()?)),
                 2203 => Ok(FlowData::AppParentContext(
                     parser.parse_app_parent_context()?,
+                )),
+                2200 => Ok(FlowData::MemcacheOperation(
+                    parser.parse_memcache_operation()?,
                 )),
                 2204 => Ok(FlowData::AppInitiator(parser.parse_app_initiator()?)),
                 2205 => Ok(FlowData::AppTarget(parser.parse_app_target()?)),

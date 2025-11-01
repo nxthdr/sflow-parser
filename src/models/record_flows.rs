@@ -1787,6 +1787,209 @@ impl From<u32> for AppStatus {
     }
 }
 
+/// Memcache Protocol
+///
+/// # XDR Definition ([sFlow Memcache](https://sflow.org/sflow_memcache.txt))
+///
+/// ```text
+/// enum memcache_protocol {
+///   OTHER  = 0;
+///   ASCII  = 1;
+///   BINARY = 2;
+/// }
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u32)]
+pub enum MemcacheProtocol {
+    Other = 0,
+    Ascii = 1,
+    Binary = 2,
+}
+
+impl MemcacheProtocol {
+    /// Convert from u32 value to MemcacheProtocol enum
+    pub fn from_u32(value: u32) -> Self {
+        match value {
+            1 => MemcacheProtocol::Ascii,
+            2 => MemcacheProtocol::Binary,
+            _ => MemcacheProtocol::Other,
+        }
+    }
+}
+
+/// Memcache Command
+///
+/// # XDR Definition ([sFlow Memcache](https://sflow.org/sflow_memcache.txt))
+///
+/// ```text
+/// enum memcache_cmd {
+///   OTHER    = 0;
+///   SET      = 1;
+///   ADD      = 2;
+///   REPLACE  = 3;
+///   APPEND   = 4;
+///   PREPEND  = 5;
+///   CAS      = 6;
+///   GET      = 7;
+///   GETS     = 8;
+///   INCR     = 9;
+///   DECR     = 10;
+///   DELETE   = 11;
+///   STATS    = 12;
+///   FLUSH    = 13;
+///   VERSION  = 14;
+///   QUIT     = 15;
+///   TOUCH    = 16;
+/// }
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u32)]
+pub enum MemcacheCommand {
+    Other = 0,
+    Set = 1,
+    Add = 2,
+    Replace = 3,
+    Append = 4,
+    Prepend = 5,
+    Cas = 6,
+    Get = 7,
+    Gets = 8,
+    Incr = 9,
+    Decr = 10,
+    Delete = 11,
+    Stats = 12,
+    Flush = 13,
+    Version = 14,
+    Quit = 15,
+    Touch = 16,
+}
+
+impl MemcacheCommand {
+    /// Convert from u32 value to MemcacheCommand enum
+    pub fn from_u32(value: u32) -> Self {
+        match value {
+            1 => MemcacheCommand::Set,
+            2 => MemcacheCommand::Add,
+            3 => MemcacheCommand::Replace,
+            4 => MemcacheCommand::Append,
+            5 => MemcacheCommand::Prepend,
+            6 => MemcacheCommand::Cas,
+            7 => MemcacheCommand::Get,
+            8 => MemcacheCommand::Gets,
+            9 => MemcacheCommand::Incr,
+            10 => MemcacheCommand::Decr,
+            11 => MemcacheCommand::Delete,
+            12 => MemcacheCommand::Stats,
+            13 => MemcacheCommand::Flush,
+            14 => MemcacheCommand::Version,
+            15 => MemcacheCommand::Quit,
+            16 => MemcacheCommand::Touch,
+            _ => MemcacheCommand::Other,
+        }
+    }
+}
+
+/// Memcache Status
+///
+/// # XDR Definition ([sFlow Memcache](https://sflow.org/sflow_memcache.txt))
+///
+/// ```text
+/// enum memcache_status {
+///   UNKNOWN      = 0;
+///   OK           = 1;
+///   ERROR        = 2;
+///   CLIENT_ERROR = 3;
+///   SERVER_ERROR = 4;
+///   STORED       = 5;
+///   NOT_STORED   = 6;
+///   EXISTS       = 7;
+///   NOT_FOUND    = 8;
+///   DELETED      = 9;
+/// }
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u32)]
+pub enum MemcacheStatus {
+    Unknown = 0,
+    Ok = 1,
+    Error = 2,
+    ClientError = 3,
+    ServerError = 4,
+    Stored = 5,
+    NotStored = 6,
+    Exists = 7,
+    NotFound = 8,
+    Deleted = 9,
+}
+
+impl MemcacheStatus {
+    /// Convert from u32 value to MemcacheStatus enum
+    pub fn from_u32(value: u32) -> Self {
+        match value {
+            1 => MemcacheStatus::Ok,
+            2 => MemcacheStatus::Error,
+            3 => MemcacheStatus::ClientError,
+            4 => MemcacheStatus::ServerError,
+            5 => MemcacheStatus::Stored,
+            6 => MemcacheStatus::NotStored,
+            7 => MemcacheStatus::Exists,
+            8 => MemcacheStatus::NotFound,
+            9 => MemcacheStatus::Deleted,
+            _ => MemcacheStatus::Unknown,
+        }
+    }
+}
+
+/// Memcache Operation - Format (0,2200)
+///
+/// Sampled memcache operation
+///
+/// # XDR Definition ([sFlow Memcache](https://sflow.org/sflow_memcache.txt))
+///
+/// ```text
+/// /* Memcache operation */
+/// /* opaque = flow_data; enterprise = 0; format = 2200 */
+///
+/// struct memcache_operation {
+///   memcache_protocol protocol;  /* protocol */
+///   memcache_cmd cmd;            /* command */
+///   string<255> key;             /* key used to store/retrieve data */
+///   unsigned int nkeys;          /* number of keys
+///                                   (including sampled key) */
+///   unsigned int value_bytes;    /* size of the value (in bytes) */
+///   unsigned int uS;             /* duration of the operation
+///                                   (in microseconds) */
+///   memcache_status status;      /* status of command */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct MemcacheOperation {
+    /// Protocol (ASCII or Binary)
+    pub protocol: MemcacheProtocol,
+
+    /// Command type
+    pub cmd: MemcacheCommand,
+
+    /// Key used to store/retrieve data
+    pub key: String,
+
+    /// Number of keys (including sampled key)
+    pub nkeys: u32,
+
+    /// Size of the value in bytes
+    pub value_bytes: u32,
+
+    /// Duration of the operation in microseconds
+    pub duration_us: u32,
+
+    /// Status of the command
+    pub status: MemcacheStatus,
+}
+
 /// Application Operation - Format (0,2202)
 ///
 /// Sampled application operation information

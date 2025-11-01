@@ -355,6 +355,8 @@ pub enum FlowData {
     AppInitiator(crate::models::record_flows::AppInitiator),
     /// Application Target - Format (0,2205)
     AppTarget(crate::models::record_flows::AppTarget),
+    /// Memcache Operation - Format (0,2200)
+    MemcacheOperation(crate::models::record_flows::MemcacheOperation),
     /// HTTP Request - Format (0,2206)
     HttpRequest(crate::models::record_flows::HttpRequest),
     /// Extended Proxy Request - Format (0,2207)
@@ -443,6 +445,8 @@ pub enum CounterData {
     JvmRuntime(crate::models::record_counters::JvmRuntime),
     /// JVM Statistics - Format (0,2106)
     JvmStatistics(crate::models::record_counters::JvmStatistics),
+    /// Memcache Counters - Format (0,2204)
+    MemcacheCounters(crate::models::record_counters::MemcacheCounters),
     /// Unknown or unparsed format
     Unknown { format: DataFormat, data: Vec<u8> },
 }
