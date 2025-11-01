@@ -166,6 +166,43 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse LAG Port Statistics - Format (0,7)
+    pub(super) fn parse_lag_port_stats(
+        &mut self,
+    ) -> Result<crate::models::record_counters::LagPortStats> {
+        // Read actor system ID (MAC address - 6 bytes)
+        let mut actor_system_id = [0u8; 6];
+        self.reader.read_exact(&mut actor_system_id)?;
+
+        // Read partner operational system ID (MAC address - 6 bytes)
+        let mut partner_oper_system_id = [0u8; 6];
+        self.reader.read_exact(&mut partner_oper_system_id)?;
+
+        // Read attached aggregator ID
+        let dot3ad_agg_port_attached_agg_id = self.read_u32()?;
+
+        // Read port state (4 bytes fixed array)
+        let mut dot3ad_agg_port_state = [0u8; 4];
+        self.reader.read_exact(&mut dot3ad_agg_port_state)?;
+
+        Ok(crate::models::record_counters::LagPortStats {
+            dot3ad_agg_port_actor_system_id: crate::models::MacAddress::from(actor_system_id),
+            dot3ad_agg_port_partner_oper_system_id: crate::models::MacAddress::from(
+                partner_oper_system_id,
+            ),
+            dot3ad_agg_port_attached_agg_id,
+            dot3ad_agg_port_state,
+            dot3ad_agg_port_stats_lacpd_us_rx: self.read_u32()?,
+            dot3ad_agg_port_stats_marker_pdus_rx: self.read_u32()?,
+            dot3ad_agg_port_stats_marker_response_pdus_rx: self.read_u32()?,
+            dot3ad_agg_port_stats_unknown_rx: self.read_u32()?,
+            dot3ad_agg_port_stats_illegal_rx: self.read_u32()?,
+            dot3ad_agg_port_stats_lacpd_us_tx: self.read_u32()?,
+            dot3ad_agg_port_stats_marker_pdus_tx: self.read_u32()?,
+            dot3ad_agg_port_stats_marker_response_pdus_tx: self.read_u32()?,
+        })
+    }
+
     /// Parse Processor Counters - Format (0,1001)
     pub(super) fn parse_processor_counters(
         &mut self,
@@ -606,6 +643,7 @@ impl<R: Read> Parser<R> {
                 )),
                 5 => Ok(CounterData::Vlan(parser.parse_vlan_counters()?)),
                 6 => Ok(CounterData::Ieee80211(parser.parse_ieee80211_counters()?)),
+                7 => Ok(CounterData::LagPortStats(parser.parse_lag_port_stats()?)),
                 1001 => Ok(CounterData::Processor(parser.parse_processor_counters()?)),
                 1002 => Ok(CounterData::RadioUtilization(
                     parser.parse_radio_utilization()?,

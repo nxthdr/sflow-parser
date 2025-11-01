@@ -34,7 +34,7 @@ The main specification is [sFlow Version 5](https://sflow.org/sflow_version_5.tx
 | 2011 | [sFlow Memcache Structures](https://sflow.org/sflow_memcache.txt) | Memcache performance metrics | ⬜ |
 | 2012 | [sFlow NVML GPU Structures](https://sflow.org/sflow_nvml.txt) | NVIDIA GPU performance, status, and health | ⬜ |
 | 2012 | [sFlow Application Structures](https://sflow.org/sflow_application.txt) | Application resource monitoring | ✅ |
-| 2012 | [sFlow LAG Counters Structure](https://sflow.org/sflow_lag.txt) | IEEE 802.1AX Link Aggregation (LACP) | ⬜ |
+| 2012 | [sFlow LAG Counters Structure](https://sflow.org/sflow_lag.txt) | IEEE 802.1AX Link Aggregation (LACP) | ✅ |
 | 2012 | [sFlow Tunnel Structures](https://sflow.org/sflow_tunnels.txt) | Encapsulation/decapsulation (VXLAN, GRE, etc.) | ✅ |
 | 2012 | [sFlow Port NAT Structures](https://sflow.org/sflow_pnat.txt) | Port-based NAT mapping | ⬜ |
 | 2013 | [sFlow InfiniBand Structures](https://sflow.org/draft_sflow_infiniband_2.txt) | InfiniBand network monitoring | ⬜ |
@@ -143,7 +143,7 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 4 | 100BaseVG Interface | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
 | 0 | 5 | VLAN | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
 | 0 | 6 | IEEE 802.11 Counters | [sFlow 802.11](https://sflow.org/sflow_80211.txt) | ✅ |
-| 0 | 7 | LAG Port Stats | [sFlow LAG](https://sflow.org/sflow_lag.txt) | ⬜ |
+| 0 | 7 | LAG Port Stats | [sFlow LAG](https://sflow.org/sflow_lag.txt) | ✅ |
 | 0 | 8 | Slow Path Counts | [sFlow Discussion](https://groups.google.com/g/sflow/c/4JM1_Mmoz7w) | ⬜ |
 | 0 | 9 | InfiniBand Counters | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ⬜ |
 | 0 | 10 | Optical SFP/QSFP | [sFlow Optics](https://sflow.org/sflow_optics.txt) | ⬜ |
@@ -186,9 +186,9 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 4413 | 3 | Broadcom ASIC Tables | [sFlow Broadcom](https://sflow.org/sflow_broadcom_tables.txt) | ⬜ |
 | 5703 | 1 | NVIDIA GPU | [sFlow NVML](https://sflow.org/sflow_nvml.txt) | ⬜ |
 
-## Serialization / Deserialization support
+## Serialization / Deserialization Support
 
-Enables serialization and deserialization support for all sFlow data structures using [serde](https://serde.rs/). This allows you to easily convert parsed sFlow data to/from JSON, YAML, or any other format supported by serde.
+Enables serialization and deserialization support for all sFlow data structures using [serde](https://serde.rs/). This allows you to easily convert parsed sFlow data to and from JSON, YAML, or any other format supported by serde.
 
 ```toml
 [dependencies]

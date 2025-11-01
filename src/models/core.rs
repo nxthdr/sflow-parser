@@ -379,6 +379,8 @@ pub enum CounterData {
     Vlan(crate::models::record_counters::VlanCounters),
     /// IEEE 802.11 Counters - Format (0,6)
     Ieee80211(crate::models::record_counters::Ieee80211Counters),
+    /// LAG Port Statistics - Format (0,7)
+    LagPortStats(crate::models::record_counters::LagPortStats),
     /// Processor Counters - Format (0,1001)
     Processor(crate::models::record_counters::ProcessorCounters),
     /// Radio Utilization - Format (0,1002)

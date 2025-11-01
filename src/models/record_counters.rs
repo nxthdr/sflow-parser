@@ -364,6 +364,81 @@ pub struct Ieee80211Counters {
     pub dot11_qos_cf_polls_lost_count: u32,
 }
 
+/// LAG Port Statistics - Format (0,7)
+///
+/// Link Aggregation (LAG) port statistics based on IEEE 802.1AX
+///
+/// # XDR Definition ([sFlow LAG](https://sflow.org/sflow_lag.txt))
+///
+/// ```text
+/// /* LAG Port Statistics - see IEEE8023-LAG-MIB */
+/// /* opaque = counter_data; enterprise = 0; format = 7 */
+///
+/// struct lag_port_stats {
+///   mac dot3adAggPortActorSystemID;
+///   mac dot3adAggPortPartnerOperSystemID;
+///   unsigned int dot3adAggPortAttachedAggID;
+///   opaque dot3adAggPortState[4]; /*
+///                              Bytes are assigned in following order:
+///                              byte 0, value dot3adAggPortActorAdminState
+///                              byte 1, value dot3adAggPortActorOperState
+///                              byte 2, value dot3adAggPortPartnerAdminState
+///                              byte 3, value dot3adAggPortPartnerOperState
+///                                  */
+///   unsigned int dot3adAggPortStatsLACPDUsRx;
+///   unsigned int dot3adAggPortStatsMarkerPDUsRx;
+///   unsigned int dot3adAggPortStatsMarkerResponsePDUsRx;
+///   unsigned int dot3adAggPortStatsUnknownRx;
+///   unsigned int dot3adAggPortStatsIllegalRx;
+///   unsigned int dot3adAggPortStatsLACPDUsTx;
+///   unsigned int dot3adAggPortStatsMarkerPDUsTx;
+///   unsigned int dot3adAggPortStatsMarkerResponsePDUsTx;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct LagPortStats {
+    /// Actor system ID (MAC address)
+    pub dot3ad_agg_port_actor_system_id: crate::models::MacAddress,
+
+    /// Partner operational system ID (MAC address)
+    pub dot3ad_agg_port_partner_oper_system_id: crate::models::MacAddress,
+
+    /// Attached aggregator ID
+    pub dot3ad_agg_port_attached_agg_id: u32,
+
+    /// Port state (4 bytes):
+    /// - byte 0: dot3adAggPortActorAdminState
+    /// - byte 1: dot3adAggPortActorOperState
+    /// - byte 2: dot3adAggPortPartnerAdminState
+    /// - byte 3: dot3adAggPortPartnerOperState
+    pub dot3ad_agg_port_state: [u8; 4],
+
+    /// LACP PDUs received
+    pub dot3ad_agg_port_stats_lacpd_us_rx: u32,
+
+    /// Marker PDUs received
+    pub dot3ad_agg_port_stats_marker_pdus_rx: u32,
+
+    /// Marker response PDUs received
+    pub dot3ad_agg_port_stats_marker_response_pdus_rx: u32,
+
+    /// Unknown PDUs received
+    pub dot3ad_agg_port_stats_unknown_rx: u32,
+
+    /// Illegal PDUs received
+    pub dot3ad_agg_port_stats_illegal_rx: u32,
+
+    /// LACP PDUs transmitted
+    pub dot3ad_agg_port_stats_lacpd_us_tx: u32,
+
+    /// Marker PDUs transmitted
+    pub dot3ad_agg_port_stats_marker_pdus_tx: u32,
+
+    /// Marker response PDUs transmitted
+    pub dot3ad_agg_port_stats_marker_response_pdus_tx: u32,
+}
+
 /// Processor Counters - Format (0,1001)
 ///
 /// CPU and memory utilization

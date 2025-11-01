@@ -241,6 +241,72 @@ fn test_parse_ieee80211_counters() {
 }
 
 #[test]
+fn test_parse_lag_port_stats() {
+    // LAG Port Stats: 2 MAC (6 bytes each) + 1 u32 + 4 bytes state + 8 u32 = 52 bytes
+    let record_data = [
+        // Actor system ID (MAC address)
+        0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E,
+        // Partner operational system ID (MAC address)
+        0x00, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, // Attached aggregator ID
+        0x00, 0x00, 0x00, 0x01, // dot3ad_agg_port_attached_agg_id = 1
+        // Port state (4 bytes)
+        0x01, // byte 0: dot3adAggPortActorAdminState
+        0x02, // byte 1: dot3adAggPortActorOperState
+        0x03, // byte 2: dot3adAggPortPartnerAdminState
+        0x04, // byte 3: dot3adAggPortPartnerOperState
+        // Statistics
+        0x00, 0x00, 0x03, 0xE8, // dot3ad_agg_port_stats_lacpd_us_rx = 1000
+        0x00, 0x00, 0x00, 0x0A, // dot3ad_agg_port_stats_marker_pdus_rx = 10
+        0x00, 0x00, 0x00, 0x05, // dot3ad_agg_port_stats_marker_response_pdus_rx = 5
+        0x00, 0x00, 0x00, 0x02, // dot3ad_agg_port_stats_unknown_rx = 2
+        0x00, 0x00, 0x00, 0x01, // dot3ad_agg_port_stats_illegal_rx = 1
+        0x00, 0x00, 0x02, 0xEE, // dot3ad_agg_port_stats_lacpd_us_tx = 750
+        0x00, 0x00, 0x00, 0x08, // dot3ad_agg_port_stats_marker_pdus_tx = 8
+        0x00, 0x00, 0x00, 0x04, // dot3ad_agg_port_stats_marker_response_pdus_tx = 4
+    ];
+
+    let data = build_counter_sample_test(0x0007, &record_data); // record type = 7
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::LagPortStats(lag) => {
+                    // Verify MAC addresses
+                    assert_eq!(
+                        lag.dot3ad_agg_port_actor_system_id.as_bytes(),
+                        &[0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E]
+                    );
+                    assert_eq!(
+                        lag.dot3ad_agg_port_partner_oper_system_id.as_bytes(),
+                        &[0x00, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE]
+                    );
+                    // Verify aggregator ID
+                    assert_eq!(lag.dot3ad_agg_port_attached_agg_id, 1);
+                    // Verify port state
+                    assert_eq!(lag.dot3ad_agg_port_state, [0x01, 0x02, 0x03, 0x04]);
+                    // Verify statistics
+                    assert_eq!(lag.dot3ad_agg_port_stats_lacpd_us_rx, 1000);
+                    assert_eq!(lag.dot3ad_agg_port_stats_marker_pdus_rx, 10);
+                    assert_eq!(lag.dot3ad_agg_port_stats_marker_response_pdus_rx, 5);
+                    assert_eq!(lag.dot3ad_agg_port_stats_unknown_rx, 2);
+                    assert_eq!(lag.dot3ad_agg_port_stats_illegal_rx, 1);
+                    assert_eq!(lag.dot3ad_agg_port_stats_lacpd_us_tx, 750);
+                    assert_eq!(lag.dot3ad_agg_port_stats_marker_pdus_tx, 8);
+                    assert_eq!(lag.dot3ad_agg_port_stats_marker_response_pdus_tx, 4);
+                }
+                _ => panic!("Expected LagPortStats"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
 fn test_parse_processor_counters() {
     // Processor counters: 3 u32 + 2 u64 = 28 bytes
     let record_data = [
