@@ -641,6 +641,44 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse JVM Runtime - Format (0,2105)
+    pub(super) fn parse_jvm_runtime(
+        &mut self,
+    ) -> Result<crate::models::record_counters::JvmRuntime> {
+        Ok(crate::models::record_counters::JvmRuntime {
+            vm_name: self.read_string()?,
+            vm_vendor: self.read_string()?,
+            vm_version: self.read_string()?,
+        })
+    }
+
+    /// Parse JVM Statistics - Format (0,2106)
+    pub(super) fn parse_jvm_statistics(
+        &mut self,
+    ) -> Result<crate::models::record_counters::JvmStatistics> {
+        Ok(crate::models::record_counters::JvmStatistics {
+            heap_initial: self.read_u64()?,
+            heap_used: self.read_u64()?,
+            heap_committed: self.read_u64()?,
+            heap_max: self.read_u64()?,
+            non_heap_initial: self.read_u64()?,
+            non_heap_used: self.read_u64()?,
+            non_heap_committed: self.read_u64()?,
+            non_heap_max: self.read_u64()?,
+            gc_count: self.read_u32()?,
+            gc_time: self.read_u32()?,
+            classes_loaded: self.read_u32()?,
+            classes_total: self.read_u32()?,
+            classes_unloaded: self.read_u32()?,
+            compilation_time: self.read_u32()?,
+            thread_num_live: self.read_u32()?,
+            thread_num_daemon: self.read_u32()?,
+            thread_num_started: self.read_u32()?,
+            fd_open_count: self.read_u32()?,
+            fd_max_count: self.read_u32()?,
+        })
+    }
+
     /// Parse counter data based on format
     pub(super) fn parse_counter_data(
         &mut self,
@@ -695,6 +733,8 @@ impl<R: Read> Parser<R> {
                 2102 => Ok(CounterData::VirtualMemory(parser.parse_virtual_memory()?)),
                 2103 => Ok(CounterData::VirtualDiskIo(parser.parse_virtual_disk_io()?)),
                 2104 => Ok(CounterData::VirtualNetIo(parser.parse_virtual_net_io()?)),
+                2105 => Ok(CounterData::JvmRuntime(parser.parse_jvm_runtime()?)),
+                2106 => Ok(CounterData::JvmStatistics(parser.parse_jvm_statistics()?)),
                 2201 => Ok(CounterData::HttpCounters(parser.parse_http_counters()?)),
                 2202 => Ok(CounterData::AppOperations(parser.parse_app_operations()?)),
                 2203 => Ok(CounterData::AppResources(parser.parse_app_resources()?)),

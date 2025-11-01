@@ -1332,3 +1332,110 @@ fn test_parse_app_workers() {
         _ => panic!("Expected CountersSample"),
     }
 }
+
+#[test]
+fn test_parse_jvm_runtime() {
+    // JVM Runtime: 3 strings with lengths and padding
+    // vm_name: "Java HotSpot" (12 chars) -> 4 + 12 + 0 = 16 bytes
+    // vm_vendor: "Oracle" (6 chars) -> 4 + 6 + 2 = 12 bytes
+    // vm_version: "11.0.12" (7 chars) -> 4 + 7 + 1 = 12 bytes
+    // Total: 40 bytes
+    let record_data = [
+        // vm_name length and data
+        0x00, 0x00, 0x00, 0x0C, // length = 12
+        b'J', b'a', b'v', b'a', b' ', b'H', b'o', b't', b'S', b'p', b'o', b't',
+        // vm_vendor length and data
+        0x00, 0x00, 0x00, 0x06, // length = 6
+        b'O', b'r', b'a', b'c', b'l', b'e', 0x00, 0x00, // padding
+        // vm_version length and data
+        0x00, 0x00, 0x00, 0x07, // length = 7
+        b'1', b'1', b'.', b'0', b'.', b'1', b'2', 0x00, // padding
+    ];
+
+    let data = build_counter_sample_test(0x0839, &record_data); // record type = 2105
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::JvmRuntime(jvm) => {
+                    assert_eq!(jvm.vm_name, "Java HotSpot");
+                    assert_eq!(jvm.vm_vendor, "Oracle");
+                    assert_eq!(jvm.vm_version, "11.0.12");
+                }
+                _ => panic!("Expected JvmRuntime"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_jvm_statistics() {
+    // JVM Statistics: 8 u64 + 11 u32 = 108 bytes
+    let record_data = [
+        // Heap memory (4 u64)
+        0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, // heap_initial = 256MB
+        0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, // heap_used = 128MB
+        0x00, 0x00, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00, // heap_committed = 192MB
+        0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, // heap_max = 512MB
+        // Non-heap memory (4 u64)
+        0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, // non_heap_initial = 64MB
+        0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, // non_heap_used = 48MB
+        0x00, 0x00, 0x00, 0x00, 0x03, 0x80, 0x00, 0x00, // non_heap_committed = 56MB
+        0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, // non_heap_max = 128MB
+        // GC and class statistics (11 u32)
+        0x00, 0x00, 0x00, 0x64, // gc_count = 100
+        0x00, 0x00, 0x03, 0xE8, // gc_time = 1000ms
+        0x00, 0x00, 0x0F, 0xA0, // classes_loaded = 4000
+        0x00, 0x00, 0x10, 0x00, // classes_total = 4096
+        0x00, 0x00, 0x00, 0x60, // classes_unloaded = 96
+        0x00, 0x00, 0x01, 0xF4, // compilation_time = 500ms
+        0x00, 0x00, 0x00, 0x14, // thread_num_live = 20
+        0x00, 0x00, 0x00, 0x05, // thread_num_daemon = 5
+        0x00, 0x00, 0x00, 0x32, // thread_num_started = 50
+        0x00, 0x00, 0x00, 0x64, // fd_open_count = 100
+        0x00, 0x00, 0x04, 0x00, // fd_max_count = 1024
+    ];
+
+    let data = build_counter_sample_test(0x083A, &record_data); // record type = 2106
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::JvmStatistics(jvm) => {
+                    assert_eq!(jvm.heap_initial, 268_435_456); // 256MB
+                    assert_eq!(jvm.heap_used, 134_217_728); // 128MB
+                    assert_eq!(jvm.heap_committed, 201_326_592); // 192MB
+                    assert_eq!(jvm.heap_max, 536_870_912); // 512MB
+                    assert_eq!(jvm.non_heap_initial, 67_108_864); // 64MB
+                    assert_eq!(jvm.non_heap_used, 50_331_648); // 48MB
+                    assert_eq!(jvm.non_heap_committed, 58_720_256); // 56MB
+                    assert_eq!(jvm.non_heap_max, 134_217_728); // 128MB
+                    assert_eq!(jvm.gc_count, 100);
+                    assert_eq!(jvm.gc_time, 1000);
+                    assert_eq!(jvm.classes_loaded, 4000);
+                    assert_eq!(jvm.classes_total, 4096);
+                    assert_eq!(jvm.classes_unloaded, 96);
+                    assert_eq!(jvm.compilation_time, 500);
+                    assert_eq!(jvm.thread_num_live, 20);
+                    assert_eq!(jvm.thread_num_daemon, 5);
+                    assert_eq!(jvm.thread_num_started, 50);
+                    assert_eq!(jvm.fd_open_count, 100);
+                    assert_eq!(jvm.fd_max_count, 1024);
+                }
+                _ => panic!("Expected JvmStatistics"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}

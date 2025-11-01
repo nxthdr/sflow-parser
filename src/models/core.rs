@@ -439,6 +439,10 @@ pub enum CounterData {
     AppResources(crate::models::record_counters::AppResources),
     /// App Workers - Format (0,2206)
     AppWorkers(crate::models::record_counters::AppWorkers),
+    /// JVM Runtime - Format (0,2105)
+    JvmRuntime(crate::models::record_counters::JvmRuntime),
+    /// JVM Statistics - Format (0,2106)
+    JvmStatistics(crate::models::record_counters::JvmStatistics),
     /// Unknown or unparsed format
     Unknown { format: DataFormat, data: Vec<u8> },
 }

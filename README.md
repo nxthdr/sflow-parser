@@ -30,7 +30,7 @@ The main specification is [sFlow Version 5](https://sflow.org/sflow_version_5.tx
 | 2007 | [sFlow 802.11 Structures](https://sflow.org/sflow_80211.txt) | Wireless/802.11 monitoring extensions | ✅ |
 | 2010 | [sFlow Host Structures](https://sflow.org/sflow_host.txt) | Host and virtual machine performance metrics | ✅ |
 | 2011 | [sFlow HTTP Structures](https://sflow.org/sflow_http.txt) | HTTP performance metrics | ✅ |
-| 2011 | [sFlow Java Virtual Machine Structures](https://sflow.org/sflow_jvm.txt) | JVM performance metrics | ⬜ |
+| 2011 | [sFlow Java Virtual Machine Structures](https://sflow.org/sflow_jvm.txt) | JVM performance metrics | ✅ |
 | 2011 | [sFlow Memcache Structures](https://sflow.org/sflow_memcache.txt) | Memcache performance metrics | ⬜ |
 | 2012 | [sFlow NVML GPU Structures](https://sflow.org/sflow_nvml.txt) | NVIDIA GPU performance, status, and health | ⬜ |
 | 2012 | [sFlow Application Structures](https://sflow.org/sflow_application.txt) | Application resource monitoring | ✅ |
@@ -168,8 +168,8 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 2102 | Virtual Memory | [sFlow Host](https://sflow.org/sflow_host.txt) | ✅ |
 | 0 | 2103 | Virtual Disk I/O | [sFlow Host](https://sflow.org/sflow_host.txt) | ✅ |
 | 0 | 2104 | Virtual Network I/O | [sFlow Host](https://sflow.org/sflow_host.txt) | ✅ |
-| 0 | 2105 | JVM Runtime | [sFlow JVM](https://sflow.org/sflow_jvm.txt) | ⬜ |
-| 0 | 2106 | JVM Statistics | [sFlow JVM](https://sflow.org/sflow_jvm.txt) | ⬜ |
+| 0 | 2105 | JVM Runtime | [sFlow JVM](https://sflow.org/sflow_jvm.txt) | ✅ |
+| 0 | 2106 | JVM Statistics | [sFlow JVM](https://sflow.org/sflow_jvm.txt) | ✅ |
 | 0 | 2200 | Memcache Counters (deprecated) | [sFlow Discussion](https://groups.google.com/g/sflow/c/KDk_QrxCSJI) | ⬜ 🪦 |
 | 0 | 2201 | HTTP Counters | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ✅ |
 | 0 | 2202 | App Operations | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
