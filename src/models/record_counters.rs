@@ -512,6 +512,96 @@ pub struct InfiniBandCounters {
     pub vl15_dropped: u32,
 }
 
+/// Optical Lane - Format (0,10)
+///
+/// Optical lane statistics for a single lane within an optical module
+///
+/// # XDR Definition ([sFlow Optics](https://sflow.org/sflow_optics.txt))
+///
+/// ```text
+/// struct lane {
+///   unsigned int index; /* 1-based index of lane within module, 0=unknown */
+///   unsigned int tx_bias_current; /* microamps */
+///   unsigned int tx_power;        /* microwatts */
+///   unsigned int tx_power_min;    /* microwatts */
+///   unsigned int tx_power_max;    /* microwatts */
+///   unsigned int tx_wavelength;   /* nanometers */
+///   unsigned int rx_power;        /* microwatts */
+///   unsigned int rx_power_min;    /* microwatts */
+///   unsigned int rx_power_max;    /* microwatts */
+///   unsigned int rx_wavelength;   /* nanometers */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct Lane {
+    /// 1-based index of lane within module, 0=unknown
+    pub index: u32,
+
+    /// Transmit bias current in microamps
+    pub tx_bias_current: u32,
+
+    /// Transmit power in microwatts
+    pub tx_power: u32,
+
+    /// Minimum transmit power in microwatts
+    pub tx_power_min: u32,
+
+    /// Maximum transmit power in microwatts
+    pub tx_power_max: u32,
+
+    /// Transmit wavelength in nanometers
+    pub tx_wavelength: u32,
+
+    /// Receive power in microwatts
+    pub rx_power: u32,
+
+    /// Minimum receive power in microwatts
+    pub rx_power_min: u32,
+
+    /// Maximum receive power in microwatts
+    pub rx_power_max: u32,
+
+    /// Receive wavelength in nanometers
+    pub rx_wavelength: u32,
+}
+
+/// Optical SFP/QSFP Counters - Format (0,10)
+///
+/// Optical interface module statistics for pluggable optical modules (SFP, QSFP, etc.)
+///
+/// # XDR Definition ([sFlow Optics](https://sflow.org/sflow_optics.txt))
+///
+/// ```text
+/// /* Optical SFP / QSFP metrics */
+/// /* opaque = counter_data; enterprise=0; format=10 */
+/// struct sfp {
+///   unsigned int module_id;
+///   unsigned int module_num_lanes;      /* total number of lanes in module */
+///   unsigned int module_supply_voltage; /* millivolts */
+///   int module_temperature;             /* thousandths of a degree Celsius */
+///   lane<> lanes;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct OpticalSfpQsfp {
+    /// Module identifier (ifIndex of module or lowest ifIndex of ports sharing module)
+    pub module_id: u32,
+
+    /// Total number of lanes in module
+    pub module_num_lanes: u32,
+
+    /// Module supply voltage in millivolts
+    pub module_supply_voltage: u32,
+
+    /// Module temperature in thousandths of a degree Celsius
+    pub module_temperature: i32,
+
+    /// Array of optical lane statistics
+    pub lanes: Vec<Lane>,
+}
+
 /// Processor Counters - Format (0,1001)
 ///
 /// CPU and memory utilization

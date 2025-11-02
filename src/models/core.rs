@@ -394,6 +394,8 @@ pub enum CounterData {
     LagPortStats(crate::models::record_counters::LagPortStats),
     /// InfiniBand Counters - Format (0,9)
     InfiniBandCounters(crate::models::record_counters::InfiniBandCounters),
+    /// Optical SFP/QSFP Counters - Format (0,10)
+    OpticalSfpQsfp(crate::models::record_counters::OpticalSfpQsfp),
     /// Processor Counters - Format (0,1001)
     Processor(crate::models::record_counters::ProcessorCounters),
     /// Radio Utilization - Format (0,1002)

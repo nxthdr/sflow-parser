@@ -7,4 +7,4 @@
 /tests/fuzz/coverage
 
 # Validation specs cache
-/tests/validation/specs/
+/tests/specs/cache/

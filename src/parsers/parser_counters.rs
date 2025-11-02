@@ -225,6 +225,47 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Optical Lane
+    fn parse_lane(&mut self) -> Result<crate::models::record_counters::Lane> {
+        Ok(crate::models::record_counters::Lane {
+            index: self.read_u32()?,
+            tx_bias_current: self.read_u32()?,
+            tx_power: self.read_u32()?,
+            tx_power_min: self.read_u32()?,
+            tx_power_max: self.read_u32()?,
+            tx_wavelength: self.read_u32()?,
+            rx_power: self.read_u32()?,
+            rx_power_min: self.read_u32()?,
+            rx_power_max: self.read_u32()?,
+            rx_wavelength: self.read_u32()?,
+        })
+    }
+
+    /// Parse Optical SFP/QSFP Counters - Format (0,10)
+    pub(super) fn parse_optical_sfp_qsfp(
+        &mut self,
+    ) -> Result<crate::models::record_counters::OpticalSfpQsfp> {
+        let module_id = self.read_u32()?;
+        let module_num_lanes = self.read_u32()?;
+        let module_supply_voltage = self.read_u32()?;
+        let module_temperature = self.read_i32()?;
+
+        // Parse variable-length array of lanes
+        let num_lanes = self.read_u32()?;
+        let mut lanes = Vec::with_capacity(num_lanes as usize);
+        for _ in 0..num_lanes {
+            lanes.push(self.parse_lane()?);
+        }
+
+        Ok(crate::models::record_counters::OpticalSfpQsfp {
+            module_id,
+            module_num_lanes,
+            module_supply_voltage,
+            module_temperature,
+            lanes,
+        })
+    }
+
     /// Parse Processor Counters - Format (0,1001)
     pub(super) fn parse_processor_counters(
         &mut self,
@@ -847,6 +888,9 @@ impl<R: Read> Parser<R> {
                 7 => Ok(CounterData::LagPortStats(parser.parse_lag_port_stats()?)),
                 9 => Ok(CounterData::InfiniBandCounters(
                     parser.parse_infiniband_counters()?,
+                )),
+                10 => Ok(CounterData::OpticalSfpQsfp(
+                    parser.parse_optical_sfp_qsfp()?,
                 )),
                 1001 => Ok(CounterData::Processor(parser.parse_processor_counters()?)),
                 1002 => Ok(CounterData::RadioUtilization(

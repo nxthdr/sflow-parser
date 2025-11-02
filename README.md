@@ -42,7 +42,7 @@ The main specification is [sFlow Version 5](https://sflow.org/sflow_version_5.tx
 | 2015 | [sFlow Host TCP/IP Counters](https://sflow.org/sflow_host_ip.txt) | Host IP, ICMP, TCP, and UDP counters | ✅ |
 | 2015 | [sFlow Broadcom ASIC Table Utilization](https://sflow.org/sflow_broadcom_tables.txt) | Hardware table utilization for Broadcom ASICs | ✅ |
 | 2015 | [sFlow Broadcom Buffer Utilization](https://sflow.org/bv-sflow.txt) | Buffer utilization for Broadcom switches | ✅ |
-| 2016 | [sFlow Optical Interface Structures](https://sflow.org/sflow_optics.txt) | Pluggable optical modules (SFP, QSFP, etc.) | ⬜ |
+| 2016 | [sFlow Optical Interface Structures](https://sflow.org/sflow_optics.txt) | Pluggable optical modules (SFP, QSFP, etc.) | ✅ |
 | 2020 | [sFlow Dropped Packet Notification](https://sflow.org/sflow_drops.txt) | Reports on dropped packets with reason codes | ✅ |
 | 2021 | [sFlow Transit Delay Structures](https://sflow.org/sflow_transit.txt) | Delay and queue depth for sampled packets | ✅ |
 
@@ -146,7 +146,7 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 7 | LAG Port Stats | [sFlow LAG](https://sflow.org/sflow_lag.txt) | ✅ |
 | 0 | 8 | Slow Path Counts | [sFlow Discussion](https://groups.google.com/g/sflow/c/4JM1_Mmoz7w) | ⬜ |
 | 0 | 9 | InfiniBand Counters | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ✅ |
-| 0 | 10 | Optical SFP/QSFP | [sFlow Optics](https://sflow.org/sflow_optics.txt) | ⬜ |
+| 0 | 10 | Optical SFP/QSFP | [sFlow Optics](https://sflow.org/sflow_optics.txt) | ✅ |
 | 0 | 1001 | Processor | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
 | 0 | 1002 | Radio Utilization | [sFlow 802.11](https://sflow.org/sflow_80211.txt) | ✅ |
 | 0 | 1003 | Queue Length | [sFlow Discussion](http://groups.google.com/group/sflow/browse_thread/thread/773d27b17a81600c) | ⬜ |

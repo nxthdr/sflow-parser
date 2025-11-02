@@ -360,6 +360,90 @@ fn test_parse_infiniband_counters() {
 }
 
 #[test]
+fn test_parse_optical_sfp_qsfp() {
+    // Optical SFP/QSFP Counters: 4 fields + variable lanes array
+    // module_id (u32) + module_num_lanes (u32) + module_supply_voltage (u32) + module_temperature (i32)
+    // + num_lanes (u32) + lanes (2 lanes * 10 u32 each = 20 u32)
+    // Total: 4 + 1 + 80 = 85 u32 = 340 bytes
+    let record_data = vec![
+        0x00, 0x00, 0x00, 0x01, // module_id = 1
+        0x00, 0x00, 0x00, 0x04, // module_num_lanes = 4
+        0x00, 0x00, 0x0C, 0xE4, // module_supply_voltage = 3300 millivolts
+        0x00, 0x00, 0x61, 0xA8, // module_temperature = 25000 (25 degrees C)
+        0x00, 0x00, 0x00, 0x02, // num_lanes = 2
+        // Lane 1
+        0x00, 0x00, 0x00, 0x01, // index = 1
+        0x00, 0x00, 0x00, 0x64, // tx_bias_current = 100 microamps
+        0x00, 0x00, 0x03, 0xE8, // tx_power = 1000 microwatts
+        0x00, 0x00, 0x03, 0x84, // tx_power_min = 900 microwatts
+        0x00, 0x00, 0x04, 0x4C, // tx_power_max = 1100 microwatts
+        0x00, 0x00, 0x05, 0x28, // tx_wavelength = 1320 nanometers
+        0x00, 0x00, 0x03, 0xD0, // rx_power = 976 microwatts
+        0x00, 0x00, 0x03, 0x70, // rx_power_min = 880 microwatts
+        0x00, 0x00, 0x04, 0x38, // rx_power_max = 1080 microwatts
+        0x00, 0x00, 0x05, 0x28, // rx_wavelength = 1320 nanometers
+        // Lane 2
+        0x00, 0x00, 0x00, 0x02, // index = 2
+        0x00, 0x00, 0x00, 0x66, // tx_bias_current = 102 microamps
+        0x00, 0x00, 0x03, 0xF2, // tx_power = 1010 microwatts
+        0x00, 0x00, 0x03, 0x8E, // tx_power_min = 910 microwatts
+        0x00, 0x00, 0x04, 0x56, // tx_power_max = 1110 microwatts
+        0x00, 0x00, 0x05, 0x28, // tx_wavelength = 1320 nanometers
+        0x00, 0x00, 0x03, 0xDA, // rx_power = 986 microwatts
+        0x00, 0x00, 0x03, 0x7A, // rx_power_min = 890 microwatts
+        0x00, 0x00, 0x04, 0x42, // rx_power_max = 1090 microwatts
+        0x00, 0x00, 0x05, 0x28, // rx_wavelength = 1320 nanometers
+    ];
+
+    let data = build_counter_sample_test(0x000A, &record_data); // record type = 10
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::OpticalSfpQsfp(optical) => {
+                    assert_eq!(optical.module_id, 1);
+                    assert_eq!(optical.module_num_lanes, 4);
+                    assert_eq!(optical.module_supply_voltage, 3300);
+                    assert_eq!(optical.module_temperature, 25000);
+                    assert_eq!(optical.lanes.len(), 2);
+
+                    // Verify lane 1
+                    assert_eq!(optical.lanes[0].index, 1);
+                    assert_eq!(optical.lanes[0].tx_bias_current, 100);
+                    assert_eq!(optical.lanes[0].tx_power, 1000);
+                    assert_eq!(optical.lanes[0].tx_power_min, 900);
+                    assert_eq!(optical.lanes[0].tx_power_max, 1100);
+                    assert_eq!(optical.lanes[0].tx_wavelength, 1320);
+                    assert_eq!(optical.lanes[0].rx_power, 976);
+                    assert_eq!(optical.lanes[0].rx_power_min, 880);
+                    assert_eq!(optical.lanes[0].rx_power_max, 1080);
+                    assert_eq!(optical.lanes[0].rx_wavelength, 1320);
+
+                    // Verify lane 2
+                    assert_eq!(optical.lanes[1].index, 2);
+                    assert_eq!(optical.lanes[1].tx_bias_current, 102);
+                    assert_eq!(optical.lanes[1].tx_power, 1010);
+                    assert_eq!(optical.lanes[1].tx_power_min, 910);
+                    assert_eq!(optical.lanes[1].tx_power_max, 1110);
+                    assert_eq!(optical.lanes[1].tx_wavelength, 1320);
+                    assert_eq!(optical.lanes[1].rx_power, 986);
+                    assert_eq!(optical.lanes[1].rx_power_min, 890);
+                    assert_eq!(optical.lanes[1].rx_power_max, 1090);
+                    assert_eq!(optical.lanes[1].rx_wavelength, 1320);
+                }
+                _ => panic!("Expected OpticalSfpQsfp"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
 fn test_parse_processor_counters() {
     // Processor counters: 3 u32 + 2 u64 = 28 bytes
     let record_data = [
