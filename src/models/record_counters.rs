@@ -2009,6 +2009,167 @@ pub struct AppWorkers {
     pub req_dropped: u32,
 }
 
+/// Broadcom Switch ASIC Table Utilization - Format (4413,3)
+///
+/// Table utilization statistics from Broadcom switch ASICs
+///
+/// # XDR Definition ([sFlow Broadcom Tables](https://sflow.org/sflow_broadcom_tables.txt))
+///
+/// ```text
+/// /* Table utilizations */
+/// /* utilization of ASIC hardware tables */
+/// /* opaque = counter_data; enterprise = 4413; format = 3 */
+/// struct hw_tables {
+///   unsigned int host_entries;
+///   unsigned int host_entries_max;
+///   unsigned int ipv4_entries;
+///   unsigned int ipv4_entries_max;
+///   unsigned int ipv6_entries;
+///   unsigned int ipv6_entries_max;
+///   unsigned int ipv4_ipv6_entries;
+///   unsigned int ipv6_ipv6_entries_max;
+///   unsigned int long_ipv6_entries;
+///   unsigned int long_ipv6_entries_max;
+///   unsigned int total_routes;
+///   unsigned int total_routes_max;
+///   unsigned int ecmp_nexthops;
+///   unsigned int ecmp_nexthops_max;
+///   unsigned int mac_entries;
+///   unsigned int mac_entries_max;
+///   unsigned int ipv4_neighbors;
+///   unsigned int ipv6_neighbors;
+///   unsigned int ipv4_routes;
+///   unsigned int ipv6_routes;
+///   unsigned int acl_ingress_entries;
+///   unsigned int acl_ingress_entries_max;
+///   unsigned int acl_ingress_counters;
+///   unsigned int acl_ingress_counters_max;
+///   unsigned int acl_ingress_meters;
+///   unsigned int acl_ingress_meters_max;
+///   unsigned int acl_ingress_slices;
+///   unsigned int acl_ingress_slices_max;
+///   unsigned int acl_egress_entries;
+///   unsigned int acl_egress_entries_max;
+///   unsigned int acl_egress_counters;
+///   unsigned int acl_egress_counters_max;
+///   unsigned int acl_egress_meters;
+///   unsigned int acl_egress_meters_max;
+///   unsigned int acl_egress_slices;
+///   unsigned int acl_egress_slices_max;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct BroadcomTables {
+    /// Number of host table entries
+    pub host_entries: u32,
+
+    /// Maximum number of host table entries
+    pub host_entries_max: u32,
+
+    /// Number of IPv4 routing table entries
+    pub ipv4_entries: u32,
+
+    /// Maximum number of IPv4 routing table entries
+    pub ipv4_entries_max: u32,
+
+    /// Number of IPv6 routing table entries
+    pub ipv6_entries: u32,
+
+    /// Maximum number of IPv6 routing table entries
+    pub ipv6_entries_max: u32,
+
+    /// Number of IPv4/IPv6 routing table entries
+    pub ipv4_ipv6_entries: u32,
+
+    /// Maximum number of IPv6/IPv6 routing table entries
+    pub ipv6_ipv6_entries_max: u32,
+
+    /// Number of long IPv6 routing table entries
+    pub long_ipv6_entries: u32,
+
+    /// Maximum number of long IPv6 routing table entries
+    pub long_ipv6_entries_max: u32,
+
+    /// Total number of routes
+    pub total_routes: u32,
+
+    /// Maximum total number of routes
+    pub total_routes_max: u32,
+
+    /// Number of ECMP nexthops
+    pub ecmp_nexthops: u32,
+
+    /// Maximum number of ECMP nexthops
+    pub ecmp_nexthops_max: u32,
+
+    /// Number of MAC table entries
+    pub mac_entries: u32,
+
+    /// Maximum number of MAC table entries
+    pub mac_entries_max: u32,
+
+    /// Number of IPv4 neighbors
+    pub ipv4_neighbors: u32,
+
+    /// Number of IPv6 neighbors
+    pub ipv6_neighbors: u32,
+
+    /// Number of IPv4 routes
+    pub ipv4_routes: u32,
+
+    /// Number of IPv6 routes
+    pub ipv6_routes: u32,
+
+    /// Number of ingress ACL entries
+    pub acl_ingress_entries: u32,
+
+    /// Maximum number of ingress ACL entries
+    pub acl_ingress_entries_max: u32,
+
+    /// Number of ingress ACL counters
+    pub acl_ingress_counters: u32,
+
+    /// Maximum number of ingress ACL counters
+    pub acl_ingress_counters_max: u32,
+
+    /// Number of ingress ACL meters
+    pub acl_ingress_meters: u32,
+
+    /// Maximum number of ingress ACL meters
+    pub acl_ingress_meters_max: u32,
+
+    /// Number of ingress ACL slices
+    pub acl_ingress_slices: u32,
+
+    /// Maximum number of ingress ACL slices
+    pub acl_ingress_slices_max: u32,
+
+    /// Number of egress ACL entries
+    pub acl_egress_entries: u32,
+
+    /// Maximum number of egress ACL entries
+    pub acl_egress_entries_max: u32,
+
+    /// Number of egress ACL counters
+    pub acl_egress_counters: u32,
+
+    /// Maximum number of egress ACL counters
+    pub acl_egress_counters_max: u32,
+
+    /// Number of egress ACL meters
+    pub acl_egress_meters: u32,
+
+    /// Maximum number of egress ACL meters
+    pub acl_egress_meters_max: u32,
+
+    /// Number of egress ACL slices
+    pub acl_egress_slices: u32,
+
+    /// Maximum number of egress ACL slices
+    pub acl_egress_slices_max: u32,
+}
+
 /// NVIDIA GPU Statistics - Format (5703,1)
 ///
 /// GPU performance metrics from NVIDIA Management Library (NVML)

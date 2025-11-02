@@ -134,6 +134,11 @@ pub const SFLOW_SPECS: &[SpecDocument] = &[
         url: "https://sflow.org/sflow_nvml.txt",
         year: 2012,
     },
+    SpecDocument {
+        name: "sflow_broadcom_tables",
+        url: "https://sflow.org/sflow_broadcom_tables.txt",
+        year: 2015,
+    },
 ];
 
 /// XDR structure definition parsed from spec

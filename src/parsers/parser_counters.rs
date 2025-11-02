@@ -718,6 +718,50 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Broadcom Switch ASIC Table Utilization - Format (4413,3)
+    pub(super) fn parse_broadcom_tables(
+        &mut self,
+    ) -> Result<crate::models::record_counters::BroadcomTables> {
+        Ok(crate::models::record_counters::BroadcomTables {
+            host_entries: self.read_u32()?,
+            host_entries_max: self.read_u32()?,
+            ipv4_entries: self.read_u32()?,
+            ipv4_entries_max: self.read_u32()?,
+            ipv6_entries: self.read_u32()?,
+            ipv6_entries_max: self.read_u32()?,
+            ipv4_ipv6_entries: self.read_u32()?,
+            ipv6_ipv6_entries_max: self.read_u32()?,
+            long_ipv6_entries: self.read_u32()?,
+            long_ipv6_entries_max: self.read_u32()?,
+            total_routes: self.read_u32()?,
+            total_routes_max: self.read_u32()?,
+            ecmp_nexthops: self.read_u32()?,
+            ecmp_nexthops_max: self.read_u32()?,
+            mac_entries: self.read_u32()?,
+            mac_entries_max: self.read_u32()?,
+            ipv4_neighbors: self.read_u32()?,
+            ipv6_neighbors: self.read_u32()?,
+            ipv4_routes: self.read_u32()?,
+            ipv6_routes: self.read_u32()?,
+            acl_ingress_entries: self.read_u32()?,
+            acl_ingress_entries_max: self.read_u32()?,
+            acl_ingress_counters: self.read_u32()?,
+            acl_ingress_counters_max: self.read_u32()?,
+            acl_ingress_meters: self.read_u32()?,
+            acl_ingress_meters_max: self.read_u32()?,
+            acl_ingress_slices: self.read_u32()?,
+            acl_ingress_slices_max: self.read_u32()?,
+            acl_egress_entries: self.read_u32()?,
+            acl_egress_entries_max: self.read_u32()?,
+            acl_egress_counters: self.read_u32()?,
+            acl_egress_counters_max: self.read_u32()?,
+            acl_egress_meters: self.read_u32()?,
+            acl_egress_meters_max: self.read_u32()?,
+            acl_egress_slices: self.read_u32()?,
+            acl_egress_slices_max: self.read_u32()?,
+        })
+    }
+
     /// Parse NVIDIA GPU Statistics - Format (5703,1)
     pub(super) fn parse_nvidia_gpu(&mut self) -> Result<crate::models::record_counters::NvidiaGpu> {
         Ok(crate::models::record_counters::NvidiaGpu {
@@ -797,6 +841,12 @@ impl<R: Read> Parser<R> {
                 2202 => Ok(CounterData::AppOperations(parser.parse_app_operations()?)),
                 2203 => Ok(CounterData::AppResources(parser.parse_app_resources()?)),
                 2206 => Ok(CounterData::AppWorkers(parser.parse_app_workers()?)),
+                _ => Ok(CounterData::Unknown { format, data }),
+            }
+        } else if format.enterprise() == 4413 {
+            // Broadcom enterprise formats
+            match format.format() {
+                3 => Ok(CounterData::BroadcomTables(parser.parse_broadcom_tables()?)),
                 _ => Ok(CounterData::Unknown { format, data }),
             }
         } else if format.enterprise() == 5703 {

@@ -274,8 +274,7 @@ pub enum FlowData {
     ExtendedGateway(crate::models::record_flows::ExtendedGateway),
     /// Extended User - Format (0,1004)
     ExtendedUser(crate::models::record_flows::ExtendedUser),
-    /// Extended URL - Format (0,1005)
-    /// Note: This format is deprecated but kept for backward compatibility
+    /// Extended URL - Format (0,1005) - DEPRECATED
     ExtendedUrl(crate::models::record_flows::ExtendedUrl),
     /// Extended MPLS - Format (0,1006)
     ExtendedMpls(crate::models::record_flows::ExtendedMpls),
@@ -303,10 +302,6 @@ pub enum FlowData {
     ExtendedOpenFlowV1(crate::models::record_flows::ExtendedOpenFlowV1),
     /// Extended NAT Port - Format (0,1020)
     ExtendedNatPort(crate::models::record_flows::ExtendedNatPort),
-    /// Extended InfiniBand LRH - Format (0,1031)
-    ExtendedInfiniBandLrh(crate::models::record_flows::ExtendedInfiniBandLrh),
-    /// Extended InfiniBand GRH - Format (0,1032)
-    ExtendedInfiniBandGrh(crate::models::record_flows::ExtendedInfiniBandGrh),
     /// Extended InfiniBand BTH - Format (0,1033)
     ExtendedInfiniBandBth(crate::models::record_flows::ExtendedInfiniBandBth),
     /// Extended L2 Tunnel Egress - Format (0,1021)
@@ -329,6 +324,10 @@ pub enum FlowData {
     ExtendedVniEgress(crate::models::record_flows::ExtendedVniEgress),
     /// Extended VNI Ingress - Format (0,1030)
     ExtendedVniIngress(crate::models::record_flows::ExtendedVniIngress),
+    /// Extended InfiniBand LRH - Format (0,1031)
+    ExtendedInfiniBandLrh(crate::models::record_flows::ExtendedInfiniBandLrh),
+    /// Extended InfiniBand GRH - Format (0,1032)
+    ExtendedInfiniBandGrh(crate::models::record_flows::ExtendedInfiniBandGrh),
     /// Extended Egress Queue - Format (0,1036)
     ExtendedEgressQueue(crate::models::record_flows::ExtendedEgressQueue),
     /// Extended ACL - Format (0,1037)
@@ -347,6 +346,8 @@ pub enum FlowData {
     ExtendedProxySocketIpv4(crate::models::record_flows::ExtendedProxySocketIpv4),
     /// Extended Proxy Socket IPv6 - Format (0,2103)
     ExtendedProxySocketIpv6(crate::models::record_flows::ExtendedProxySocketIpv6),
+    /// Memcache Operation - Format (0,2200)
+    MemcacheOperation(crate::models::record_flows::MemcacheOperation),
     /// Application Operation - Format (0,2202)
     AppOperation(crate::models::record_flows::AppOperation),
     /// Application Parent Context - Format (0,2203)
@@ -355,8 +356,6 @@ pub enum FlowData {
     AppInitiator(crate::models::record_flows::AppInitiator),
     /// Application Target - Format (0,2205)
     AppTarget(crate::models::record_flows::AppTarget),
-    /// Memcache Operation - Format (0,2200)
-    MemcacheOperation(crate::models::record_flows::MemcacheOperation),
     /// HTTP Request - Format (0,2206)
     HttpRequest(crate::models::record_flows::HttpRequest),
     /// Extended Proxy Request - Format (0,2207)
@@ -397,6 +396,10 @@ pub enum CounterData {
     Processor(crate::models::record_counters::ProcessorCounters),
     /// Radio Utilization - Format (0,1002)
     RadioUtilization(crate::models::record_counters::RadioUtilization),
+    /// OpenFlow Port - Format (0,1004)
+    OpenFlowPort(crate::models::record_counters::OpenFlowPort),
+    /// OpenFlow Port Name - Format (0,1005)
+    OpenFlowPortName(crate::models::record_counters::OpenFlowPortName),
     /// Host Description - Format (0,2000)
     HostDescription(crate::models::record_counters::HostDescription),
     /// Host Adapters - Format (0,2001)
@@ -429,24 +432,22 @@ pub enum CounterData {
     VirtualDiskIo(crate::models::record_counters::VirtualDiskIo),
     /// Virtual Network I/O - Format (0,2104)
     VirtualNetIo(crate::models::record_counters::VirtualNetIo),
-    /// OpenFlow Port - Format (0,1004)
-    OpenFlowPort(crate::models::record_counters::OpenFlowPort),
-    /// OpenFlow Port Name - Format (0,1005)
-    OpenFlowPortName(crate::models::record_counters::OpenFlowPortName),
+    /// JVM Runtime - Format (0,2105)
+    JvmRuntime(crate::models::record_counters::JvmRuntime),
+    /// JVM Statistics - Format (0,2106)
+    JvmStatistics(crate::models::record_counters::JvmStatistics),
     /// HTTP Counters - Format (0,2201)
     HttpCounters(crate::models::record_counters::HttpCounters),
     /// App Operations - Format (0,2202)
     AppOperations(crate::models::record_counters::AppOperations),
     /// App Resources - Format (0,2203)
     AppResources(crate::models::record_counters::AppResources),
-    /// App Workers - Format (0,2206)
-    AppWorkers(crate::models::record_counters::AppWorkers),
-    /// JVM Runtime - Format (0,2105)
-    JvmRuntime(crate::models::record_counters::JvmRuntime),
-    /// JVM Statistics - Format (0,2106)
-    JvmStatistics(crate::models::record_counters::JvmStatistics),
     /// Memcache Counters - Format (0,2204)
     MemcacheCounters(crate::models::record_counters::MemcacheCounters),
+    /// App Workers - Format (0,2206)
+    AppWorkers(crate::models::record_counters::AppWorkers),
+    /// Broadcom Switch ASIC Table Utilization - Format (4413,3)
+    BroadcomTables(crate::models::record_counters::BroadcomTables),
     /// NVIDIA GPU Statistics - Format (5703,1)
     NvidiaGpu(crate::models::record_counters::NvidiaGpu),
     /// Unknown or unparsed format

@@ -1537,6 +1537,90 @@ fn test_parse_memcache_counters() {
 }
 
 #[test]
+fn test_parse_broadcom_tables() {
+    // Broadcom tables counters: 36 u32 = 144 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x64, // host_entries = 100
+        0x00, 0x00, 0x04, 0x00, // host_entries_max = 1024
+        0x00, 0x00, 0x01, 0xF4, // ipv4_entries = 500
+        0x00, 0x00, 0x10, 0x00, // ipv4_entries_max = 4096
+        0x00, 0x00, 0x00, 0xC8, // ipv6_entries = 200
+        0x00, 0x00, 0x08, 0x00, // ipv6_entries_max = 2048
+        0x00, 0x00, 0x00, 0x32, // ipv4_ipv6_entries = 50
+        0x00, 0x00, 0x02, 0x00, // ipv6_ipv6_entries_max = 512
+        0x00, 0x00, 0x00, 0x14, // long_ipv6_entries = 20
+        0x00, 0x00, 0x01, 0x00, // long_ipv6_entries_max = 256
+        0x00, 0x00, 0x02, 0xBC, // total_routes = 700
+        0x00, 0x00, 0x20, 0x00, // total_routes_max = 8192
+        0x00, 0x00, 0x00, 0x96, // ecmp_nexthops = 150
+        0x00, 0x00, 0x04, 0x00, // ecmp_nexthops_max = 1024
+        0x00, 0x00, 0x03, 0xE8, // mac_entries = 1000
+        0x00, 0x00, 0x40, 0x00, // mac_entries_max = 16384
+        0x00, 0x00, 0x00, 0x46, // ipv4_neighbors = 70
+        0x00, 0x00, 0x00, 0x1E, // ipv6_neighbors = 30
+        0x00, 0x00, 0x01, 0xC2, // ipv4_routes = 450
+        0x00, 0x00, 0x00, 0xFA, // ipv6_routes = 250
+        0x00, 0x00, 0x00, 0x0A, // acl_ingress_entries = 10
+        0x00, 0x00, 0x00, 0x80, // acl_ingress_entries_max = 128
+        0x00, 0x00, 0x00, 0x05, // acl_ingress_counters = 5
+        0x00, 0x00, 0x00, 0x40, // acl_ingress_counters_max = 64
+        0x00, 0x00, 0x00, 0x03, // acl_ingress_meters = 3
+        0x00, 0x00, 0x00, 0x20, // acl_ingress_meters_max = 32
+        0x00, 0x00, 0x00, 0x02, // acl_ingress_slices = 2
+        0x00, 0x00, 0x00, 0x10, // acl_ingress_slices_max = 16
+        0x00, 0x00, 0x00, 0x08, // acl_egress_entries = 8
+        0x00, 0x00, 0x00, 0x80, // acl_egress_entries_max = 128
+        0x00, 0x00, 0x00, 0x04, // acl_egress_counters = 4
+        0x00, 0x00, 0x00, 0x40, // acl_egress_counters_max = 64
+        0x00, 0x00, 0x00, 0x02, // acl_egress_meters = 2
+        0x00, 0x00, 0x00, 0x20, // acl_egress_meters_max = 32
+        0x00, 0x00, 0x00, 0x01, // acl_egress_slices = 1
+        0x00, 0x00, 0x00, 0x10, // acl_egress_slices_max = 16
+    ];
+
+    // Enterprise 4413, format 3: (4413 << 12) | 3 = 18079747
+    let record_type = 0x0113D003;
+
+    let data = build_counter_sample_test(record_type, &record_data);
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::BroadcomTables(tables) => {
+                    assert_eq!(tables.host_entries, 100);
+                    assert_eq!(tables.host_entries_max, 1024);
+                    assert_eq!(tables.ipv4_entries, 500);
+                    assert_eq!(tables.ipv4_entries_max, 4096);
+                    assert_eq!(tables.ipv6_entries, 200);
+                    assert_eq!(tables.ipv6_entries_max, 2048);
+                    assert_eq!(tables.total_routes, 700);
+                    assert_eq!(tables.total_routes_max, 8192);
+                    assert_eq!(tables.ecmp_nexthops, 150);
+                    assert_eq!(tables.ecmp_nexthops_max, 1024);
+                    assert_eq!(tables.mac_entries, 1000);
+                    assert_eq!(tables.mac_entries_max, 16384);
+                    assert_eq!(tables.ipv4_neighbors, 70);
+                    assert_eq!(tables.ipv6_neighbors, 30);
+                    assert_eq!(tables.ipv4_routes, 450);
+                    assert_eq!(tables.ipv6_routes, 250);
+                    assert_eq!(tables.acl_ingress_entries, 10);
+                    assert_eq!(tables.acl_ingress_entries_max, 128);
+                    assert_eq!(tables.acl_egress_entries, 8);
+                    assert_eq!(tables.acl_egress_entries_max, 128);
+                }
+                _ => panic!("Expected BroadcomTables"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
 fn test_parse_nvidia_gpu() {
     // NVIDIA GPU counters: 4 u32 + 2 u64 + 4 u32 = 40 bytes
     let record_data = [
