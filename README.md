@@ -103,8 +103,8 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 1031 | Extended InfiniBand LRH | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ✅ |
 | 0 | 1032 | Extended InfiniBand GRH | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ✅ |
 | 0 | 1033 | Extended InfiniBand BTH | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ✅ |
-| 0 | 1034 | Extended VLAN In | [sFlow Discussion](https://groups.google.com/forum/) | ⬜ |
-| 0 | 1035 | Extended VLAN Out | [sFlow Discussion](https://groups.google.com/forum/) | ⬜ |
+| 0 | 1034 | Extended VLAN In | [sFlow Discussion](https://groups.google.com/g/sflow/c/S22dbzam404) | ⬜ |
+| 0 | 1035 | Extended VLAN Out | [sFlow Discussion](https://groups.google.com/g/sflow/c/S22dbzam404) | ⬜ |
 | 0 | 1036 | Extended Egress Queue | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ✅ |
 | 0 | 1037 | Extended ACL | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ✅ |
 | 0 | 1038 | Extended Function | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ✅ |
@@ -128,8 +128,8 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 2205 | App Target | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
 | 0 | 2206 | HTTP Request | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ✅ |
 | 0 | 2207 | Extended Proxy Request | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ✅ |
-| 0 | 2208 | Extended Nav Timing | [sFlow Discussion](https://groups.google.com/forum/) | ⬜ |
-| 0 | 2209 | Extended TCP Info | [sFlow Discussion](https://groups.google.com/forum/) | ⬜ |
+| 0 | 2208 | Extended Nav Timing | [sFlow Discussion](https://groups.google.com/g/sflow/c/FKzkvig32Tk) | ⬜ |
+| 0 | 2209 | Extended TCP Info | [sFlow Discussion](https://groups.google.com/g/sflow/c/JCG9iwacLZA) | ⬜ |
 | 0 | 2210 | Extended Entities | [sFlow Discussion](https://blog.sflow.com/2018/10/systemd-traffic-marking.html) | ⬜ |
 | 4413 | 1 | BST Egress Queue | [sFlow Broadcom](https://sflow.org/bv-sflow.txt) | ✅ |
 
