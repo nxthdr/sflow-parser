@@ -342,6 +342,14 @@ pub enum FlowData {
     ExtendedHwTrap(crate::models::record_flows::ExtendedHwTrap),
     /// Extended Linux Drop Reason - Format (0,1042)
     ExtendedLinuxDropReason(crate::models::record_flows::ExtendedLinuxDropReason),
+    /// Transaction - Format (0,2000)
+    Transaction(crate::models::record_flows::Transaction),
+    /// Extended NFS Storage Transaction - Format (0,2001)
+    ExtendedNfsStorageTransaction(crate::models::record_flows::ExtendedNfsStorageTransaction),
+    /// Extended SCSI Storage Transaction - Format (0,2002)
+    ExtendedScsiStorageTransaction(crate::models::record_flows::ExtendedScsiStorageTransaction),
+    /// Extended HTTP Transaction - Format (0,2003)
+    ExtendedHttpTransaction(crate::models::record_flows::ExtendedHttpTransaction),
     /// Extended Socket IPv4 - Format (0,2100)
     ExtendedSocketIpv4(crate::models::record_flows::ExtendedSocketIpv4),
     /// Extended Socket IPv6 - Format (0,2101)

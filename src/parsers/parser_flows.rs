@@ -677,6 +677,78 @@ impl<R: Read> Parser<R> {
         Ok(crate::models::record_flows::ExtendedLinuxDropReason { reason })
     }
 
+    /// Parse Transaction - Format (0,2000)
+    pub(super) fn parse_transaction(&mut self) -> Result<crate::models::record_flows::Transaction> {
+        let direction = self.read_u32()?;
+        let wait = self.read_u32()?;
+        let duration = self.read_u32()?;
+        let status = self.read_u32()?;
+        let bytes_received = self.read_u64()?;
+        let bytes_sent = self.read_u64()?;
+
+        Ok(crate::models::record_flows::Transaction {
+            direction,
+            wait,
+            duration,
+            status,
+            bytes_received,
+            bytes_sent,
+        })
+    }
+
+    /// Parse Extended NFS Storage Transaction - Format (0,2001)
+    pub(super) fn parse_extended_nfs_storage_transaction(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedNfsStorageTransaction> {
+        let path = self.read_opaque()?;
+        let operation = self.read_u32()?;
+        let status = self.read_u32()?;
+
+        Ok(crate::models::record_flows::ExtendedNfsStorageTransaction {
+            path,
+            operation,
+            status,
+        })
+    }
+
+    /// Parse Extended SCSI Storage Transaction - Format (0,2002)
+    pub(super) fn parse_extended_scsi_storage_transaction(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedScsiStorageTransaction> {
+        let lun = self.read_u32()?;
+        let operation = self.read_u32()?;
+        let status = self.read_u32()?;
+
+        Ok(
+            crate::models::record_flows::ExtendedScsiStorageTransaction {
+                lun,
+                operation,
+                status,
+            },
+        )
+    }
+
+    /// Parse Extended HTTP Transaction - Format (0,2003)
+    pub(super) fn parse_extended_http_transaction(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedHttpTransaction> {
+        let url = self.read_string()?;
+        let host = self.read_string()?;
+        let referer = self.read_string()?;
+        let user_agent = self.read_string()?;
+        let user = self.read_string()?;
+        let status = self.read_u32()?;
+
+        Ok(crate::models::record_flows::ExtendedHttpTransaction {
+            url,
+            host,
+            referer,
+            user_agent,
+            user,
+            status,
+        })
+    }
+
     /// Parse Extended Socket IPv4 - Format (0,2100)
     pub(super) fn parse_extended_socket_ipv4(
         &mut self,
@@ -1016,6 +1088,16 @@ impl<R: Read> Parser<R> {
                 1041 => Ok(FlowData::ExtendedHwTrap(parser.parse_extended_hw_trap()?)),
                 1042 => Ok(FlowData::ExtendedLinuxDropReason(
                     parser.parse_extended_linux_drop_reason()?,
+                )),
+                2000 => Ok(FlowData::Transaction(parser.parse_transaction()?)),
+                2001 => Ok(FlowData::ExtendedNfsStorageTransaction(
+                    parser.parse_extended_nfs_storage_transaction()?,
+                )),
+                2002 => Ok(FlowData::ExtendedScsiStorageTransaction(
+                    parser.parse_extended_scsi_storage_transaction()?,
+                )),
+                2003 => Ok(FlowData::ExtendedHttpTransaction(
+                    parser.parse_extended_http_transaction()?,
                 )),
                 2100 => Ok(FlowData::ExtendedSocketIpv4(
                     parser.parse_extended_socket_ipv4()?,

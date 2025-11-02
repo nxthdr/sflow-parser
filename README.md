@@ -114,10 +114,10 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 1040 | Extended Queue Depth | [sFlow Transit](https://sflow.org/sflow_transit.txt) | ✅ |
 | 0 | 1041 | Extended HW Trap | [host-sflow Implementation](https://github.com/sflow/host-sflow/blob/v2.0.50-3/src/sflow/sflow.h) | ✅ |
 | 0 | 1042 | Extended Linux Drop Reason | [host-sflow Implementation](https://github.com/sflow/host-sflow/blob/v2.0.50-3/src/sflow/sflow.h) | ✅ |
-| 0 | 2000 | Transaction | [sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0282.html) | ⬜ |
-| 0 | 2001 | Extended NFS Storage Transaction | [sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0282.html) | ⬜ |
-| 0 | 2002 | Extended SCSI Storage Transaction | [sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0282.html) | ⬜ |
-| 0 | 2003 | Extended HTTP Transaction | [sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0282.html) | ⬜ |
+| 0 | 2000 | Transaction | [sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0282.html) | ✅ |
+| 0 | 2001 | Extended NFS Storage Transaction | [sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0282.html) | ✅ |
+| 0 | 2002 | Extended SCSI Storage Transaction | [sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0282.html) | ✅ |
+| 0 | 2003 | Extended HTTP Transaction | [sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0282.html) | ✅ |
 | 0 | 2100 | Extended Socket IPv4 | [sFlow Host](https://sflow.org/sflow_host.txt) | ✅ |
 | 0 | 2101 | Extended Socket IPv6 | [sFlow Host](https://sflow.org/sflow_host.txt) | ✅ |
 | 0 | 2102 | Extended Proxy Socket IPv4 | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ✅ |

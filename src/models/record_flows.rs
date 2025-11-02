@@ -1603,6 +1603,212 @@ pub struct ExtendedLinuxDropReason {
     pub reason: String,
 }
 
+/// Transaction status values
+///
+/// # XDR Definition ([sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0282.html))
+///
+/// ```text
+/// enum status_value {
+///     succeeded = 0,
+///     generic_failure = 1,
+///     outofmemory = 2,
+///     timeout = 3,
+///     notpermitted = 4
+/// }
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u32)]
+pub enum TransactionStatus {
+    Succeeded = 0,
+    GenericFailure = 1,
+    OutOfMemory = 2,
+    Timeout = 3,
+    NotPermitted = 4,
+}
+
+impl From<u32> for TransactionStatus {
+    fn from(value: u32) -> Self {
+        match value {
+            0 => TransactionStatus::Succeeded,
+            1 => TransactionStatus::GenericFailure,
+            2 => TransactionStatus::OutOfMemory,
+            3 => TransactionStatus::Timeout,
+            4 => TransactionStatus::NotPermitted,
+            _ => TransactionStatus::GenericFailure,
+        }
+    }
+}
+
+/// Service direction for transactions
+///
+/// # XDR Definition ([sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0282.html))
+///
+/// ```text
+/// enum service_direction {
+///     client = 1,
+///     server = 2
+/// }
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u32)]
+pub enum ServiceDirection {
+    Client = 1,
+    Server = 2,
+}
+
+impl From<u32> for ServiceDirection {
+    fn from(value: u32) -> Self {
+        match value {
+            1 => ServiceDirection::Client,
+            2 => ServiceDirection::Server,
+            _ => ServiceDirection::Client,
+        }
+    }
+}
+
+/// Transaction - Format (0,2000)
+///
+/// Generic application transaction record sampled upon completion
+///
+/// # XDR Definition ([sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0282.html))
+///
+/// ```text
+/// /* Generic Application Transaction record */
+/// /* Every Application Transaction sample must start with a generic transaction record */
+/// /* opaque = flow_data; enterprise = 0; format = 2000 */
+/// struct transaction {
+///     service_direction direction; /* was this transaction observed by the server or the client */
+///     unsigned int wait;           /* time in microseconds that transaction was queued
+///                                     before processing started */
+///     unsigned int duration;       /* time in microseconds from start of processing to completion */
+///     status_value status;         /* status of transaction */
+///     unsigned hyper bytes_received; /* bytes received */
+///     unsigned hyper bytes_send;   /* bytes sent */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct Transaction {
+    /// Was this transaction observed by the server or the client
+    pub direction: u32,
+
+    /// Time in microseconds that transaction was queued before processing started
+    pub wait: u32,
+
+    /// Time in microseconds from start of processing to completion
+    pub duration: u32,
+
+    /// Status of transaction
+    pub status: u32,
+
+    /// Bytes received
+    pub bytes_received: u64,
+
+    /// Bytes sent (spec: bytes_send)
+    pub bytes_sent: u64,
+}
+
+/// Extended NFS Storage Transaction - Format (0,2001)
+///
+/// NFS operation transaction details
+///
+/// # XDR Definition ([sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0282.html))
+///
+/// ```text
+/// /* Extended NFS transaction */
+/// /* see RFC 3530 */
+/// /* opaque = flow_data; enterprise = 0; format = 2001 */
+/// struct extended_nfs_storage_transaction {
+///     opaque<> path;        /* canonical path to file or directory
+///                              associated with operation file handle
+///                              UTF8 encoded string */
+///     unsigned int operation; /* NFS operation */
+///     unsigned int status;    /* NFS operation status - nfsstat4 */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedNfsStorageTransaction {
+    /// Canonical path to file or directory (UTF8 encoded)
+    pub path: Vec<u8>,
+
+    /// NFS operation
+    pub operation: u32,
+
+    /// NFS operation status (nfsstat4)
+    pub status: u32,
+}
+
+/// Extended SCSI Storage Transaction - Format (0,2002)
+///
+/// SCSI operation transaction details
+///
+/// # XDR Definition ([sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0282.html))
+///
+/// ```text
+/// /* Extended SCSI transaction */
+/// /* opaque = flow_data; enterprise = 0; format = 2002 */
+/// struct extended_scsi_storage_transaction {
+///     unsigned int lun;       /* LUN */
+///     unsigned int operation; /* use maxint to encode unknown operation */
+///     unsigned int status;    /* SCSI status code reporting result of operation */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedScsiStorageTransaction {
+    /// Logical Unit Number
+    pub lun: u32,
+
+    /// SCSI operation (use maxint to encode unknown operation)
+    pub operation: u32,
+
+    /// SCSI status code reporting result of operation
+    pub status: u32,
+}
+
+/// Extended HTTP Transaction - Format (0,2003)
+///
+/// HTTP transaction details
+///
+/// # XDR Definition ([sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0282.html))
+///
+/// ```text
+/// /* Extended Web transaction */
+/// /* opaque = flow_data; enterprise = 0; format = 2003 */
+/// struct extended_http_transaction {
+///     string<> url;       /* The HTTP request-line (see RFC 2616) */
+///     string<> host;      /* The host field from the HTTP header */
+///     string<> referer;   /* The referer field from the HTTP header */
+///     string<> useragent; /* The user agent from the HTTP header */
+///     string<> user;      /* The authenticated user */
+///     unigned int status; /* Status code returned with response */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedHttpTransaction {
+    /// The HTTP request-line (see RFC 2616)
+    pub url: String,
+
+    /// The host field from the HTTP header
+    pub host: String,
+
+    /// The referer field from the HTTP header
+    pub referer: String,
+
+    /// The user agent from the HTTP header (spec: useragent)
+    pub user_agent: String,
+
+    /// The authenticated user
+    pub user: String,
+
+    /// Status code returned with response
+    pub status: u32,
+}
+
 /// Extended Socket IPv4 - Format (0,2100)
 ///
 /// IPv4 socket information for application transactions

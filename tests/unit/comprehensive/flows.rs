@@ -1958,3 +1958,158 @@ fn test_parse_http_request_deprecated() {
         _ => panic!("Expected FlowSample"),
     }
 }
+
+#[test]
+fn test_parse_transaction() {
+    // Transaction data: direction(4) + wait(4) + duration(4) + status(4) + bytes_received(8) + bytes_sent(8) = 32 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x02, // direction = 2 (server)
+        0x00, 0x00, 0x00, 0x64, // wait = 100 microseconds
+        0x00, 0x00, 0x03, 0xE8, // duration = 1000 microseconds
+        0x00, 0x00, 0x00, 0x00, // status = 0 (succeeded)
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, // bytes_received = 1024
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00, // bytes_sent = 2048
+    ];
+
+    let data = build_flow_sample_test(0x07D0, &record_data); // record type = 2000
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::Transaction(txn) => {
+                    assert_eq!(txn.direction, 2); // server
+                    assert_eq!(txn.wait, 100);
+                    assert_eq!(txn.duration, 1000);
+                    assert_eq!(txn.status, 0); // succeeded
+                    assert_eq!(txn.bytes_received, 1024);
+                    assert_eq!(txn.bytes_sent, 2048);
+                }
+                _ => panic!("Expected Transaction"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_nfs_storage_transaction() {
+    let mut record_data = Vec::new();
+
+    // path = "/home/user/file.txt" (opaque)
+    let path = b"/home/user/file.txt";
+    record_data.extend(&(path.len() as u32).to_be_bytes());
+    record_data.extend_from_slice(path);
+    // Add padding to 4-byte boundary
+    let padding = (4 - (path.len() % 4)) % 4;
+    record_data.extend(vec![0u8; padding]);
+
+    // operation = 18 (NFS READ)
+    record_data.extend(&[0x00, 0x00, 0x00, 0x12]);
+
+    // status = 0 (NFS4_OK)
+    record_data.extend(&[0x00, 0x00, 0x00, 0x00]);
+
+    let data = build_flow_sample_test(0x07D1, &record_data); // record type = 2001
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedNfsStorageTransaction(nfs) => {
+                    assert_eq!(nfs.path, b"/home/user/file.txt");
+                    assert_eq!(nfs.operation, 18); // READ
+                    assert_eq!(nfs.status, 0); // NFS4_OK
+                }
+                _ => panic!("Expected ExtendedNfsStorageTransaction"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_scsi_storage_transaction() {
+    // SCSI transaction data: lun(4) + operation(4) + status(4) = 12 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x05, // lun = 5
+        0x00, 0x00, 0x00, 0x28, // operation = 0x28 (READ(10))
+        0x00, 0x00, 0x00, 0x00, // status = 0 (GOOD)
+    ];
+
+    let data = build_flow_sample_test(0x07D2, &record_data); // record type = 2002
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedScsiStorageTransaction(scsi) => {
+                    assert_eq!(scsi.lun, 5);
+                    assert_eq!(scsi.operation, 0x28); // READ(10)
+                    assert_eq!(scsi.status, 0); // GOOD
+                }
+                _ => panic!("Expected ExtendedScsiStorageTransaction"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_http_transaction() {
+    let mut record_data = Vec::new();
+
+    // url = "/api/v1/users"
+    record_data.extend(encode_string("/api/v1/users"));
+
+    // host = "example.com"
+    record_data.extend(encode_string("example.com"));
+
+    // referer = "https://google.com"
+    record_data.extend(encode_string("https://google.com"));
+
+    // useragent = "Mozilla/5.0"
+    record_data.extend(encode_string("Mozilla/5.0"));
+
+    // user = "john_doe"
+    record_data.extend(encode_string("john_doe"));
+
+    // status = 200
+    record_data.extend(&[0x00, 0x00, 0x00, 0xC8]);
+
+    let data = build_flow_sample_test(0x07D3, &record_data); // record type = 2003
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedHttpTransaction(http) => {
+                    assert_eq!(http.url, "/api/v1/users");
+                    assert_eq!(http.host, "example.com");
+                    assert_eq!(http.referer, "https://google.com");
+                    assert_eq!(http.user_agent, "Mozilla/5.0");
+                    assert_eq!(http.user, "john_doe");
+                    assert_eq!(http.status, 200);
+                }
+                _ => panic!("Expected ExtendedHttpTransaction"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
