@@ -1,5 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use sflow_parser::parse_datagram;
+use std::hint::black_box;
 
 /// Benchmark parsing a real sFlow datagram from test data
 fn bench_parse_real_datagram(c: &mut Criterion) {
