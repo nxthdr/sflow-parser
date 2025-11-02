@@ -1886,3 +1886,75 @@ fn test_parse_extended_linux_drop_reason() {
         _ => panic!("Expected FlowSample"),
     }
 }
+
+#[test]
+fn test_parse_http_request_deprecated() {
+    // HTTP Request (deprecated): method(4) + 8 strings + 2 u64 + 1 u32 + 1 i32
+    let mut record_data = Vec::new();
+
+    // method = GET (2)
+    record_data.extend(&[0x00, 0x00, 0x00, 0x02]);
+
+    // uri = "/api/v1/users"
+    record_data.extend(encode_string("/api/v1/users"));
+
+    // host = "example.com"
+    record_data.extend(encode_string("example.com"));
+
+    // referer = "https://google.com"
+    record_data.extend(encode_string("https://google.com"));
+
+    // useragent = "Mozilla/5.0"
+    record_data.extend(encode_string("Mozilla/5.0"));
+
+    // xff = "203.0.113.1"
+    record_data.extend(encode_string("203.0.113.1"));
+
+    // authuser = "john_doe"
+    record_data.extend(encode_string("john_doe"));
+
+    // mime_type = "application/json"
+    record_data.extend(encode_string("application/json"));
+
+    // req_bytes = 1024
+    record_data.extend(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00]);
+
+    // resp_bytes = 2048
+    record_data.extend(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00]);
+
+    // duration_us = 15000
+    record_data.extend(&[0x00, 0x00, 0x3A, 0x98]);
+
+    // status = 200
+    record_data.extend(&[0x00, 0x00, 0x00, 0xC8]);
+
+    let data = build_flow_sample_test(0x0899, &record_data); // record type = 2201
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::HttpRequestDeprecated(http) => {
+                    assert_eq!(http.method, HttpMethod::Get);
+                    assert_eq!(http.uri, "/api/v1/users");
+                    assert_eq!(http.host, "example.com");
+                    assert_eq!(http.referer, "https://google.com");
+                    assert_eq!(http.useragent, "Mozilla/5.0");
+                    assert_eq!(http.xff, "203.0.113.1");
+                    assert_eq!(http.authuser, "john_doe");
+                    assert_eq!(http.mime_type, "application/json");
+                    assert_eq!(http.req_bytes, 1024);
+                    assert_eq!(http.resp_bytes, 2048);
+                    assert_eq!(http.duration_us, 15000);
+                    assert_eq!(http.status, 200);
+                }
+                _ => panic!("Expected HttpRequestDeprecated"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}

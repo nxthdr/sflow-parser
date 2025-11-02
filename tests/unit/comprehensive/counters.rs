@@ -1329,7 +1329,7 @@ fn test_parse_app_operations() {
 
 #[test]
 fn test_parse_memcache_counters_deprecated() {
-    // Memcache Counters (Deprecated): 32 u32 fields + 3 u64 fields = 128 + 24 = 152 bytes
+    // Memcache Counters (deprecated): 32 u32 fields + 3 u64 fields = 128 + 24 = 152 bytes
     let record_data = [
         0x00, 0x00, 0x0E, 0x10, // uptime = 3600 seconds
         0x00, 0x00, 0x03, 0xE8, // rusage_user = 1000 ms

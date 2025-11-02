@@ -784,6 +784,39 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse HTTP Request - Format (0,2201) - DEPRECATED
+    pub(super) fn parse_http_request_deprecated(
+        &mut self,
+    ) -> Result<crate::models::record_flows::HttpRequestDeprecated> {
+        let method = crate::models::record_flows::HttpMethod::from(self.read_u32()?);
+        let uri = self.read_string()?;
+        let host = self.read_string()?;
+        let referer = self.read_string()?;
+        let useragent = self.read_string()?;
+        let xff = self.read_string()?;
+        let authuser = self.read_string()?;
+        let mime_type = self.read_string()?;
+        let req_bytes = self.read_u64()?;
+        let resp_bytes = self.read_u64()?;
+        let duration_us = self.read_u32()?;
+        let status = self.read_i32()?;
+
+        Ok(crate::models::record_flows::HttpRequestDeprecated {
+            method,
+            uri,
+            host,
+            referer,
+            useragent,
+            xff,
+            authuser,
+            mime_type,
+            req_bytes,
+            resp_bytes,
+            duration_us,
+            status,
+        })
+    }
+
     /// Parse Application Operation - Format (0,2202)
     pub(super) fn parse_app_operation(
         &mut self,
@@ -996,12 +1029,15 @@ impl<R: Read> Parser<R> {
                 2103 => Ok(FlowData::ExtendedProxySocketIpv6(
                     parser.parse_extended_proxy_socket_ipv6()?,
                 )),
+                2200 => Ok(FlowData::MemcacheOperation(
+                    parser.parse_memcache_operation()?,
+                )),
+                2201 => Ok(FlowData::HttpRequestDeprecated(
+                    parser.parse_http_request_deprecated()?,
+                )),
                 2202 => Ok(FlowData::AppOperation(parser.parse_app_operation()?)),
                 2203 => Ok(FlowData::AppParentContext(
                     parser.parse_app_parent_context()?,
-                )),
-                2200 => Ok(FlowData::MemcacheOperation(
-                    parser.parse_memcache_operation()?,
                 )),
                 2204 => Ok(FlowData::AppInitiator(parser.parse_app_initiator()?)),
                 2205 => Ok(FlowData::AppTarget(parser.parse_app_target()?)),

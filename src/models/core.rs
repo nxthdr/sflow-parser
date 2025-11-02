@@ -352,6 +352,8 @@ pub enum FlowData {
     ExtendedProxySocketIpv6(crate::models::record_flows::ExtendedProxySocketIpv6),
     /// Memcache Operation - Format (0,2200)
     MemcacheOperation(crate::models::record_flows::MemcacheOperation),
+    /// HTTP Request - Format (0,2201) - DEPRECATED
+    HttpRequestDeprecated(crate::models::record_flows::HttpRequestDeprecated),
     /// Application Operation - Format (0,2202)
     AppOperation(crate::models::record_flows::AppOperation),
     /// Application Parent Context - Format (0,2203)

@@ -1733,7 +1733,7 @@ pub struct JvmStatistics {
     pub fd_max_count: u32,
 }
 
-/// Memcache Counters (Deprecated) - Format (0,2200) - **DEPRECATED**
+/// Memcache Counters - Format (0,2200) - **DEPRECATED**
 ///
 /// Legacy memcache statistics counters
 ///

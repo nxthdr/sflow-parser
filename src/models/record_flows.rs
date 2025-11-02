@@ -2051,6 +2051,74 @@ pub struct MemcacheOperation {
     pub status: MemcacheStatus,
 }
 
+/// HTTP Request - Format (0,2201) - **DEPRECATED**
+///
+/// Legacy HTTP request information
+///
+/// **Note:** This format was defined in an early sFlow HTTP discussion
+/// but was deprecated and replaced by format 2206. It is included here for
+/// backward compatibility with legacy implementations.
+///
+/// # XDR Definition ([sFlow Discussion](https://groups.google.com/g/sflow/c/iKzLK61ZTR0))
+///
+/// ```text
+/// /* HTTP request */
+/// /* opaque = flow_data; enterprise = 0; format = 2201 */
+/// struct http_request {
+///   http_method method;        /* method */
+///   string<255> uri;           /* URI exactly as it came from the client */
+///   string<32> host;           /* Host value from request header */
+///   string<255> referer;       /* Referer value from request header */
+///   string<64> useragent;      /* User-Agent value from request header */
+///   string<64> xff;            /* X-Forwarded-For value from request header */
+///   string<32> authuser;       /* RFC 1413 identity of user*/
+///   string<32> mime_type;      /* Mime-Type */
+///   unsigned hyper req_bytes;  /* Content-Length of request */
+///   unsigned hyper resp_bytes; /* Content-Length of response */
+///   unsigned int uS;           /* duration of the operation (microseconds) */
+///   int status;                /* HTTP status code */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct HttpRequestDeprecated {
+    /// HTTP method
+    pub method: HttpMethod,
+
+    /// URI exactly as it came from the client
+    pub uri: String,
+
+    /// Host value from request header
+    pub host: String,
+
+    /// Referer value from request header
+    pub referer: String,
+
+    /// User-Agent value from request header
+    pub useragent: String,
+
+    /// X-Forwarded-For value from request header
+    pub xff: String,
+
+    /// RFC 1413 identity of user
+    pub authuser: String,
+
+    /// Mime-Type
+    pub mime_type: String,
+
+    /// Content-Length of request
+    pub req_bytes: u64,
+
+    /// Content-Length of response
+    pub resp_bytes: u64,
+
+    /// Duration of the operation in microseconds
+    pub duration_us: u32,
+
+    /// HTTP status code
+    pub status: i32,
+}
+
 /// Application Operation - Format (0,2202)
 ///
 /// Sampled application operation information

@@ -648,7 +648,7 @@ impl<R: Read> Parser<R> {
         })
     }
 
-    /// Parse Memcache Counters (Deprecated) - Format (0,2200) - DEPRECATED
+    /// Parse Memcache Counters - Format (0,2200) - DEPRECATED
     pub(super) fn parse_memcache_counters_deprecated(
         &mut self,
     ) -> Result<crate::models::record_counters::MemcacheCountersDeprecated> {
