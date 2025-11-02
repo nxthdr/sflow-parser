@@ -705,7 +705,22 @@ pub enum SampleData {
     FlowSampleExpanded(FlowSampleExpanded),
     CountersSampleExpanded(CountersSampleExpanded),
     DiscardedPacket(DiscardedPacket),
-    Unknown { format: DataFormat, data: Vec<u8> },
+    /// sFlow-RT Custom Metrics - Format (4300,1002)
+    /// Opaque data - structure defined at runtime via sFlow-RT API
+    RtMetric {
+        format: DataFormat,
+        data: Vec<u8>,
+    },
+    /// sFlow-RT Custom Flow Metrics - Format (4300,1003)
+    /// Opaque data - structure defined at runtime via sFlow-RT API
+    RtFlow {
+        format: DataFormat,
+        data: Vec<u8>,
+    },
+    Unknown {
+        format: DataFormat,
+        data: Vec<u8>,
+    },
 }
 
 /// Sample record

@@ -175,8 +175,15 @@ impl<R: Read> Parser<R> {
                 }
                 _ => Ok(SampleData::Unknown { format, data }),
             }
+        } else if format.enterprise() == 4300 {
+            // sFlow-RT (InMon Corp) formats
+            match format.format() {
+                1002 => Ok(SampleData::RtMetric { format, data }),
+                1003 => Ok(SampleData::RtFlow { format, data }),
+                _ => Ok(SampleData::Unknown { format, data }),
+            }
         } else {
-            // Vendor-specific format
+            // Other vendor-specific formats
             Ok(SampleData::Unknown { format, data })
         }
     }

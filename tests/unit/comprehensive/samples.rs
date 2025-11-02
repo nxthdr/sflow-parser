@@ -419,3 +419,68 @@ fn test_parse_discarded_packet_sample() {
         _ => panic!("Expected DiscardedPacket"),
     }
 }
+
+#[test]
+fn test_parse_rtmetric_sample() {
+    // sFlow-RT custom metric sample - opaque data
+    let mut data = create_datagram_header(1);
+
+    // Sample with enterprise 4300, format 1002
+    let sample_data = vec![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08];
+
+    data.extend_from_slice(&[
+        0x01, 0x0C, 0xC3, 0xEA, // sample type = (4300 << 12) | 1002 = 0x010CC3EA
+        0x00, 0x00, 0x00, 0x08, // sample length = 8 bytes
+    ]);
+    data.extend_from_slice(&sample_data);
+
+    let result = parse_datagram(&data);
+    if let Err(e) = &result {
+        eprintln!("Parse error: {}", e);
+    }
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    assert_eq!(datagram.samples.len(), 1);
+
+    match &datagram.samples[0].sample_data {
+        SampleData::RtMetric { format, data } => {
+            assert_eq!(format.enterprise(), 4300);
+            assert_eq!(format.format(), 1002);
+            assert_eq!(data.len(), 8);
+            assert_eq!(&data[..], &[0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]);
+        }
+        _ => panic!("Expected RtMetric"),
+    }
+}
+
+#[test]
+fn test_parse_rtflow_sample() {
+    // sFlow-RT custom flow metric sample - opaque data
+    let mut data = create_datagram_header(1);
+
+    // Sample with enterprise 4300, format 1003
+    let sample_data = vec![0xAA, 0xBB, 0xCC, 0xDD];
+
+    data.extend_from_slice(&[
+        0x01, 0x0C, 0xC3, 0xEB, // sample type = (4300 << 12) | 1003 = 0x010CC3EB
+        0x00, 0x00, 0x00, 0x04, // sample length = 4 bytes
+    ]);
+    data.extend_from_slice(&sample_data);
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    assert_eq!(datagram.samples.len(), 1);
+
+    match &datagram.samples[0].sample_data {
+        SampleData::RtFlow { format, data } => {
+            assert_eq!(format.enterprise(), 4300);
+            assert_eq!(format.format(), 1003);
+            assert_eq!(data.len(), 4);
+            assert_eq!(&data[..], &[0xAA, 0xBB, 0xCC, 0xDD]);
+        }
+        _ => panic!("Expected RtFlow"),
+    }
+}

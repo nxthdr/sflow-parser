@@ -59,6 +59,8 @@ sFlow datagrams contain sample records. Each sample record has a format type tha
 | 0 | 3 | Flow Sample Expanded | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
 | 0 | 4 | Counters Sample Expanded | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
 | 0 | 5 | Discarded Packet | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ✅ |
+| 4300 | 1002 | Custom Metrics | [sFlow-RT](https://sflow-rt.com/custom_metrics.php) | ✅ |
+| 4300 | 1003 | Custom Flow Metrics | [sFlow-RT](https://sflow-rt.com/custom_metrics.php) | ✅ |
 
 Each sample contains one or more flow records (for flow samples) or counter records (for counter samples).
 
