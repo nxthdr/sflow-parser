@@ -105,8 +105,8 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 1031 | Extended InfiniBand LRH | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ✅ |
 | 0 | 1032 | Extended InfiniBand GRH | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ✅ |
 | 0 | 1033 | Extended InfiniBand BTH | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ✅ |
-| 0 | 1034 | Extended VLAN In | [sFlow Discussion](https://groups.google.com/g/sflow/c/S22dbzam404) | ⬜ |
-| 0 | 1035 | Extended VLAN Out | [sFlow Discussion](https://groups.google.com/g/sflow/c/S22dbzam404) | ⬜ |
+| 0 | 1034 | Extended VLAN In | [sFlow Discussion](https://groups.google.com/g/sflow/c/S22dbzam404) | ✅ |
+| 0 | 1035 | Extended VLAN Out | [sFlow Discussion](https://groups.google.com/g/sflow/c/S22dbzam404) | ✅ |
 | 0 | 1036 | Extended Egress Queue | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ✅ |
 | 0 | 1037 | Extended ACL | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ✅ |
 | 0 | 1038 | Extended Function | [sFlow Drops](https://sflow.org/sflow_drops.txt) | ✅ |

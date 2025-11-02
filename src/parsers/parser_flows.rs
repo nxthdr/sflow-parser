@@ -330,6 +330,32 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Extended VLAN In - Format (0,1034)
+    pub(super) fn parse_extended_vlan_in(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedVlanIn> {
+        let num_vlans = self.read_u32()?;
+        let capacity = num_vlans.min(1024) as usize;
+        let mut stack = Vec::with_capacity(capacity);
+        for _ in 0..num_vlans {
+            stack.push(self.read_u32()?);
+        }
+        Ok(crate::models::record_flows::ExtendedVlanIn { stack })
+    }
+
+    /// Parse Extended VLAN Out - Format (0,1035)
+    pub(super) fn parse_extended_vlan_out(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedVlanOut> {
+        let num_vlans = self.read_u32()?;
+        let capacity = num_vlans.min(1024) as usize;
+        let mut stack = Vec::with_capacity(capacity);
+        for _ in 0..num_vlans {
+            stack.push(self.read_u32()?);
+        }
+        Ok(crate::models::record_flows::ExtendedVlanOut { stack })
+    }
+
     /// Parse Extended MPLS Tunnel - Format (0,1008)
     pub(super) fn parse_extended_mpls_tunnel(
         &mut self,
@@ -1046,6 +1072,8 @@ impl<R: Read> Parser<R> {
                 1033 => Ok(FlowData::ExtendedInfiniBandBth(
                     parser.parse_extended_infiniband_bth()?,
                 )),
+                1034 => Ok(FlowData::ExtendedVlanIn(parser.parse_extended_vlan_in()?)),
+                1035 => Ok(FlowData::ExtendedVlanOut(parser.parse_extended_vlan_out()?)),
                 1021 => Ok(FlowData::ExtendedL2TunnelEgress(
                     parser.parse_extended_l2_tunnel_egress()?,
                 )),

@@ -1273,6 +1273,66 @@ fn test_flow_0_1033_extended_infiniband_bth() {
 }
 
 #[test]
+fn test_flow_0_1034_extended_vlan_in() {
+    // Extended VLAN In: array_len(4) + 2 VLAN tags (8 bytes) = 12 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x02, // array length = 2
+        0x81, 0x00, 0x00, 0x64, // TPID=0x8100, TCI=0x0064 (VLAN 100)
+        0x88, 0xA8, 0x00, 0xC8, // TPID=0x88A8, TCI=0x00C8 (VLAN 200)
+    ];
+
+    let data = build_flow_sample_test(0x040A, &record_data); // record type = 1034
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedVlanIn(vlan_in) => {
+                    assert_eq!(vlan_in.stack.len(), 2);
+                    assert_eq!(vlan_in.stack[0], 0x81000064);
+                    assert_eq!(vlan_in.stack[1], 0x88A800C8);
+                }
+                _ => panic!("Expected ExtendedVlanIn"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_1035_extended_vlan_out() {
+    // Extended VLAN Out: array_len(4) + 1 VLAN tag (4 bytes) = 8 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x01, // array length = 1
+        0x81, 0x00, 0x01, 0x2C, // TPID=0x8100, TCI=0x012C (VLAN 300)
+    ];
+
+    let data = build_flow_sample_test(0x040B, &record_data); // record type = 1035
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedVlanOut(vlan_out) => {
+                    assert_eq!(vlan_out.stack.len(), 1);
+                    assert_eq!(vlan_out.stack[0], 0x8100012C);
+                }
+                _ => panic!("Expected ExtendedVlanOut"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
 fn test_flow_0_1036_extended_egress_queue() {
     // Extended Egress Queue: queue(4)
     let record_data = [

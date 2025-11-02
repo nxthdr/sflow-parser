@@ -667,6 +667,54 @@ pub struct ExtendedInfiniBandBth {
     pub opcode: u32,
 }
 
+/// Extended VLAN In - Format (0,1034)
+///
+/// Ingress 802.1Q VLAN tag information
+///
+/// # XDR Definition ([sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0199.html))
+///
+/// ```text
+/// /* opaque = flow_data; enterprise = 0; format = 1034 */
+/// extended_vlanin {
+///   unsigned int stack<>;  /* List of ingress 802.1Q TPID/TCI layers. Each
+///                             TPID,TCI pair is represented as a single 32 bit
+///                             integer. Layers listed from outermost to
+///                             innermost. */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedVlanIn {
+    /// List of ingress 802.1Q TPID/TCI layers
+    /// Each TPID,TCI pair is represented as a single 32-bit integer
+    /// Layers listed from outermost to innermost
+    pub stack: Vec<u32>,
+}
+
+/// Extended VLAN Out - Format (0,1035)
+///
+/// Egress 802.1Q VLAN tag information
+///
+/// # XDR Definition ([sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0199.html))
+///
+/// ```text
+/// /* opaque = flow_data; enterprise = 0; format = 1035 */
+/// extended_vlanout {
+///   unsigned int stack<>;  /* List of egress 802.1Q TPID/TCI layers. Each
+///                             TPID,TCI pair is represented as a single 32 bit
+///                             integer. Layers listed from outermost to
+///                             innermost. */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedVlanOut {
+    /// List of egress 802.1Q TPID/TCI layers
+    /// Each TPID,TCI pair is represented as a single 32-bit integer
+    /// Layers listed from outermost to innermost
+    pub stack: Vec<u32>,
+}
+
 /// Extended MPLS Tunnel - Format (0,1008)
 ///
 /// MPLS tunnel information

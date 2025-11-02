@@ -304,6 +304,10 @@ pub enum FlowData {
     ExtendedNatPort(crate::models::record_flows::ExtendedNatPort),
     /// Extended InfiniBand BTH - Format (0,1033)
     ExtendedInfiniBandBth(crate::models::record_flows::ExtendedInfiniBandBth),
+    /// Extended VLAN In - Format (0,1034)
+    ExtendedVlanIn(crate::models::record_flows::ExtendedVlanIn),
+    /// Extended VLAN Out - Format (0,1035)
+    ExtendedVlanOut(crate::models::record_flows::ExtendedVlanOut),
     /// Extended L2 Tunnel Egress - Format (0,1021)
     ExtendedL2TunnelEgress(crate::models::record_flows::ExtendedL2TunnelEgress),
     /// Extended L2 Tunnel Ingress - Format (0,1022)
