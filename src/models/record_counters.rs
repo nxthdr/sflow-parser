@@ -1026,8 +1026,8 @@ pub struct HostDiskIo {
     /// Free disk space in bytes
     pub disk_free: u64,
 
-    /// Percentage of disk used (0-100)
-    pub part_max_used: u32,
+    /// Percentage of disk used (in hundredths of a percent, e.g., 100 = 1%)
+    pub part_max_used: i32,
 
     /// Number of disk reads
     pub reads: u32,
@@ -2007,6 +2007,72 @@ pub struct AppWorkers {
 
     /// Number of dropped requests
     pub req_dropped: u32,
+}
+
+/// Broadcom Device Buffer Utilization - Format (4413,1)
+///
+/// Device level buffer utilization statistics from Broadcom switch ASICs
+///
+/// # XDR Definition ([sFlow Broadcom Buffers](https://sflow.org/bv-sflow.txt))
+///
+/// ```text
+/// /* Device level buffer utilization */
+/// /* buffers_used metrics represent peak since last export */
+/// /* opaque = counter_data; enterprise = 4413; format = 1 */
+/// struct bst_device_buffers {
+///   percentage uc_pc;  /* unicast buffers percentage utilization */
+///   percentage mc_pc;  /* multicast buffers percentage utilization */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct BroadcomDeviceBuffers {
+    /// Unicast buffers percentage utilization (in hundredths of a percent, e.g., 100 = 1%)
+    pub uc_pc: i32,
+
+    /// Multicast buffers percentage utilization (in hundredths of a percent, e.g., 100 = 1%)
+    pub mc_pc: i32,
+}
+
+/// Broadcom Port Buffer Utilization - Format (4413,2)
+///
+/// Port level buffer utilization statistics from Broadcom switch ASICs
+///
+/// # XDR Definition ([sFlow Broadcom Buffers](https://sflow.org/bv-sflow.txt))
+///
+/// ```text
+/// /* Port level buffer utilization */
+/// /* buffers_used metrics represent peak buffers used since last export */
+/// /* opaque = counter_data; enterprise = 4413; format = 2 */
+/// struct bst_port_buffers {
+///   percentage ingress_uc_pc;         /* ingress unicast buffers utilization */
+///   percentage ingress_mc_pc;         /* ingress multicast buffers utilization */
+///   percentage egress_uc_pc;          /* egress unicast buffers utilization */
+///   percentage egress_mc_pc;          /* egress multicast buffers utilization */
+///   percentage egress_queue_uc_pc<8>; /* per egress queue unicast buffers utilization */
+///   percentage egress_queue_mc_pc<8>; /* per egress queue multicast buffers utilization*/
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct BroadcomPortBuffers {
+    /// Ingress unicast buffers percentage utilization (in hundredths of a percent)
+    pub ingress_uc_pc: i32,
+
+    /// Ingress multicast buffers percentage utilization (in hundredths of a percent)
+    pub ingress_mc_pc: i32,
+
+    /// Egress unicast buffers percentage utilization (in hundredths of a percent)
+    pub egress_uc_pc: i32,
+
+    /// Egress multicast buffers percentage utilization (in hundredths of a percent)
+    pub egress_mc_pc: i32,
+
+    /// Per egress queue unicast buffers percentage utilization (up to 8 queues)
+    pub egress_queue_uc_pc: Vec<i32>,
+
+    /// Per egress queue multicast buffers percentage utilization (up to 8 queues)
+    pub egress_queue_mc_pc: Vec<i32>,
 }
 
 /// Broadcom Switch ASIC Table Utilization - Format (4413,3)

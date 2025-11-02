@@ -1796,3 +1796,33 @@ fn test_parse_memcache_operation() {
         _ => panic!("Expected FlowSample"),
     }
 }
+
+#[test]
+fn test_extended_bst_egress_queue() {
+    // Extended BST Egress Queue: 1 u32 = 4 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x05, // queue = 5
+    ];
+
+    // Enterprise 4413, format 1: (4413 << 12) | 1 = 18079745
+    let record_type = 0x0113D001;
+
+    let data = build_flow_sample_test(record_type, &record_data);
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedBstEgressQueue(bst) => {
+                    assert_eq!(bst.queue, 5);
+                }
+                _ => panic!("Expected ExtendedBstEgressQueue"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}

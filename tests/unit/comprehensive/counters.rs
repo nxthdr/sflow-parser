@@ -1537,6 +1537,94 @@ fn test_parse_memcache_counters() {
 }
 
 #[test]
+fn test_parse_broadcom_device_buffers() {
+    // Broadcom device buffers: 2 i32 = 8 bytes
+    let record_data = [
+        0x00, 0x00, 0x27, 0x10, // uc_pc = 10000 (100.00%)
+        0x00, 0x00, 0x13, 0x88, // mc_pc = 5000 (50.00%)
+    ];
+
+    // Enterprise 4413, format 1: (4413 << 12) | 1 = 18079745
+    let record_type = 0x0113D001;
+
+    let data = build_counter_sample_test(record_type, &record_data);
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::BroadcomDeviceBuffers(buffers) => {
+                    assert_eq!(buffers.uc_pc, 10000); // 100.00%
+                    assert_eq!(buffers.mc_pc, 5000); // 50.00%
+                }
+                _ => panic!("Expected BroadcomDeviceBuffers"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_broadcom_port_buffers() {
+    // Broadcom port buffers: 4 i32 + 2 variable arrays
+    let mut record_data = vec![
+        0x00, 0x00, 0x1F, 0x40, // ingress_uc_pc = 8000 (80.00%)
+        0x00, 0x00, 0x0F, 0xA0, // ingress_mc_pc = 4000 (40.00%)
+        0x00, 0x00, 0x13, 0x88, // egress_uc_pc = 5000 (50.00%)
+        0x00, 0x00, 0x0B, 0xB8, // egress_mc_pc = 3000 (30.00%)
+    ];
+
+    // egress_queue_uc_pc array: 3 elements
+    record_data.extend_from_slice(&[0x00, 0x00, 0x00, 0x03]); // count = 3
+    record_data.extend_from_slice(&[0x00, 0x00, 0x0F, 0xA0]); // 4000
+    record_data.extend_from_slice(&[0x00, 0x00, 0x13, 0x88]); // 5000
+    record_data.extend_from_slice(&[0x00, 0x00, 0x17, 0x70]); // 6000
+
+    // egress_queue_mc_pc array: 3 elements
+    record_data.extend_from_slice(&[0x00, 0x00, 0x00, 0x03]); // count = 3
+    record_data.extend_from_slice(&[0x00, 0x00, 0x07, 0xD0]); // 2000
+    record_data.extend_from_slice(&[0x00, 0x00, 0x0B, 0xB8]); // 3000
+    record_data.extend_from_slice(&[0x00, 0x00, 0x09, 0xC4]); // 2500
+
+    // Enterprise 4413, format 2: (4413 << 12) | 2 = 18079746
+    let record_type = 0x0113D002;
+
+    let data = build_counter_sample_test(record_type, &record_data);
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::BroadcomPortBuffers(buffers) => {
+                    assert_eq!(buffers.ingress_uc_pc, 8000);
+                    assert_eq!(buffers.ingress_mc_pc, 4000);
+                    assert_eq!(buffers.egress_uc_pc, 5000);
+                    assert_eq!(buffers.egress_mc_pc, 3000);
+                    assert_eq!(buffers.egress_queue_uc_pc.len(), 3);
+                    assert_eq!(buffers.egress_queue_uc_pc[0], 4000);
+                    assert_eq!(buffers.egress_queue_uc_pc[1], 5000);
+                    assert_eq!(buffers.egress_queue_uc_pc[2], 6000);
+                    assert_eq!(buffers.egress_queue_mc_pc.len(), 3);
+                    assert_eq!(buffers.egress_queue_mc_pc[0], 2000);
+                    assert_eq!(buffers.egress_queue_mc_pc[1], 3000);
+                    assert_eq!(buffers.egress_queue_mc_pc[2], 2500);
+                }
+                _ => panic!("Expected BroadcomPortBuffers"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
 fn test_parse_broadcom_tables() {
     // Broadcom tables counters: 36 u32 = 144 bytes
     let record_data = [

@@ -856,6 +856,15 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Extended BST Egress Queue - Format (4413,1)
+    pub(super) fn parse_extended_bst_egress_queue(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedBstEgressQueue> {
+        Ok(crate::models::record_flows::ExtendedBstEgressQueue {
+            queue: self.read_u32()?,
+        })
+    }
+
     /// Parse flow data based on format
     pub(super) fn parse_flow_data(
         &mut self,
@@ -976,6 +985,14 @@ impl<R: Read> Parser<R> {
                 2206 => Ok(FlowData::HttpRequest(parser.parse_http_request()?)),
                 2207 => Ok(FlowData::ExtendedProxyRequest(
                     parser.parse_extended_proxy_request()?,
+                )),
+                _ => Ok(FlowData::Unknown { format, data }),
+            }
+        } else if format.enterprise() == 4413 {
+            // Broadcom enterprise formats
+            match format.format() {
+                1 => Ok(FlowData::ExtendedBstEgressQueue(
+                    parser.parse_extended_bst_egress_queue()?,
                 )),
                 _ => Ok(FlowData::Unknown { format, data }),
             }

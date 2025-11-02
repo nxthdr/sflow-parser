@@ -379,7 +379,7 @@ impl<R: Read> Parser<R> {
         Ok(crate::models::record_counters::HostDiskIo {
             disk_total: self.read_u64()?,
             disk_free: self.read_u64()?,
-            part_max_used: self.read_u32()?,
+            part_max_used: self.read_i32()?,
             reads: self.read_u32()?,
             bytes_read: self.read_u64()?,
             read_time: self.read_u32()?,
@@ -718,6 +718,48 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Broadcom Device Buffer Utilization - Format (4413,1)
+    pub(super) fn parse_broadcom_device_buffers(
+        &mut self,
+    ) -> Result<crate::models::record_counters::BroadcomDeviceBuffers> {
+        Ok(crate::models::record_counters::BroadcomDeviceBuffers {
+            uc_pc: self.read_i32()?,
+            mc_pc: self.read_i32()?,
+        })
+    }
+
+    /// Parse Broadcom Port Buffer Utilization - Format (4413,2)
+    pub(super) fn parse_broadcom_port_buffers(
+        &mut self,
+    ) -> Result<crate::models::record_counters::BroadcomPortBuffers> {
+        let ingress_uc_pc = self.read_i32()?;
+        let ingress_mc_pc = self.read_i32()?;
+        let egress_uc_pc = self.read_i32()?;
+        let egress_mc_pc = self.read_i32()?;
+
+        // Read variable-length arrays for egress queue percentages
+        let uc_count = self.read_u32()? as usize;
+        let mut egress_queue_uc_pc = Vec::with_capacity(uc_count);
+        for _ in 0..uc_count {
+            egress_queue_uc_pc.push(self.read_i32()?);
+        }
+
+        let mc_count = self.read_u32()? as usize;
+        let mut egress_queue_mc_pc = Vec::with_capacity(mc_count);
+        for _ in 0..mc_count {
+            egress_queue_mc_pc.push(self.read_i32()?);
+        }
+
+        Ok(crate::models::record_counters::BroadcomPortBuffers {
+            ingress_uc_pc,
+            ingress_mc_pc,
+            egress_uc_pc,
+            egress_mc_pc,
+            egress_queue_uc_pc,
+            egress_queue_mc_pc,
+        })
+    }
+
     /// Parse Broadcom Switch ASIC Table Utilization - Format (4413,3)
     pub(super) fn parse_broadcom_tables(
         &mut self,
@@ -846,6 +888,12 @@ impl<R: Read> Parser<R> {
         } else if format.enterprise() == 4413 {
             // Broadcom enterprise formats
             match format.format() {
+                1 => Ok(CounterData::BroadcomDeviceBuffers(
+                    parser.parse_broadcom_device_buffers()?,
+                )),
+                2 => Ok(CounterData::BroadcomPortBuffers(
+                    parser.parse_broadcom_port_buffers()?,
+                )),
                 3 => Ok(CounterData::BroadcomTables(parser.parse_broadcom_tables()?)),
                 _ => Ok(CounterData::Unknown { format, data }),
             }

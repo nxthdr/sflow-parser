@@ -139,6 +139,11 @@ pub const SFLOW_SPECS: &[SpecDocument] = &[
         url: "https://sflow.org/sflow_broadcom_tables.txt",
         year: 2015,
     },
+    SpecDocument {
+        name: "sflow_broadcom_buffers",
+        url: "https://sflow.org/bv-sflow.txt",
+        year: 2015,
+    },
 ];
 
 /// XDR structure definition parsed from spec
@@ -390,6 +395,10 @@ fn xdr_type_to_rust(xdr_type: &str) -> String {
         if xdr_type.contains("opaque") || xdr_type.contains("byte") {
             return "Vec<u8>".to_string();
         }
+        // Handle arrays of typedefs like "percentage<8>"
+        if xdr_type.contains("percentage") {
+            return "Vec<i32>".to_string();
+        }
         return "Vec<u32>".to_string();
     }
 
@@ -424,7 +433,7 @@ fn xdr_type_to_rust(xdr_type: &str) -> String {
         "os_name" => "OsName".to_string(),
         "label_stack" => "Vec<u32>".to_string(),
         "milliseconds" => "u32".to_string(),
-        "percentage" => "u32".to_string(),
+        "percentage" => "i32".to_string(),
         "gauge32" => "u32".to_string(),
         "counter32" => "u32".to_string(),
         "counter64" => "u64".to_string(),

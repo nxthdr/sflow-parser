@@ -41,6 +41,13 @@ impl<R: Read> Parser<R> {
         Ok(u64::from_be_bytes(buf))
     }
 
+    /// Read an i32 in network byte order (big-endian)
+    pub(crate) fn read_i32(&mut self) -> Result<i32> {
+        let mut buf = [0u8; 4];
+        self.reader.read_exact(&mut buf)?;
+        Ok(i32::from_be_bytes(buf))
+    }
+
     /// Read a u8
     #[allow(dead_code)]
     pub(crate) fn read_u8(&mut self) -> Result<u8> {

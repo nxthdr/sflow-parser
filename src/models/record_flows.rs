@@ -2195,3 +2195,23 @@ pub struct ExtendedProxyRequest {
     /// Host in request to downstream server
     pub host: String,
 }
+
+/// Extended BST Egress Queue - Format (4413,1)
+///
+/// Selected egress queue for sampled packet from Broadcom switch ASIC
+///
+/// # XDR Definition ([sFlow Broadcom Buffers](https://sflow.org/bv-sflow.txt))
+///
+/// ```text
+/// /* Selected egress queue */
+/// /* opaque = flow_data; enterprise = 4413; format = 1 */
+/// struct extended_bst_egress_queue {
+///   unsigned int queue;  /* eqress queue number selected for sampled packet */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedBstEgressQueue {
+    /// Egress queue number selected for sampled packet
+    pub queue: u32,
+}

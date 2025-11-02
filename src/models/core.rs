@@ -360,6 +360,8 @@ pub enum FlowData {
     HttpRequest(crate::models::record_flows::HttpRequest),
     /// Extended Proxy Request - Format (0,2207)
     ExtendedProxyRequest(crate::models::record_flows::ExtendedProxyRequest),
+    /// Extended BST Egress Queue - Format (4413,1)
+    ExtendedBstEgressQueue(crate::models::record_flows::ExtendedBstEgressQueue),
     /// Unknown or unparsed format
     Unknown { format: DataFormat, data: Vec<u8> },
 }
@@ -446,6 +448,10 @@ pub enum CounterData {
     MemcacheCounters(crate::models::record_counters::MemcacheCounters),
     /// App Workers - Format (0,2206)
     AppWorkers(crate::models::record_counters::AppWorkers),
+    /// Broadcom Device Buffer Utilization - Format (4413,1)
+    BroadcomDeviceBuffers(crate::models::record_counters::BroadcomDeviceBuffers),
+    /// Broadcom Port Buffer Utilization - Format (4413,2)
+    BroadcomPortBuffers(crate::models::record_counters::BroadcomPortBuffers),
     /// Broadcom Switch ASIC Table Utilization - Format (4413,3)
     BroadcomTables(crate::models::record_counters::BroadcomTables),
     /// NVIDIA GPU Statistics - Format (5703,1)

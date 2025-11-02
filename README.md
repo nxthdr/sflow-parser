@@ -41,7 +41,7 @@ The main specification is [sFlow Version 5](https://sflow.org/sflow_version_5.tx
 | 2014 | [sFlow OpenFlow Structures](https://sflow.org/sflow_openflow.txt) | OpenFlow port monitoring | ✅ |
 | 2015 | [sFlow Host TCP/IP Counters](https://sflow.org/sflow_host_ip.txt) | Host IP, ICMP, TCP, and UDP counters | ✅ |
 | 2015 | [sFlow Broadcom ASIC Table Utilization](https://sflow.org/sflow_broadcom_tables.txt) | Hardware table utilization for Broadcom ASICs | ✅ |
-| 2015 | [sFlow Broadcom Buffer Utilization](https://sflow.org/bv-sflow.txt) | Buffer utilization for Broadcom switches | ⬜ |
+| 2015 | [sFlow Broadcom Buffer Utilization](https://sflow.org/bv-sflow.txt) | Buffer utilization for Broadcom switches | ✅ |
 | 2016 | [sFlow Optical Interface Structures](https://sflow.org/sflow_optics.txt) | Pluggable optical modules (SFP, QSFP, etc.) | ⬜ |
 | 2020 | [sFlow Dropped Packet Notification](https://sflow.org/sflow_drops.txt) | Reports on dropped packets with reason codes | ✅ |
 | 2021 | [sFlow Transit Delay Structures](https://sflow.org/sflow_transit.txt) | Delay and queue depth for sampled packets | ✅ |
@@ -131,7 +131,7 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 2208 | Extended Nav Timing | [sFlow Discussion](https://groups.google.com/forum/) | ⬜ |
 | 0 | 2209 | Extended TCP Info | [sFlow Discussion](https://groups.google.com/forum/) | ⬜ |
 | 0 | 2210 | Extended Entities | [sFlow Discussion](https://blog.sflow.com/2018/10/systemd-traffic-marking.html) | ⬜ |
-| 4413 | 1 | BST Egress Queue | [sFlow Broadcom](https://sflow.org/bv-sflow.txt) | ⬜ |
+| 4413 | 1 | BST Egress Queue | [sFlow Broadcom](https://sflow.org/bv-sflow.txt) | ✅ |
 
 ### Counter Records
 
@@ -181,8 +181,8 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 3001 | Temperature | [sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs) | ⬜ |
 | 0 | 3002 | Humidity | [sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs) | ⬜ |
 | 0 | 3003 | Fans | [sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs) | ⬜ |
-| 4413 | 1 | Broadcom Device Buffer | [sFlow Broadcom](https://sflow.org/bv-sflow.txt) | ⬜ |
-| 4413 | 2 | Broadcom Port Buffer | [sFlow Broadcom](https://sflow.org/bv-sflow.txt) | ⬜ |
+| 4413 | 1 | Broadcom Device Buffer | [sFlow Broadcom](https://sflow.org/bv-sflow.txt) | ✅ |
+| 4413 | 2 | Broadcom Port Buffer | [sFlow Broadcom](https://sflow.org/bv-sflow.txt) | ✅ |
 | 4413 | 3 | Broadcom ASIC Tables | [sFlow Broadcom](https://sflow.org/sflow_broadcom_tables.txt) | ✅ |
 | 5703 | 1 | NVIDIA GPU | [sFlow NVML](https://sflow.org/sflow_nvml.txt) | ✅ |
 
