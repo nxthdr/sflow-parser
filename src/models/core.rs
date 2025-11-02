@@ -338,6 +338,10 @@ pub enum FlowData {
     ExtendedTransit(crate::models::record_flows::ExtendedTransit),
     /// Extended Queue - Format (0,1040)
     ExtendedQueue(crate::models::record_flows::ExtendedQueue),
+    /// Extended HW Trap - Format (0,1041)
+    ExtendedHwTrap(crate::models::record_flows::ExtendedHwTrap),
+    /// Extended Linux Drop Reason - Format (0,1042)
+    ExtendedLinuxDropReason(crate::models::record_flows::ExtendedLinuxDropReason),
     /// Extended Socket IPv4 - Format (0,2100)
     ExtendedSocketIpv4(crate::models::record_flows::ExtendedSocketIpv4),
     /// Extended Socket IPv6 - Format (0,2101)

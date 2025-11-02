@@ -658,6 +658,25 @@ impl<R: Read> Parser<R> {
         Ok(crate::models::record_flows::ExtendedQueue { depth })
     }
 
+    /// Parse Extended HW Trap - Format (0,1041)
+    pub(super) fn parse_extended_hw_trap(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedHwTrap> {
+        let group = self.read_string()?;
+        let trap = self.read_string()?;
+
+        Ok(crate::models::record_flows::ExtendedHwTrap { group, trap })
+    }
+
+    /// Parse Extended Linux Drop Reason - Format (0,1042)
+    pub(super) fn parse_extended_linux_drop_reason(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedLinuxDropReason> {
+        let reason = self.read_string()?;
+
+        Ok(crate::models::record_flows::ExtendedLinuxDropReason { reason })
+    }
+
     /// Parse Extended Socket IPv4 - Format (0,2100)
     pub(super) fn parse_extended_socket_ipv4(
         &mut self,
@@ -961,6 +980,10 @@ impl<R: Read> Parser<R> {
                 )),
                 1039 => Ok(FlowData::ExtendedTransit(parser.parse_extended_transit()?)),
                 1040 => Ok(FlowData::ExtendedQueue(parser.parse_extended_queue()?)),
+                1041 => Ok(FlowData::ExtendedHwTrap(parser.parse_extended_hw_trap()?)),
+                1042 => Ok(FlowData::ExtendedLinuxDropReason(
+                    parser.parse_extended_linux_drop_reason()?,
+                )),
                 2100 => Ok(FlowData::ExtendedSocketIpv4(
                     parser.parse_extended_socket_ipv4()?,
                 )),

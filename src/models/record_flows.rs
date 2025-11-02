@@ -1555,6 +1555,54 @@ pub struct ExtendedQueue {
     pub depth: u32,
 }
 
+/// Extended HW Trap - Format (0,1041)
+///
+/// Devlink Trap Name information from Linux kernel
+///
+/// # XDR Definition ([host-sflow](https://github.com/sflow/host-sflow/blob/v2.0.50-3/src/sflow/sflow.h))
+///
+/// ```text
+/// /* Devlink Trap Name */
+/// /* opaque = flow_data; enterprise = 0; format = 1041 */
+/// /* https://www.kernel.org/doc/html/latest/networking/devlink/devlink-trap.html */
+/// /* XDR spec: */
+/// /*  struct extended_hw_trap { */
+/// /*    string group<>; */ /* NET_DM_ATTR_HW_TRAP_GROUP_NAME */
+/// /*    string trap<>; */ /* NET_DM_ATTR_HW_TRAP_NAME */
+/// /*  } */
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedHwTrap {
+    /// Hardware trap group name (NET_DM_ATTR_HW_TRAP_GROUP_NAME)
+    pub group: String,
+
+    /// Hardware trap name (NET_DM_ATTR_HW_TRAP_NAME)
+    pub trap: String,
+}
+
+/// Extended Linux Drop Reason - Format (0,1042)
+///
+/// Linux drop_monitor reason information
+///
+/// # XDR Definition ([host-sflow](https://github.com/sflow/host-sflow/blob/v2.0.50-3/src/sflow/sflow.h))
+///
+/// ```text
+/// /* Linux drop_monitor reason */
+/// /* opaque = flow_data; enterprise = 0; format = 1042 */
+/// /* https://github.com/torvalds/linux/blob/master/include/net/dropreason.h */
+/// /* XDR spec: */
+/// /*  struct extended_linux_drop_reason { */
+/// /*    string reason<>; */ /* NET_DM_ATTR_REASON */
+/// /*  } */
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedLinuxDropReason {
+    /// Drop reason string (NET_DM_ATTR_REASON)
+    pub reason: String,
+}
+
 /// Extended Socket IPv4 - Format (0,2100)
 ///
 /// IPv4 socket information for application transactions

@@ -8,6 +8,8 @@ To implement a new sFlow specification extension, follow these steps:
 6. Update the documentation in the `README.md` file, checking newly implemented specifications, and the newly implemented flow and counter records sections.
 7. Add the specification in the `tests/validation/specs_validation.rs` file (in the `SFLOW_SPECS` constant). Please keep the ordering of the specifications based on the year.
 
+To implement records that are not part of a spec (such as sFlow discussions), you can follow the plan above but skip the steps related to the specification validation.
+
 To check that the implementation is correct, please run:
 
 1. `make test` to validate the unit tests.

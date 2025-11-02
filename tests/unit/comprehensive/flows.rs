@@ -1826,3 +1826,63 @@ fn test_extended_bst_egress_queue() {
         _ => panic!("Expected FlowSample"),
     }
 }
+
+#[test]
+fn test_parse_extended_hw_trap() {
+    // Extended HW Trap: group string + trap string
+    let mut record_data = Vec::new();
+
+    // group = "l2_drops"
+    record_data.extend(encode_string("l2_drops"));
+
+    // trap = "source_mac_is_multicast"
+    record_data.extend(encode_string("source_mac_is_multicast"));
+
+    let data = build_flow_sample_test(0x0411, &record_data); // record type = 1041
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedHwTrap(hw_trap) => {
+                    assert_eq!(hw_trap.group, "l2_drops");
+                    assert_eq!(hw_trap.trap, "source_mac_is_multicast");
+                }
+                _ => panic!("Expected ExtendedHwTrap"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_parse_extended_linux_drop_reason() {
+    // Extended Linux Drop Reason: reason string
+    let mut record_data = Vec::new();
+
+    // reason = "SKB_DROP_REASON_NOT_SPECIFIED"
+    record_data.extend(encode_string("SKB_DROP_REASON_NOT_SPECIFIED"));
+
+    let data = build_flow_sample_test(0x0412, &record_data); // record type = 1042
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedLinuxDropReason(drop_reason) => {
+                    assert_eq!(drop_reason.reason, "SKB_DROP_REASON_NOT_SPECIFIED");
+                }
+                _ => panic!("Expected ExtendedLinuxDropReason"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
