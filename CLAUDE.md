@@ -3,7 +3,7 @@ To implement a new sFlow specification extension, follow these steps:
 1. Read the specification document. You can find it on the `README.md`.
 2. Implement the models in the `src/models` directory for the flows and counters records. Please keep the ordering of the models based on the (enterprise, format) tuple. Also, please include a docstring for each model with the specification XDR record definition. Stay as close as possible to the specification, keeping the field names, types (adapting for Rust) and order.
 3. Implement the parser in the `src/parsers` directory. Please keep the ordering of the parsers based on the (enterprise, format) tuple.
-4. Add unit tests in the `tests/unit` directory. Particularly, implement at minimum one test for each parser in the `tests/unit/comprehensive` directory.Please keep the ordering of the tests based on the (enterprise, format) tuple.
+4. Add unit tests in the `tests/unit` directory. Particularly, implement at minimum one test for each parser in the `tests/unit/comprehensive` directory. Please keep the ordering of the tests based on the (enterprise, format) tuple.
 5. See if the integration tests need to be updated in the `tests/integration` directory.
 6. Update the documentation in the `README.md` file, checking newly implemented specifications, and the newly implemented flow and counter records sections.
 7. Add the specification in the `tests/validation/specs_validation.rs` file (in the `SFLOW_SPECS` constant). Please keep the ordering of the specifications based on the year.

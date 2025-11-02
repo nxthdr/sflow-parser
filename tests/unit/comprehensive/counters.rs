@@ -1,14 +1,93 @@
 //! Counter record parsing tests
 //!
 //! Tests for parsing all counter record types: interface, host, virtual, and app counters.
+//!
+//! ## Test Organization
+//!
+//! Tests are organized by (enterprise, format) tuple to match the order in:
+//! - `src/models/core.rs` (CounterData enum)
+//! - `src/models/record_counters.rs`
+//! - `src/parsers/parser_counters.rs`
+//!
+//! ### Test Naming Convention
+//!
+//! Format: `test_counter_{enterprise}_{format}_{descriptive_name}`
+//!
+//! Examples:
+//! - `test_counter_0_1_generic_interface` - Enterprise 0, Format 1
+//! - `test_counter_0_2000_host_description` - Enterprise 0, Format 2000
+//! - `test_counter_4413_1_broadcom_device_buffers` - Enterprise 4413, Format 1
+//!
+//! ### Test Order
+//!
+//! Tests are ordered by (enterprise, format) tuple:
+//! 1. Enterprise 0, Formats 1-10 (Interface counters)
+//! 2. Enterprise 0, Formats 1001-1005 (Processor/Radio counters)
+//! 3. Enterprise 0, Formats 2000-2010 (Host counters)
+//! 4. Enterprise 0, Formats 2100-2106 (Virtual counters)
+//! 5. Enterprise 0, Formats 2200-2206 (Application counters)
+//! 6. Enterprise 0, Formats 3000-3003 (Environmental counters)
+//! 7. Enterprise 4413, Formats 1-3 (Broadcom counters)
+//! 8. Enterprise 5703, Format 1 (NVIDIA GPU counters)
 
 use super::helpers::*;
 use sflow_parser::models::*;
 use sflow_parser::models::{MachineType, OsName};
 use sflow_parser::parsers::parse_datagram;
 
+// ===== Enterprise 0: Interface Counters (Formats 1-10) =====
+
 #[test]
-fn test_parse_ethernet_interface_counters() {
+fn test_counter_0_1_generic_interface() {
+    // Generic interface counters: 22 fields (88 bytes for counters + 8 bytes for if_index and if_type)
+    let record_data = [
+        0x00, 0x00, 0x00, 0x01, // if_index = 1
+        0x00, 0x00, 0x00, 0x06, // if_type = 6 (ethernetCsmacd)
+        0x00, 0x00, 0x00, 0x00, 0x3B, 0x9A, 0xCA, 0x00, // if_speed = 1 Gbps
+        0x00, 0x00, 0x00, 0x01, // if_direction = 1 (full-duplex)
+        0x00, 0x00, 0x00, 0x03, // if_status = 3 (up)
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x27, 0x10, // if_in_octets = 10000
+        0x00, 0x00, 0x00, 0x64, // if_in_ucast_pkts = 100
+        0x00, 0x00, 0x00, 0x0A, // if_in_multicast_pkts = 10
+        0x00, 0x00, 0x00, 0x05, // if_in_broadcast_pkts = 5
+        0x00, 0x00, 0x00, 0x00, // if_in_discards = 0
+        0x00, 0x00, 0x00, 0x00, // if_in_errors = 0
+        0x00, 0x00, 0x00, 0x00, // if_in_unknown_protos = 0
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4E, 0x20, // if_out_octets = 20000
+        0x00, 0x00, 0x00, 0xC8, // if_out_ucast_pkts = 200
+        0x00, 0x00, 0x00, 0x14, // if_out_multicast_pkts = 20
+        0x00, 0x00, 0x00, 0x0A, // if_out_broadcast_pkts = 10
+        0x00, 0x00, 0x00, 0x00, // if_out_discards = 0
+        0x00, 0x00, 0x00, 0x00, // if_out_errors = 0
+        0x00, 0x00, 0x00, 0x64, // if_promiscuous_mode = 100
+    ];
+
+    let data = build_counter_sample_test(0x0001, &record_data); // record type = 1
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::GenericInterface(iface) => {
+                    assert_eq!(iface.if_index, 1);
+                    assert_eq!(iface.if_type, 6);
+                    assert_eq!(iface.if_speed, 1_000_000_000);
+                    assert_eq!(iface.if_in_ucast_pkts, 100);
+                    assert_eq!(iface.if_out_ucast_pkts, 200);
+                }
+                _ => panic!("Expected GenericInterface"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_counter_0_2_ethernet_interface_counters() {
     // Ethernet interface counters: 13 u32 = 52 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x00, // dot3_stats_alignment_errors = 0
@@ -49,7 +128,7 @@ fn test_parse_ethernet_interface_counters() {
 }
 
 #[test]
-fn test_parse_token_ring_counters() {
+fn test_counter_0_3_token_ring_counters() {
     // Token Ring counters: 18 u32 = 72 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x05, // dot5_stats_line_errors = 5
@@ -96,7 +175,7 @@ fn test_parse_token_ring_counters() {
 }
 
 #[test]
-fn test_parse_vg100_interface_counters() {
+fn test_counter_0_4_vg100_interface_counters() {
     // 100BaseVG counters: 8 u32 + 6 u64 = 80 bytes
     let record_data = [
         0x00, 0x00, 0x03, 0xE8, // dot12_in_high_priority_frames = 1000
@@ -148,7 +227,7 @@ fn test_parse_vg100_interface_counters() {
 }
 
 #[test]
-fn test_parse_vlan_counters() {
+fn test_counter_0_5_vlan_counters() {
     // VLAN counters: 1 u32 + 1 u64 + 4 u32 = 28 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x64, // vlan_id = 100
@@ -188,7 +267,7 @@ fn test_parse_vlan_counters() {
 }
 
 #[test]
-fn test_parse_ieee80211_counters() {
+fn test_counter_0_6_ieee80211_counters() {
     // IEEE 802.11 Counters: 20 u32 = 80 bytes
     let record_data = [
         0x00, 0x00, 0x27, 0x10, // dot11_transmitted_fragment_count = 10000
@@ -241,7 +320,7 @@ fn test_parse_ieee80211_counters() {
 }
 
 #[test]
-fn test_parse_lag_port_stats() {
+fn test_counter_0_7_lag_port_stats() {
     // LAG Port Stats: 2 MAC (6 bytes each) + 1 u32 + 4 bytes state + 8 u32 = 52 bytes
     let record_data = [
         // Actor system ID (MAC address)
@@ -307,7 +386,7 @@ fn test_parse_lag_port_stats() {
 }
 
 #[test]
-fn test_parse_infiniband_counters() {
+fn test_counter_0_9_infiniband_counters() {
     // InfiniBand Counters: 2 u64 + 12 u32 = 64 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x42, 0x40, // port_xmit_pkts = 1000000
@@ -360,7 +439,7 @@ fn test_parse_infiniband_counters() {
 }
 
 #[test]
-fn test_parse_optical_sfp_qsfp() {
+fn test_counter_0_10_optical_sfp_qsfp() {
     // Optical SFP/QSFP Counters: 4 fields + variable lanes array
     // module_id (u32) + module_num_lanes (u32) + module_supply_voltage (u32) + module_temperature (i32)
     // + num_lanes (u32) + lanes (2 lanes * 10 u32 each = 20 u32)
@@ -443,8 +522,10 @@ fn test_parse_optical_sfp_qsfp() {
     }
 }
 
+// ===== Enterprise 0: Processor/Radio Counters (Formats 1001-1005) =====
+
 #[test]
-fn test_parse_processor_counters() {
+fn test_counter_0_1001_processor_counters() {
     // Processor counters: 3 u32 + 2 u64 = 28 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x32, // cpu_5s = 50%
@@ -482,7 +563,7 @@ fn test_parse_processor_counters() {
 }
 
 #[test]
-fn test_parse_radio_utilization() {
+fn test_counter_0_1002_radio_utilization() {
     // Radio Utilization: elapsed_time(4) + on_channel_time(4) + on_channel_busy_time(4) = 12 bytes
     let record_data = [
         0x00, 0x00, 0x03, 0xE8, // elapsed_time = 1000 ms
@@ -513,7 +594,7 @@ fn test_parse_radio_utilization() {
 }
 
 #[test]
-fn test_parse_openflow_port() {
+fn test_counter_0_1004_openflow_port() {
     // OpenFlow Port: datapath_id(8) + port_no(4) = 12 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, // datapath_id = 1
@@ -542,7 +623,37 @@ fn test_parse_openflow_port() {
 }
 
 #[test]
-fn test_parse_host_description() {
+fn test_counter_0_1005_openflow_port_name() {
+    // OpenFlow Port Name: port_name_len(4) + "eth0"(4) = 8 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x04, // port_name length = 4
+        b'e', b't', b'h', b'0', // "eth0"
+    ];
+
+    let data = build_counter_sample_test(0x03ED, &record_data); // record type = 1005
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::OpenFlowPortName(port_name) => {
+                    assert_eq!(port_name.port_name, "eth0");
+                }
+                _ => panic!("Expected OpenFlowPortName"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+// ===== Enterprise 0: Host Counters (Formats 2000-2010) =====
+
+#[test]
+fn test_counter_0_2000_host_description() {
     // Host Description: hostname + uuid(16) + machine_type(u32) + os_name(u32) + os_release
     let record_data = [
         0x00, 0x00, 0x00, 0x09, // hostname length = 9
@@ -583,35 +694,7 @@ fn test_parse_host_description() {
 }
 
 #[test]
-fn test_parse_openflow_port_name() {
-    // OpenFlow Port Name: port_name_len(4) + "eth0"(4) = 8 bytes
-    let record_data = [
-        0x00, 0x00, 0x00, 0x04, // port_name length = 4
-        b'e', b't', b'h', b'0', // "eth0"
-    ];
-
-    let data = build_counter_sample_test(0x03ED, &record_data); // record type = 1005
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::CountersSample(counters) => {
-            assert_eq!(counters.counters.len(), 1);
-            match &counters.counters[0].counter_data {
-                CounterData::OpenFlowPortName(port_name) => {
-                    assert_eq!(port_name.port_name, "eth0");
-                }
-                _ => panic!("Expected OpenFlowPortName"),
-            }
-        }
-        _ => panic!("Expected CountersSample"),
-    }
-}
-
-#[test]
-fn test_parse_host_adapters() {
+fn test_counter_0_2001_host_adapters() {
     // Host Adapters: num_adapters(4) + 2 adapters * (if_index(4) + num_macs(4) + mac(6) + padding(2)) = 36 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x02, // num_adapters = 2
@@ -657,7 +740,7 @@ fn test_parse_host_adapters() {
 }
 
 #[test]
-fn test_parse_host_parent() {
+fn test_counter_0_2002_host_parent() {
     // Host Parent: container_type(4) + container_index(4) = 8 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x01, // container_type = 1 (docker)
@@ -686,7 +769,7 @@ fn test_parse_host_parent() {
 }
 
 #[test]
-fn test_parse_host_cpu_counters() {
+fn test_counter_0_2003_host_cpu_counters() {
     // Host CPU counters: 8 u32 + 7 u64 = 68 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x96, // load_one = 150 (1.50)
@@ -732,7 +815,7 @@ fn test_parse_host_cpu_counters() {
 }
 
 #[test]
-fn test_parse_host_memory_counters() {
+fn test_counter_0_2004_host_memory_counters() {
     // Host Memory counters: 4 u64 + 1 u32 = 36 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x03, 0xB9, 0xAC, 0xA0, 0x00, // mem_total = 16GB
@@ -774,7 +857,7 @@ fn test_parse_host_memory_counters() {
 }
 
 #[test]
-fn test_parse_host_disk_io_counters() {
+fn test_counter_0_2005_host_disk_io_counters() {
     // Host Disk I/O counters: 2 u64 + 1 u32 + 1 u32 + 1 u64 + 1 u32 + 1 u32 + 1 u64 + 1 u32 = 52 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0xE8, 0xD4, 0xA5, 0x10, 0x00, // disk_total = 1TB
@@ -815,7 +898,7 @@ fn test_parse_host_disk_io_counters() {
 }
 
 #[test]
-fn test_parse_host_net_io_counters() {
+fn test_counter_0_2006_host_net_io_counters() {
     // Host Network I/O counters: 2 u64 + 2 u32 + 2 u64 + 2 u32 = 36 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x02, 0x54, 0x0B, 0xE4, 0x00, // bytes_in = 10GB
@@ -852,7 +935,7 @@ fn test_parse_host_net_io_counters() {
 }
 
 #[test]
-fn test_parse_mib2_ip_group() {
+fn test_counter_0_2007_mib2_ip_group() {
     // MIB-2 IP Group: 19 u32 = 76 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x01, // ip_forwarding = 1
@@ -908,7 +991,7 @@ fn test_parse_mib2_ip_group() {
 }
 
 #[test]
-fn test_parse_mib2_icmp_group() {
+fn test_counter_0_2008_mib2_icmp_group() {
     // MIB-2 ICMP Group: 26 u32 = 104 bytes
     let record_data = [
         0x00, 0x00, 0x03, 0xE8, // icmp_in_msgs = 1000
@@ -969,7 +1052,7 @@ fn test_parse_mib2_icmp_group() {
 }
 
 #[test]
-fn test_parse_mib2_tcp_group() {
+fn test_counter_0_2009_mib2_tcp_group() {
     // MIB-2 TCP Group: 15 u32 = 60 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x01, // tcp_rto_algorithm = 1
@@ -1024,7 +1107,7 @@ fn test_parse_mib2_tcp_group() {
 }
 
 #[test]
-fn test_parse_mib2_udp_group() {
+fn test_counter_0_2010_mib2_udp_group() {
     // MIB-2 UDP Group: 7 u32 = 28 bytes
     let record_data = [
         0x00, 0x00, 0x27, 0x10, // udp_in_datagrams = 10000
@@ -1062,8 +1145,10 @@ fn test_parse_mib2_udp_group() {
     }
 }
 
+// ===== Enterprise 0: Virtual Counters (Formats 2100-2106) =====
+
 #[test]
-fn test_parse_virtual_node() {
+fn test_counter_0_2100_virtual_node() {
     // Virtual Node: mhz(4) + cpus(4) + memory(8) + memory_free(8) + num_domains(4) = 28 bytes
     let record_data = [
         0x00, 0x00, 0x09, 0x60, // mhz = 2400
@@ -1099,7 +1184,7 @@ fn test_parse_virtual_node() {
 }
 
 #[test]
-fn test_parse_virtual_cpu() {
+fn test_counter_0_2101_virtual_cpu() {
     // Virtual CPU: state(4) + cpu_time(4) + nr_virt_cpu(4) = 12 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x00, // state = 0 (running)
@@ -1130,7 +1215,7 @@ fn test_parse_virtual_cpu() {
 }
 
 #[test]
-fn test_parse_virtual_memory() {
+fn test_counter_0_2102_virtual_memory() {
     // Virtual Memory: memory(8) + max_memory(8) = 16 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, // memory = 1 GB
@@ -1159,7 +1244,7 @@ fn test_parse_virtual_memory() {
 }
 
 #[test]
-fn test_parse_virtual_disk_io() {
+fn test_counter_0_2103_virtual_disk_io() {
     // Virtual Disk I/O: capacity(8) + allocation(8) + available(8) + rd_req(4) + rd_bytes(8) + wr_req(4) + wr_bytes(8) + errs(4) = 52 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x02, 0x54, 0x0B, 0xE4, 0x00, // capacity = 10 GB
@@ -1200,7 +1285,7 @@ fn test_parse_virtual_disk_io() {
 }
 
 #[test]
-fn test_parse_virtual_net_io() {
+fn test_counter_0_2104_virtual_net_io() {
     // Virtual Network I/O: rx_bytes(8) + rx_packets(4) + rx_errs(4) + rx_drop(4) + tx_bytes(8) + tx_packets(4) + tx_errs(4) + tx_drop(4) = 44 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x00, 0x3B, 0x9A, 0xCA, 0x00, // rx_bytes = 1 GB
@@ -1241,20 +1326,25 @@ fn test_parse_virtual_net_io() {
 }
 
 #[test]
-fn test_parse_app_resources() {
-    // App Resources: user_time(4) + system_time(4) + mem_used(8) + mem_max(8) + fd_open(4) + fd_max(4) + conn_open(4) + conn_max(4) = 40 bytes
+fn test_counter_0_2105_jvm_runtime() {
+    // JVM Runtime: 3 strings with lengths and padding
+    // vm_name: "Java HotSpot" (12 chars) -> 4 + 12 + 0 = 16 bytes
+    // vm_vendor: "Oracle" (6 chars) -> 4 + 6 + 2 = 12 bytes
+    // vm_version: "11.0.12" (7 chars) -> 4 + 7 + 1 = 12 bytes
+    // Total: 40 bytes
     let record_data = [
-        0x00, 0x00, 0x13, 0x88, // user_time = 5000 ms
-        0x00, 0x00, 0x07, 0xD0, // system_time = 2000 ms
-        0x00, 0x00, 0x00, 0x00, 0x06, 0x40, 0x00, 0x00, // mem_used = 100 MB
-        0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, // mem_max = 1 GB
-        0x00, 0x00, 0x00, 0x32, // fd_open = 50
-        0x00, 0x00, 0x04, 0x00, // fd_max = 1024
-        0x00, 0x00, 0x00, 0x0A, // conn_open = 10
-        0x00, 0x00, 0x00, 0x64, // conn_max = 100
+        // vm_name length and data
+        0x00, 0x00, 0x00, 0x0C, // length = 12
+        b'J', b'a', b'v', b'a', b' ', b'H', b'o', b't', b'S', b'p', b'o', b't',
+        // vm_vendor length and data
+        0x00, 0x00, 0x00, 0x06, // length = 6
+        b'O', b'r', b'a', b'c', b'l', b'e', 0x00, 0x00, // padding
+        // vm_version length and data
+        0x00, 0x00, 0x00, 0x07, // length = 7
+        b'1', b'1', b'.', b'0', b'.', b'1', b'2', 0x00, // padding
     ];
 
-    let data = build_counter_sample_test(0x089B, &record_data); // record type = 2203
+    let data = build_counter_sample_test(0x0839, &record_data); // record type = 2105
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -1264,17 +1354,12 @@ fn test_parse_app_resources() {
         SampleData::CountersSample(counters) => {
             assert_eq!(counters.counters.len(), 1);
             match &counters.counters[0].counter_data {
-                CounterData::AppResources(app) => {
-                    assert_eq!(app.user_time, 5000);
-                    assert_eq!(app.system_time, 2000);
-                    assert_eq!(app.mem_used, 104_857_600);
-                    assert_eq!(app.mem_max, 1_073_741_824);
-                    assert_eq!(app.fd_open, 50);
-                    assert_eq!(app.fd_max, 1024);
-                    assert_eq!(app.conn_open, 10);
-                    assert_eq!(app.conn_max, 100);
+                CounterData::JvmRuntime(jvm) => {
+                    assert_eq!(jvm.vm_name, "Java HotSpot");
+                    assert_eq!(jvm.vm_vendor, "Oracle");
+                    assert_eq!(jvm.vm_version, "11.0.12");
                 }
-                other => panic!("Expected AppResources, got: {:?}", other),
+                _ => panic!("Expected JvmRuntime"),
             }
         }
         _ => panic!("Expected CountersSample"),
@@ -1282,25 +1367,34 @@ fn test_parse_app_resources() {
 }
 
 #[test]
-fn test_parse_app_operations() {
-    // App Operations: application + success + other + timeout + internal_error + bad_request + forbidden + too_large + not_implemented + not_found + unavailable + unauthorized
+fn test_counter_0_2106_jvm_statistics() {
+    // JVM Statistics: 8 u64 + 11 u32 = 108 bytes
     let record_data = [
-        0x00, 0x00, 0x00, 0x05, // application length = 5
-        b'n', b'g', b'i', b'n', b'x', 0x00, 0x00, 0x00, // "nginx" + padding
-        0x00, 0x00, 0x27, 0x10, // success = 10000
-        0x00, 0x00, 0x00, 0x05, // other = 5
-        0x00, 0x00, 0x00, 0x02, // timeout = 2
-        0x00, 0x00, 0x00, 0x01, // internal_error = 1
-        0x00, 0x00, 0x00, 0x03, // bad_request = 3
-        0x00, 0x00, 0x00, 0x00, // forbidden = 0
-        0x00, 0x00, 0x00, 0x00, // too_large = 0
-        0x00, 0x00, 0x00, 0x00, // not_implemented = 0
-        0x00, 0x00, 0x00, 0x04, // not_found = 4
-        0x00, 0x00, 0x00, 0x01, // unavailable = 1
-        0x00, 0x00, 0x00, 0x00, // unauthorized = 0
+        // Heap memory (4 u64)
+        0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, // heap_initial = 256MB
+        0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, // heap_used = 128MB
+        0x00, 0x00, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00, // heap_committed = 192MB
+        0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, // heap_max = 512MB
+        // Non-heap memory (4 u64)
+        0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, // non_heap_initial = 64MB
+        0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, // non_heap_used = 48MB
+        0x00, 0x00, 0x00, 0x00, 0x03, 0x80, 0x00, 0x00, // non_heap_committed = 56MB
+        0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, // non_heap_max = 128MB
+        // GC and class statistics (11 u32)
+        0x00, 0x00, 0x00, 0x64, // gc_count = 100
+        0x00, 0x00, 0x03, 0xE8, // gc_time = 1000ms
+        0x00, 0x00, 0x0F, 0xA0, // classes_loaded = 4000
+        0x00, 0x00, 0x10, 0x00, // classes_total = 4096
+        0x00, 0x00, 0x00, 0x60, // classes_unloaded = 96
+        0x00, 0x00, 0x01, 0xF4, // compilation_time = 500ms
+        0x00, 0x00, 0x00, 0x14, // thread_num_live = 20
+        0x00, 0x00, 0x00, 0x05, // thread_num_daemon = 5
+        0x00, 0x00, 0x00, 0x32, // thread_num_started = 50
+        0x00, 0x00, 0x00, 0x64, // fd_open_count = 100
+        0x00, 0x00, 0x04, 0x00, // fd_max_count = 1024
     ];
 
-    let data = build_counter_sample_test(0x089A, &record_data); // record type = 2202
+    let data = build_counter_sample_test(0x083A, &record_data); // record type = 2106
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -1310,25 +1404,38 @@ fn test_parse_app_operations() {
         SampleData::CountersSample(counters) => {
             assert_eq!(counters.counters.len(), 1);
             match &counters.counters[0].counter_data {
-                CounterData::AppOperations(app) => {
-                    assert_eq!(app.application, "nginx");
-                    assert_eq!(app.success, 10000);
-                    assert_eq!(app.other, 5);
-                    assert_eq!(app.timeout, 2);
-                    assert_eq!(app.internal_error, 1);
-                    assert_eq!(app.bad_request, 3);
-                    assert_eq!(app.not_found, 4);
-                    assert_eq!(app.unavailable, 1);
+                CounterData::JvmStatistics(jvm) => {
+                    assert_eq!(jvm.heap_initial, 268_435_456); // 256MB
+                    assert_eq!(jvm.heap_used, 134_217_728); // 128MB
+                    assert_eq!(jvm.heap_committed, 201_326_592); // 192MB
+                    assert_eq!(jvm.heap_max, 536_870_912); // 512MB
+                    assert_eq!(jvm.non_heap_initial, 67_108_864); // 64MB
+                    assert_eq!(jvm.non_heap_used, 50_331_648); // 48MB
+                    assert_eq!(jvm.non_heap_committed, 58_720_256); // 56MB
+                    assert_eq!(jvm.non_heap_max, 134_217_728); // 128MB
+                    assert_eq!(jvm.gc_count, 100);
+                    assert_eq!(jvm.gc_time, 1000);
+                    assert_eq!(jvm.classes_loaded, 4000);
+                    assert_eq!(jvm.classes_total, 4096);
+                    assert_eq!(jvm.classes_unloaded, 96);
+                    assert_eq!(jvm.compilation_time, 500);
+                    assert_eq!(jvm.thread_num_live, 20);
+                    assert_eq!(jvm.thread_num_daemon, 5);
+                    assert_eq!(jvm.thread_num_started, 50);
+                    assert_eq!(jvm.fd_open_count, 100);
+                    assert_eq!(jvm.fd_max_count, 1024);
                 }
-                _ => panic!("Expected AppOperations"),
+                _ => panic!("Expected JvmStatistics"),
             }
         }
         _ => panic!("Expected CountersSample"),
     }
 }
 
+// ===== Enterprise 0: Application Counters (Formats 2200-2206) =====
+
 #[test]
-fn test_parse_memcache_counters_deprecated() {
+fn test_counter_0_2200_memcache_counters_deprecated() {
     // Memcache Counters (deprecated): 32 u32 fields + 3 u64 fields = 128 + 24 = 152 bytes
     let record_data = [
         0x00, 0x00, 0x0E, 0x10, // uptime = 3600 seconds
@@ -1419,7 +1526,7 @@ fn test_parse_memcache_counters_deprecated() {
 }
 
 #[test]
-fn test_parse_http_counters() {
+fn test_counter_0_2201_http_counters() {
     // HTTP Counters: 15 u32 fields = 60 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x0A, // method_option_count = 10
@@ -1474,17 +1581,25 @@ fn test_parse_http_counters() {
 }
 
 #[test]
-fn test_parse_app_workers() {
-    // App Workers: workers_active(4) + workers_idle(4) + workers_max(4) + req_delayed(4) + req_dropped(4)
+fn test_counter_0_2202_app_operations() {
+    // App Operations: application + success + other + timeout + internal_error + bad_request + forbidden + too_large + not_implemented + not_found + unavailable + unauthorized
     let record_data = [
-        0x00, 0x00, 0x00, 0x08, // workers_active = 8
-        0x00, 0x00, 0x00, 0x04, // workers_idle = 4
-        0x00, 0x00, 0x00, 0x10, // workers_max = 16
-        0x00, 0x00, 0x00, 0x05, // req_delayed = 5
-        0x00, 0x00, 0x00, 0x02, // req_dropped = 2
+        0x00, 0x00, 0x00, 0x05, // application length = 5
+        b'n', b'g', b'i', b'n', b'x', 0x00, 0x00, 0x00, // "nginx" + padding
+        0x00, 0x00, 0x27, 0x10, // success = 10000
+        0x00, 0x00, 0x00, 0x05, // other = 5
+        0x00, 0x00, 0x00, 0x02, // timeout = 2
+        0x00, 0x00, 0x00, 0x01, // internal_error = 1
+        0x00, 0x00, 0x00, 0x03, // bad_request = 3
+        0x00, 0x00, 0x00, 0x00, // forbidden = 0
+        0x00, 0x00, 0x00, 0x00, // too_large = 0
+        0x00, 0x00, 0x00, 0x00, // not_implemented = 0
+        0x00, 0x00, 0x00, 0x04, // not_found = 4
+        0x00, 0x00, 0x00, 0x01, // unavailable = 1
+        0x00, 0x00, 0x00, 0x00, // unauthorized = 0
     ];
 
-    let data = build_counter_sample_test(0x089E, &record_data); // record type = 2206
+    let data = build_counter_sample_test(0x089A, &record_data); // record type = 2202
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -1494,14 +1609,17 @@ fn test_parse_app_workers() {
         SampleData::CountersSample(counters) => {
             assert_eq!(counters.counters.len(), 1);
             match &counters.counters[0].counter_data {
-                CounterData::AppWorkers(workers) => {
-                    assert_eq!(workers.workers_active, 8);
-                    assert_eq!(workers.workers_idle, 4);
-                    assert_eq!(workers.workers_max, 16);
-                    assert_eq!(workers.req_delayed, 5);
-                    assert_eq!(workers.req_dropped, 2);
+                CounterData::AppOperations(app) => {
+                    assert_eq!(app.application, "nginx");
+                    assert_eq!(app.success, 10000);
+                    assert_eq!(app.other, 5);
+                    assert_eq!(app.timeout, 2);
+                    assert_eq!(app.internal_error, 1);
+                    assert_eq!(app.bad_request, 3);
+                    assert_eq!(app.not_found, 4);
+                    assert_eq!(app.unavailable, 1);
                 }
-                _ => panic!("Expected AppWorkers"),
+                _ => panic!("Expected AppOperations"),
             }
         }
         _ => panic!("Expected CountersSample"),
@@ -1509,25 +1627,20 @@ fn test_parse_app_workers() {
 }
 
 #[test]
-fn test_parse_jvm_runtime() {
-    // JVM Runtime: 3 strings with lengths and padding
-    // vm_name: "Java HotSpot" (12 chars) -> 4 + 12 + 0 = 16 bytes
-    // vm_vendor: "Oracle" (6 chars) -> 4 + 6 + 2 = 12 bytes
-    // vm_version: "11.0.12" (7 chars) -> 4 + 7 + 1 = 12 bytes
-    // Total: 40 bytes
+fn test_counter_0_2203_app_resources() {
+    // App Resources: user_time(4) + system_time(4) + mem_used(8) + mem_max(8) + fd_open(4) + fd_max(4) + conn_open(4) + conn_max(4) = 40 bytes
     let record_data = [
-        // vm_name length and data
-        0x00, 0x00, 0x00, 0x0C, // length = 12
-        b'J', b'a', b'v', b'a', b' ', b'H', b'o', b't', b'S', b'p', b'o', b't',
-        // vm_vendor length and data
-        0x00, 0x00, 0x00, 0x06, // length = 6
-        b'O', b'r', b'a', b'c', b'l', b'e', 0x00, 0x00, // padding
-        // vm_version length and data
-        0x00, 0x00, 0x00, 0x07, // length = 7
-        b'1', b'1', b'.', b'0', b'.', b'1', b'2', 0x00, // padding
+        0x00, 0x00, 0x13, 0x88, // user_time = 5000 ms
+        0x00, 0x00, 0x07, 0xD0, // system_time = 2000 ms
+        0x00, 0x00, 0x00, 0x00, 0x06, 0x40, 0x00, 0x00, // mem_used = 100 MB
+        0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, // mem_max = 1 GB
+        0x00, 0x00, 0x00, 0x32, // fd_open = 50
+        0x00, 0x00, 0x04, 0x00, // fd_max = 1024
+        0x00, 0x00, 0x00, 0x0A, // conn_open = 10
+        0x00, 0x00, 0x00, 0x64, // conn_max = 100
     ];
 
-    let data = build_counter_sample_test(0x0839, &record_data); // record type = 2105
+    let data = build_counter_sample_test(0x089B, &record_data); // record type = 2203
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -1537,12 +1650,17 @@ fn test_parse_jvm_runtime() {
         SampleData::CountersSample(counters) => {
             assert_eq!(counters.counters.len(), 1);
             match &counters.counters[0].counter_data {
-                CounterData::JvmRuntime(jvm) => {
-                    assert_eq!(jvm.vm_name, "Java HotSpot");
-                    assert_eq!(jvm.vm_vendor, "Oracle");
-                    assert_eq!(jvm.vm_version, "11.0.12");
+                CounterData::AppResources(app) => {
+                    assert_eq!(app.user_time, 5000);
+                    assert_eq!(app.system_time, 2000);
+                    assert_eq!(app.mem_used, 104_857_600);
+                    assert_eq!(app.mem_max, 1_073_741_824);
+                    assert_eq!(app.fd_open, 50);
+                    assert_eq!(app.fd_max, 1024);
+                    assert_eq!(app.conn_open, 10);
+                    assert_eq!(app.conn_max, 100);
                 }
-                _ => panic!("Expected JvmRuntime"),
+                other => panic!("Expected AppResources, got: {:?}", other),
             }
         }
         _ => panic!("Expected CountersSample"),
@@ -1550,73 +1668,7 @@ fn test_parse_jvm_runtime() {
 }
 
 #[test]
-fn test_parse_jvm_statistics() {
-    // JVM Statistics: 8 u64 + 11 u32 = 108 bytes
-    let record_data = [
-        // Heap memory (4 u64)
-        0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, // heap_initial = 256MB
-        0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, // heap_used = 128MB
-        0x00, 0x00, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00, // heap_committed = 192MB
-        0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, // heap_max = 512MB
-        // Non-heap memory (4 u64)
-        0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, // non_heap_initial = 64MB
-        0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, // non_heap_used = 48MB
-        0x00, 0x00, 0x00, 0x00, 0x03, 0x80, 0x00, 0x00, // non_heap_committed = 56MB
-        0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, // non_heap_max = 128MB
-        // GC and class statistics (11 u32)
-        0x00, 0x00, 0x00, 0x64, // gc_count = 100
-        0x00, 0x00, 0x03, 0xE8, // gc_time = 1000ms
-        0x00, 0x00, 0x0F, 0xA0, // classes_loaded = 4000
-        0x00, 0x00, 0x10, 0x00, // classes_total = 4096
-        0x00, 0x00, 0x00, 0x60, // classes_unloaded = 96
-        0x00, 0x00, 0x01, 0xF4, // compilation_time = 500ms
-        0x00, 0x00, 0x00, 0x14, // thread_num_live = 20
-        0x00, 0x00, 0x00, 0x05, // thread_num_daemon = 5
-        0x00, 0x00, 0x00, 0x32, // thread_num_started = 50
-        0x00, 0x00, 0x00, 0x64, // fd_open_count = 100
-        0x00, 0x00, 0x04, 0x00, // fd_max_count = 1024
-    ];
-
-    let data = build_counter_sample_test(0x083A, &record_data); // record type = 2106
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::CountersSample(counters) => {
-            assert_eq!(counters.counters.len(), 1);
-            match &counters.counters[0].counter_data {
-                CounterData::JvmStatistics(jvm) => {
-                    assert_eq!(jvm.heap_initial, 268_435_456); // 256MB
-                    assert_eq!(jvm.heap_used, 134_217_728); // 128MB
-                    assert_eq!(jvm.heap_committed, 201_326_592); // 192MB
-                    assert_eq!(jvm.heap_max, 536_870_912); // 512MB
-                    assert_eq!(jvm.non_heap_initial, 67_108_864); // 64MB
-                    assert_eq!(jvm.non_heap_used, 50_331_648); // 48MB
-                    assert_eq!(jvm.non_heap_committed, 58_720_256); // 56MB
-                    assert_eq!(jvm.non_heap_max, 134_217_728); // 128MB
-                    assert_eq!(jvm.gc_count, 100);
-                    assert_eq!(jvm.gc_time, 1000);
-                    assert_eq!(jvm.classes_loaded, 4000);
-                    assert_eq!(jvm.classes_total, 4096);
-                    assert_eq!(jvm.classes_unloaded, 96);
-                    assert_eq!(jvm.compilation_time, 500);
-                    assert_eq!(jvm.thread_num_live, 20);
-                    assert_eq!(jvm.thread_num_daemon, 5);
-                    assert_eq!(jvm.thread_num_started, 50);
-                    assert_eq!(jvm.fd_open_count, 100);
-                    assert_eq!(jvm.fd_max_count, 1024);
-                }
-                _ => panic!("Expected JvmStatistics"),
-            }
-        }
-        _ => panic!("Expected CountersSample"),
-    }
-}
-
-#[test]
-fn test_parse_memcache_counters() {
+fn test_counter_0_2204_memcache_counters() {
     // Memcache Counters: 27 u32 + 4 u64 = 140 bytes
     let record_data = [
         // Command counters (3 u32)
@@ -1712,7 +1764,44 @@ fn test_parse_memcache_counters() {
 }
 
 #[test]
-fn test_parse_energy() {
+fn test_counter_0_2206_app_workers() {
+    // App Workers: workers_active(4) + workers_idle(4) + workers_max(4) + req_delayed(4) + req_dropped(4)
+    let record_data = [
+        0x00, 0x00, 0x00, 0x08, // workers_active = 8
+        0x00, 0x00, 0x00, 0x04, // workers_idle = 4
+        0x00, 0x00, 0x00, 0x10, // workers_max = 16
+        0x00, 0x00, 0x00, 0x05, // req_delayed = 5
+        0x00, 0x00, 0x00, 0x02, // req_dropped = 2
+    ];
+
+    let data = build_counter_sample_test(0x089E, &record_data); // record type = 2206
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::AppWorkers(workers) => {
+                    assert_eq!(workers.workers_active, 8);
+                    assert_eq!(workers.workers_idle, 4);
+                    assert_eq!(workers.workers_max, 16);
+                    assert_eq!(workers.req_delayed, 5);
+                    assert_eq!(workers.req_dropped, 2);
+                }
+                _ => panic!("Expected AppWorkers"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+// ===== Enterprise 0: Environmental Counters (Formats 3000-3003) =====
+
+#[test]
+fn test_counter_0_3000_energy() {
     // Energy: voltage(4) + current(4) + real_power(4) + power_factor(4) + energy(4) + errors(4) = 24 bytes
     let record_data = [
         0x00, 0x00, 0x2E, 0xE0, // voltage = 12000 mV (12V)
@@ -1749,7 +1838,7 @@ fn test_parse_energy() {
 }
 
 #[test]
-fn test_parse_temperature() {
+fn test_counter_0_3001_temperature() {
     // Temperature: minimum(4) + maximum(4) + errors(4) = 12 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0xC8, // minimum = 200 (20.0°C)
@@ -1780,7 +1869,7 @@ fn test_parse_temperature() {
 }
 
 #[test]
-fn test_parse_humidity() {
+fn test_counter_0_3002_humidity() {
     // Humidity: relative(4) = 4 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x37, // relative = 55%
@@ -1807,7 +1896,7 @@ fn test_parse_humidity() {
 }
 
 #[test]
-fn test_parse_fans() {
+fn test_counter_0_3003_fans() {
     // Fans: total(4) + failed(4) + speed(4) = 12 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x04, // total = 4
@@ -1837,8 +1926,10 @@ fn test_parse_fans() {
     }
 }
 
+// ===== Enterprise 4413: Broadcom Counters =====
+
 #[test]
-fn test_parse_broadcom_device_buffers() {
+fn test_counter_4413_1_broadcom_device_buffers() {
     // Broadcom device buffers: 2 i32 = 8 bytes
     let record_data = [
         0x00, 0x00, 0x27, 0x10, // uc_pc = 10000 (100.00%)
@@ -1870,7 +1961,7 @@ fn test_parse_broadcom_device_buffers() {
 }
 
 #[test]
-fn test_parse_broadcom_port_buffers() {
+fn test_counter_4413_2_broadcom_port_buffers() {
     // Broadcom port buffers: 4 i32 + 2 variable arrays
     let mut record_data = vec![
         0x00, 0x00, 0x1F, 0x40, // ingress_uc_pc = 8000 (80.00%)
@@ -1926,7 +2017,7 @@ fn test_parse_broadcom_port_buffers() {
 }
 
 #[test]
-fn test_parse_broadcom_tables() {
+fn test_counter_4413_3_broadcom_tables() {
     // Broadcom tables counters: 36 u32 = 144 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x64, // host_entries = 100
@@ -2009,8 +2100,10 @@ fn test_parse_broadcom_tables() {
     }
 }
 
+// ===== Enterprise 5703: NVIDIA Counters =====
+
 #[test]
-fn test_parse_nvidia_gpu() {
+fn test_counter_5703_1_nvidia_gpu() {
     // NVIDIA GPU counters: 4 u32 + 2 u64 + 4 u32 = 40 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x04, // device_count = 4

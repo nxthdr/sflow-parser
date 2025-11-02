@@ -1,13 +1,79 @@
 //! Flow record parsing tests
 //!
 //! Tests for parsing all flow record types: sampled and extended flow records.
+//!
+//! ## Test Organization
+//!
+//! Tests are organized by (enterprise, format) tuple to match the order in:
+//! - `src/models/core.rs` (FlowData enum)
+//! - `src/models/record_flows.rs`
+//! - `src/parsers/parser_flows.rs`
+//!
+//! ### Test Naming Convention
+//!
+//! Format: `test_flow_{enterprise}_{format}_{descriptive_name}`
+//!
+//! Examples:
+//! - `test_flow_0_2_sampled_ethernet` - Enterprise 0, Format 2
+//! - `test_flow_0_1001_extended_switch` - Enterprise 0, Format 1001
+//! - `test_flow_4413_1_bst_egress_queue` - Enterprise 4413, Format 1
+//!
+//! ### Test Order
+//!
+//! Tests are ordered by (enterprise, format) tuple:
+//! 1. Enterprise 0, Formats 1-4 (Sampled records)
+//! 2. Enterprise 0, Formats 1001-1042 (Extended records)
+//! 3. Enterprise 0, Formats 2000-2003 (Transaction records)
+//! 4. Enterprise 0, Formats 2100-2207 (Application/Socket records)
+//! 5. Enterprise 4413, Format 1 (Broadcom BST)
 
 use super::helpers::*;
 use sflow_parser::models::{AppStatus, HttpMethod};
 use sflow_parser::parsers::parse_datagram;
 
+// ===== Enterprise 0: Sampled Records (Formats 1-4) =====
+
 #[test]
-fn test_parse_sampled_ethernet() {
+fn test_flow_0_1_sampled_header() {
+    // Sampled header: protocol(4) + frame_length(4) + stripped(4) + header_len(4) + header(14) + padding(2) = 32 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x01, // protocol = Ethernet
+        0x00, 0x00, 0x05, 0xDC, // frame length = 1500
+        0x00, 0x00, 0x00, 0x00, // stripped bytes = 0
+        0x00, 0x00, 0x00, 0x0E, // header length = 14 bytes
+        // Ethernet header (14 bytes + 2 padding)
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // dst MAC
+        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, // src MAC
+        0x08, 0x00, // EtherType = IPv4
+        0x00, 0x00, // padding
+    ];
+
+    let data = build_flow_sample_test(0x0001, &record_data); // record type = 1
+
+    let result = parse_datagram(&data);
+    if let Err(e) = &result {
+        panic!("Parse failed: {}", e);
+    }
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::SampledHeader(header) => {
+                    assert_eq!(header.frame_length, 1500);
+                    assert_eq!(header.header.len(), 14);
+                }
+                _ => panic!("Expected SampledHeader"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_2_sampled_ethernet() {
     // Sampled Ethernet data: length(4) + src_mac(6) + dst_mac(6) + eth_type(4) = 20 bytes
     let record_data = [
         0x00, 0x00, 0x05, 0xDC, // length = 1500
@@ -41,7 +107,7 @@ fn test_parse_sampled_ethernet() {
 }
 
 #[test]
-fn test_parse_sampled_ipv4() {
+fn test_flow_0_3_sampled_ipv4() {
     // Sampled IPv4 data: length(4) + protocol(4) + src_ip(4) + dst_ip(4) + src_port(4) + dst_port(4) + tcp_flags(4) + tos(4) = 32 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x14, // length = 20
@@ -77,7 +143,7 @@ fn test_parse_sampled_ipv4() {
 }
 
 #[test]
-fn test_parse_sampled_ipv6() {
+fn test_flow_0_4_sampled_ipv6() {
     // Sampled IPv6 data: length(4) + protocol(4) + src_ip(16) + dst_ip(16) + src_port(4) + dst_port(4) + tcp_flags(4) + priority(4) = 56 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x28, // length = 40
@@ -117,8 +183,10 @@ fn test_parse_sampled_ipv6() {
     }
 }
 
+// ===== Enterprise 0: Extended Records (Formats 1001-1042) =====
+
 #[test]
-fn test_parse_extended_switch() {
+fn test_flow_0_1001_extended_switch() {
     // Extended Switch data: src_vlan(4) + src_priority(4) + dst_vlan(4) + dst_priority(4) = 16 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x64, // src_vlan = 100
@@ -149,7 +217,7 @@ fn test_parse_extended_switch() {
 }
 
 #[test]
-fn test_parse_extended_router() {
+fn test_flow_0_1002_extended_router() {
     // Extended Router data: next_hop_type(4) + next_hop(4 for IPv4) + src_mask_len(4) + dst_mask_len(4) = 16 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x01, // next_hop address type = IPv4
@@ -180,344 +248,7 @@ fn test_parse_extended_router() {
 }
 
 #[test]
-fn test_parse_extended_user() {
-    // Extended User data: src_charset(4) + src_user_len(4) + "alice"(5) + padding(3) +
-    //                     dst_charset(4) + dst_user_len(4) + "bob"(3) + padding(1) = 28 bytes
-    let record_data = [
-        0x00, 0x00, 0x00, 0x03, // src_charset = 3 (UTF-8)
-        0x00, 0x00, 0x00, 0x05, // src_user length = 5
-        b'a', b'l', b'i', b'c', b'e', 0x00, 0x00, 0x00, // "alice" + padding
-        0x00, 0x00, 0x00, 0x03, // dst_charset = 3 (UTF-8)
-        0x00, 0x00, 0x00, 0x03, // dst_user length = 3
-        b'b', b'o', b'b', 0x00, // "bob" + padding
-    ];
-
-    let data = build_flow_sample_test(0x03EC, &record_data); // record type = 1004
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedUser(user) => {
-                    assert_eq!(user.src_user, "alice");
-                    assert_eq!(user.dst_user, "bob");
-                    assert_eq!(user.src_charset, 3);
-                }
-                _ => panic!("Expected ExtendedUser"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_extended_url() {
-    // Extended URL data: direction(4) + url_len(4) + "https://example.com"(19) + padding(1) +
-    //                    host_len(4) + "example.com"(11) + padding(1) = 44 bytes
-    let record_data = [
-        0x00, 0x00, 0x00, 0x01, // direction = 1 (source)
-        0x00, 0x00, 0x00, 0x13, // url length = 19
-        b'h', b't', b't', b'p', b's', b':', b'/', b'/', b'e', b'x', b'a', b'm', b'p', b'l', b'e',
-        b'.', b'c', b'o', b'm', 0x00, // "https://example.com" + padding
-        0x00, 0x00, 0x00, 0x0B, // host length = 11
-        b'e', b'x', b'a', b'm', b'p', b'l', b'e', b'.', b'c', b'o', b'm',
-        0x00, // "example.com" + padding
-    ];
-
-    let data = build_flow_sample_test(0x03ED, &record_data); // record type = 1005
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedUrl(url) => {
-                    assert_eq!(url.url, "https://example.com");
-                    assert_eq!(url.host, "example.com");
-                    assert_eq!(url.direction, 1);
-                }
-                _ => panic!("Expected ExtendedUrl"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_extended_mpls() {
-    // Extended MPLS data: next_hop_type(4) + next_hop(4 for IPv4) +
-    //                     in_stack_len(4) + in_labels(3*4=12) +
-    //                     out_stack_len(4) + out_labels(2*4=8) = 36 bytes
-    let record_data = [
-        0x00, 0x00, 0x00, 0x01, // next_hop address type = IPv4
-        0x0A, 0x00, 0x00, 0x01, // next_hop = 10.0.0.1
-        0x00, 0x00, 0x00, 0x03, // in_stack_len = 3
-        0x00, 0x00, 0x00, 0x64, // label 100
-        0x00, 0x00, 0x00, 0xC8, // label 200
-        0x00, 0x00, 0x01, 0x2C, // label 300
-        0x00, 0x00, 0x00, 0x02, // out_label_stack_len = 2
-        0x00, 0x00, 0x01, 0x90, // label 400
-        0x00, 0x00, 0x01, 0xF4, // label 500
-    ];
-
-    let data = build_flow_sample_test(0x03EE, &record_data); // record type = 1006
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedMpls(mpls) => {
-                    assert_eq!(mpls.in_stack.len(), 3);
-                    assert_eq!(mpls.in_stack[0], 100);
-                    assert_eq!(mpls.out_stack.len(), 2);
-                    assert_eq!(mpls.out_stack[0], 400);
-                }
-                _ => panic!("Expected ExtendedMpls"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_extended_nat() {
-    // Extended NAT data: src_addr_type(4) + src_addr(4) + dst_addr_type(4) + dst_addr(4) = 16 bytes
-    let record_data = [
-        0x00, 0x00, 0x00, 0x01, // src_address type = IPv4
-        0xC0, 0xA8, 0x01, 0x64, // src_address = 192.168.1.100
-        0x00, 0x00, 0x00, 0x01, // dst_address type = IPv4
-        0x0A, 0x00, 0x00, 0x01, // dst_address = 10.0.0.1
-    ];
-
-    let data = build_flow_sample_test(0x03EF, &record_data); // record type = 1007
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedNat(nat) => {
-                    match nat.src_address {
-                        Address::IPv4(ip) => assert_eq!(ip.to_string(), "192.168.1.100"),
-                        _ => panic!("Expected IPv4"),
-                    }
-                    match nat.dst_address {
-                        Address::IPv4(ip) => assert_eq!(ip.to_string(), "10.0.0.1"),
-                        _ => panic!("Expected IPv4"),
-                    }
-                }
-                _ => panic!("Expected ExtendedNat"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_extended_nat_port() {
-    // Extended NAT Port data: src_port(4) + dst_port(4) = 8 bytes
-    let record_data = [
-        0x00, 0x00, 0x1F, 0x90, // src_port = 8080
-        0x00, 0x00, 0x00, 0x50, // dst_port = 80
-    ];
-
-    let data = build_flow_sample_test(0x03FC, &record_data); // record type = 1020
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedNatPort(nat_port) => {
-                    assert_eq!(nat_port.src_port, 8080);
-                    assert_eq!(nat_port.dst_port, 80);
-                }
-                _ => panic!("Expected ExtendedNatPort"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_extended_infiniband_lrh() {
-    // Extended InfiniBand LRH: 10 u32 = 40 bytes
-    let record_data = [
-        0x00, 0x00, 0x00, 0x01, // src_vl = 1
-        0x00, 0x00, 0x00, 0x02, // src_sl = 2
-        0x00, 0x00, 0x00, 0x64, // src_dlid = 100
-        0x00, 0x00, 0x00, 0x32, // src_slid = 50
-        0x00, 0x00, 0x00, 0x03, // src_lnh = 3
-        0x00, 0x00, 0x00, 0x02, // dst_vl = 2
-        0x00, 0x00, 0x00, 0x03, // dst_sl = 3
-        0x00, 0x00, 0x00, 0xC8, // dst_dlid = 200
-        0x00, 0x00, 0x00, 0x96, // dst_slid = 150
-        0x00, 0x00, 0x00, 0x04, // dst_lnh = 4
-    ];
-
-    let data = build_flow_sample_test(0x0407, &record_data); // record type = 1031
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedInfiniBandLrh(ib_lrh) => {
-                    assert_eq!(ib_lrh.src_vl, 1);
-                    assert_eq!(ib_lrh.src_sl, 2);
-                    assert_eq!(ib_lrh.src_dlid, 100);
-                    assert_eq!(ib_lrh.src_slid, 50);
-                    assert_eq!(ib_lrh.src_lnh, 3);
-                    assert_eq!(ib_lrh.dst_vl, 2);
-                    assert_eq!(ib_lrh.dst_sl, 3);
-                    assert_eq!(ib_lrh.dst_dlid, 200);
-                    assert_eq!(ib_lrh.dst_slid, 150);
-                    assert_eq!(ib_lrh.dst_lnh, 4);
-                }
-                _ => panic!("Expected ExtendedInfiniBandLrh"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_extended_infiniband_grh() {
-    // Extended InfiniBand GRH: 2 u32 + 2 GID (16 bytes each) + 2 u32 = 40 bytes
-    let record_data = [
-        0x00, 0x01, 0x23, 0x45, // flow_label = 0x12345
-        0x00, 0x00, 0x00, 0x05, // tc = 5
-        // Source GID (16 bytes)
-        0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
-        0x77, // Destination GID (16 bytes)
-        0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF,
-        0x00, 0x00, 0x00, 0x00, 0x11, // next_header = 17 (UDP)
-        0x00, 0x00, 0x05, 0xDC, // length = 1500
-    ];
-
-    let data = build_flow_sample_test(0x0408, &record_data); // record type = 1032
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedInfiniBandGrh(ib_grh) => {
-                    assert_eq!(ib_grh.flow_label, 0x12345);
-                    assert_eq!(ib_grh.tc, 5);
-                    assert_eq!(
-                        ib_grh.s_gid,
-                        [
-                            0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x22, 0x33,
-                            0x44, 0x55, 0x66, 0x77
-                        ]
-                    );
-                    assert_eq!(
-                        ib_grh.d_gid,
-                        [
-                            0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xAA, 0xBB, 0xCC,
-                            0xDD, 0xEE, 0xFF, 0x00
-                        ]
-                    );
-                    assert_eq!(ib_grh.next_header, 17);
-                    assert_eq!(ib_grh.length, 1500);
-                }
-                _ => panic!("Expected ExtendedInfiniBandGrh"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_extended_infiniband_bth() {
-    // Extended InfiniBand BTH: 3 u32 = 12 bytes
-    let record_data = [
-        0x00, 0x00, 0xFF, 0xFF, // pkey = 0xFFFF
-        0x00, 0x00, 0x00, 0x01, // dst_qp = 1
-        0x00, 0x00, 0x00, 0x64, // opcode = 100
-    ];
-
-    let data = build_flow_sample_test(0x0409, &record_data); // record type = 1033
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedInfiniBandBth(ib_bth) => {
-                    assert_eq!(ib_bth.pkey, 0xFFFF);
-                    assert_eq!(ib_bth.dst_qp, 1);
-                    assert_eq!(ib_bth.opcode, 100);
-                }
-                _ => panic!("Expected ExtendedInfiniBandBth"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_extended_vlan_tunnel() {
-    // Extended VLAN Tunnel data: num_vlans(4) + vlans(4*4=16) = 20 bytes
-    let record_data = [
-        0x00, 0x00, 0x00, 0x04, // num_vlans = 4
-        0x00, 0x00, 0x00, 0x0A, // vlan 10
-        0x00, 0x00, 0x00, 0x14, // vlan 20
-        0x00, 0x00, 0x00, 0x1E, // vlan 30
-        0x00, 0x00, 0x00, 0x28, // vlan 40
-    ];
-
-    let data = build_flow_sample_test(0x03F4, &record_data); // record type = 1012
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedVlanTunnel(vlan) => {
-                    assert_eq!(vlan.stack.len(), 4);
-                    assert_eq!(vlan.stack[0], 10);
-                    assert_eq!(vlan.stack[3], 40);
-                }
-                _ => panic!("Expected ExtendedVlanTunnel"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_extended_gateway() {
+fn test_flow_0_1003_extended_gateway() {
     // Extended Gateway data: next_hop_type(4) + next_hop(4) + as_number(4) + src_as(4) + src_peer_as(4) +
     //                        num_segments(4) + [path_type(4) + path_len(4) + as_path(2*4)] +
     //                        num_communities(4) + communities(2*4) + local_pref(4) = 56 bytes
@@ -568,7 +299,155 @@ fn test_parse_extended_gateway() {
 }
 
 #[test]
-fn test_parse_extended_mpls_tunnel() {
+fn test_flow_0_1004_extended_user() {
+    // Extended User data: src_charset(4) + src_user_len(4) + "alice"(5) + padding(3) +
+    //                     dst_charset(4) + dst_user_len(4) + "bob"(3) + padding(1) = 28 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x03, // src_charset = 3 (UTF-8)
+        0x00, 0x00, 0x00, 0x05, // src_user length = 5
+        b'a', b'l', b'i', b'c', b'e', 0x00, 0x00, 0x00, // "alice" + padding
+        0x00, 0x00, 0x00, 0x03, // dst_charset = 3 (UTF-8)
+        0x00, 0x00, 0x00, 0x03, // dst_user length = 3
+        b'b', b'o', b'b', 0x00, // "bob" + padding
+    ];
+
+    let data = build_flow_sample_test(0x03EC, &record_data); // record type = 1004
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedUser(user) => {
+                    assert_eq!(user.src_user, "alice");
+                    assert_eq!(user.dst_user, "bob");
+                    assert_eq!(user.src_charset, 3);
+                }
+                _ => panic!("Expected ExtendedUser"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_1005_extended_url() {
+    // Extended URL data: direction(4) + url_len(4) + "https://example.com"(19) + padding(1) +
+    //                    host_len(4) + "example.com"(11) + padding(1) = 44 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x01, // direction = 1 (source)
+        0x00, 0x00, 0x00, 0x13, // url length = 19
+        b'h', b't', b't', b'p', b's', b':', b'/', b'/', b'e', b'x', b'a', b'm', b'p', b'l', b'e',
+        b'.', b'c', b'o', b'm', 0x00, // "https://example.com" + padding
+        0x00, 0x00, 0x00, 0x0B, // host length = 11
+        b'e', b'x', b'a', b'm', b'p', b'l', b'e', b'.', b'c', b'o', b'm',
+        0x00, // "example.com" + padding
+    ];
+
+    let data = build_flow_sample_test(0x03ED, &record_data); // record type = 1005
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedUrl(url) => {
+                    assert_eq!(url.url, "https://example.com");
+                    assert_eq!(url.host, "example.com");
+                    assert_eq!(url.direction, 1);
+                }
+                _ => panic!("Expected ExtendedUrl"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_1006_extended_mpls() {
+    // Extended MPLS data: next_hop_type(4) + next_hop(4 for IPv4) +
+    //                     in_stack_len(4) + in_labels(3*4=12) +
+    //                     out_stack_len(4) + out_labels(2*4=8) = 36 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x01, // next_hop address type = IPv4
+        0x0A, 0x00, 0x00, 0x01, // next_hop = 10.0.0.1
+        0x00, 0x00, 0x00, 0x03, // in_stack_len = 3
+        0x00, 0x00, 0x00, 0x64, // label 100
+        0x00, 0x00, 0x00, 0xC8, // label 200
+        0x00, 0x00, 0x01, 0x2C, // label 300
+        0x00, 0x00, 0x00, 0x02, // out_label_stack_len = 2
+        0x00, 0x00, 0x01, 0x90, // label 400
+        0x00, 0x00, 0x01, 0xF4, // label 500
+    ];
+
+    let data = build_flow_sample_test(0x03EE, &record_data); // record type = 1006
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedMpls(mpls) => {
+                    assert_eq!(mpls.in_stack.len(), 3);
+                    assert_eq!(mpls.in_stack[0], 100);
+                    assert_eq!(mpls.out_stack.len(), 2);
+                    assert_eq!(mpls.out_stack[0], 400);
+                }
+                _ => panic!("Expected ExtendedMpls"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_1007_extended_nat() {
+    // Extended NAT data: src_addr_type(4) + src_addr(4) + dst_addr_type(4) + dst_addr(4) = 16 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x01, // src_address type = IPv4
+        0xC0, 0xA8, 0x01, 0x64, // src_address = 192.168.1.100
+        0x00, 0x00, 0x00, 0x01, // dst_address type = IPv4
+        0x0A, 0x00, 0x00, 0x01, // dst_address = 10.0.0.1
+    ];
+
+    let data = build_flow_sample_test(0x03EF, &record_data); // record type = 1007
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedNat(nat) => {
+                    match nat.src_address {
+                        Address::IPv4(ip) => assert_eq!(ip.to_string(), "192.168.1.100"),
+                        _ => panic!("Expected IPv4"),
+                    }
+                    match nat.dst_address {
+                        Address::IPv4(ip) => assert_eq!(ip.to_string(), "10.0.0.1"),
+                        _ => panic!("Expected IPv4"),
+                    }
+                }
+                _ => panic!("Expected ExtendedNat"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_1008_extended_mpls_tunnel() {
     // Extended MPLS Tunnel data: tunnel_lsp_name_len(4) + "mpls0"(5) + padding(3) + tunnel_id(4) + tunnel_cos(4) = 20 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x05, // tunnel_lsp_name length = 5
@@ -600,7 +479,7 @@ fn test_parse_extended_mpls_tunnel() {
 }
 
 #[test]
-fn test_parse_extended_mpls_vc() {
+fn test_flow_0_1009_extended_mpls_vc() {
     // Extended MPLS VC data: vc_name_len(4) + "vc100"(5) + padding(3) + vll_vc_id(4) + vc_label(4) + vc_cos(4) = 24 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x05, // vc_instance_name length = 5
@@ -637,7 +516,7 @@ fn test_parse_extended_mpls_vc() {
 }
 
 #[test]
-fn test_parse_extended_mpls_fec() {
+fn test_flow_0_1010_extended_mpls_fec() {
     // Extended MPLS FEC data: fec_addr_type(4) + fec_addr(4) + fec_prefix_len(4) = 12 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x01, // fec_addr_prefix type = IPv4
@@ -670,7 +549,7 @@ fn test_parse_extended_mpls_fec() {
 }
 
 #[test]
-fn test_parse_extended_mpls_lvp_fec() {
+fn test_flow_0_1011_extended_mpls_lvp_fec() {
     // Extended MPLS LVP FEC data: mpls_fec_addr_prefix_length(4) = 4 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x18, // mpls_fec_addr_prefix_length = 24
@@ -697,7 +576,40 @@ fn test_parse_extended_mpls_lvp_fec() {
 }
 
 #[test]
-fn test_parse_extended_80211_payload() {
+fn test_flow_0_1012_extended_vlan_tunnel() {
+    // Extended VLAN Tunnel data: num_vlans(4) + vlans(4*4=16) = 20 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x04, // num_vlans = 4
+        0x00, 0x00, 0x00, 0x0A, // vlan 10
+        0x00, 0x00, 0x00, 0x14, // vlan 20
+        0x00, 0x00, 0x00, 0x1E, // vlan 30
+        0x00, 0x00, 0x00, 0x28, // vlan 40
+    ];
+
+    let data = build_flow_sample_test(0x03F4, &record_data); // record type = 1012
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedVlanTunnel(vlan) => {
+                    assert_eq!(vlan.stack.len(), 4);
+                    assert_eq!(vlan.stack[0], 10);
+                    assert_eq!(vlan.stack[3], 40);
+                }
+                _ => panic!("Expected ExtendedVlanTunnel"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_1013_extended_80211_payload() {
     // Extended 802.11 Payload: cipher_suite(4) + data_length(4) + data(8 padded to 12) = 20 bytes
     let record_data = [
         0x00, 0x00, 0x00, 0x04, // cipher_suite = 4 (CCMP/AES)
@@ -731,7 +643,7 @@ fn test_parse_extended_80211_payload() {
 }
 
 #[test]
-fn test_parse_extended_80211_rx() {
+fn test_flow_0_1014_extended_80211_rx() {
     // Extended 802.11 RX: ssid_len(4) + "TestNet"(7) + padding(1) + bssid(6) + padding(2) +
     //                     version(4) + channel(4) + speed(8) + rsni(4) + rcpi(4) + packet_duration(4) = 48 bytes
     let record_data = [
@@ -780,7 +692,7 @@ fn test_parse_extended_80211_rx() {
 }
 
 #[test]
-fn test_parse_extended_80211_tx() {
+fn test_flow_0_1015_extended_80211_tx() {
     // Extended 802.11 TX: ssid_len(4) + "MyAP"(4) + bssid(6) + padding(2) +
     //                     version(4) + transmissions(4) + packet_duration(4) + retrans_duration(4) +
     //                     channel(4) + speed(8) + power(4) = 48 bytes
@@ -827,7 +739,7 @@ fn test_parse_extended_80211_tx() {
 }
 
 #[test]
-fn test_parse_extended_80211_aggregation() {
+fn test_flow_0_1016_extended_80211_aggregation() {
     // Extended 802.11 Aggregation: pdu_count(4) + for each PDU: flow_record_count(4)
     // Simple test with 2 PDUs, each with 0 flow records
     let record_data = [
@@ -859,7 +771,7 @@ fn test_parse_extended_80211_aggregation() {
 }
 
 #[test]
-fn test_parse_extended_openflow_v1() {
+fn test_flow_0_1017_extended_openflow_v1() {
     // Extended OpenFlow v1: flow_cookie(8) + flow_match(4) + flow_actions(4) = 16 bytes
     let record_data = [
         0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0, // flow_cookie = 0x123456789ABCDEF0
@@ -890,17 +802,14 @@ fn test_parse_extended_openflow_v1() {
 }
 
 #[test]
-fn test_parse_extended_socket_ipv4() {
-    // Extended Socket IPv4: protocol(4) + local_ip(4) + remote_ip(4) + local_port(4) + remote_port(4) = 20 bytes
+fn test_flow_0_1020_extended_nat_port() {
+    // Extended NAT Port data: src_port(4) + dst_port(4) = 8 bytes
     let record_data = [
-        0x00, 0x00, 0x00, 0x06, // protocol = 6 (TCP)
-        0xC0, 0xA8, 0x01, 0x64, // local_ip = 192.168.1.100
-        0x0A, 0x00, 0x00, 0x01, // remote_ip = 10.0.0.1
-        0x00, 0x00, 0x1F, 0x90, // local_port = 8080
-        0x00, 0x00, 0x01, 0xBB, // remote_port = 443
+        0x00, 0x00, 0x1F, 0x90, // src_port = 8080
+        0x00, 0x00, 0x00, 0x50, // dst_port = 80
     ];
 
-    let data = build_flow_sample_test(0x0834, &record_data); // record type = 2100
+    let data = build_flow_sample_test(0x03FC, &record_data); // record type = 1020
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -910,14 +819,11 @@ fn test_parse_extended_socket_ipv4() {
         SampleData::FlowSample(flow) => {
             assert_eq!(flow.flow_records.len(), 1);
             match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedSocketIpv4(sock) => {
-                    assert_eq!(sock.protocol, 6);
-                    assert_eq!(sock.local_ip.to_string(), "192.168.1.100");
-                    assert_eq!(sock.remote_ip.to_string(), "10.0.0.1");
-                    assert_eq!(sock.local_port, 8080);
-                    assert_eq!(sock.remote_port, 443);
+                FlowData::ExtendedNatPort(nat_port) => {
+                    assert_eq!(nat_port.src_port, 8080);
+                    assert_eq!(nat_port.dst_port, 80);
                 }
-                _ => panic!("Expected ExtendedSocketIpv4"),
+                _ => panic!("Expected ExtendedNatPort"),
             }
         }
         _ => panic!("Expected FlowSample"),
@@ -925,194 +831,7 @@ fn test_parse_extended_socket_ipv4() {
 }
 
 #[test]
-fn test_parse_extended_socket_ipv6() {
-    // Extended Socket IPv6: protocol(4) + local_ip(16) + remote_ip(16) + local_port(4) + remote_port(4) = 44 bytes
-    let record_data = [
-        0x00, 0x00, 0x00, 0x11, // protocol = 17 (UDP)
-        // local_ip = 2001:db8::1
-        0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x01, // remote_ip = 2001:db8::2
-        0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x02, 0x00, 0x00, 0x14, 0xE9, // local_port = 5353
-        0x00, 0x00, 0x00, 0x35, // remote_port = 53
-    ];
-
-    let data = build_flow_sample_test(0x0835, &record_data); // record type = 2101
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedSocketIpv6(sock) => {
-                    assert_eq!(sock.protocol, 17);
-                    assert_eq!(sock.local_ip.to_string(), "2001:db8::1");
-                    assert_eq!(sock.remote_ip.to_string(), "2001:db8::2");
-                    assert_eq!(sock.local_port, 5353);
-                    assert_eq!(sock.remote_port, 53);
-                }
-                _ => panic!("Expected ExtendedSocketIpv6"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_app_operation() {
-    // Application Operation: context + status_descr + req_bytes(8) + resp_bytes(8) + duration_us(4) + status(4)
-    // context: application_len(4) + "payment"(7) + padding(1) + operation_len(4) + "process"(7) + padding(1) + attributes_len(4) + "cc=visa"(7) + padding(1)
-    let record_data = [
-        // application = "payment"
-        0x00, 0x00, 0x00, 0x07, // length = 7
-        b'p', b'a', b'y', b'm', b'e', b'n', b't', 0x00, // "payment" + padding
-        // operation = "process"
-        0x00, 0x00, 0x00, 0x07, // length = 7
-        b'p', b'r', b'o', b'c', b'e', b's', b's', 0x00, // "process" + padding
-        // attributes = "cc=visa"
-        0x00, 0x00, 0x00, 0x07, // length = 7
-        b'c', b'c', b'=', b'v', b'i', b's', b'a', 0x00, // "cc=visa" + padding
-        // status_descr = "OK"
-        0x00, 0x00, 0x00, 0x02, // length = 2
-        b'O', b'K', 0x00, 0x00, // "OK" + padding
-        // req_bytes = 1024
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, // resp_bytes = 512
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, // duration_us = 150000
-        0x00, 0x02, 0x49, 0xF0, // status = 0 (SUCCESS)
-        0x00, 0x00, 0x00, 0x00,
-    ];
-
-    let data = build_flow_sample_test(0x089A, &record_data); // record type = 2202
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::AppOperation(app) => {
-                    assert_eq!(app.context.application, "payment");
-                    assert_eq!(app.context.operation, "process");
-                    assert_eq!(app.context.attributes, "cc=visa");
-                    assert_eq!(app.status_descr, "OK");
-                    assert_eq!(app.req_bytes, 1024);
-                    assert_eq!(app.resp_bytes, 512);
-                    assert_eq!(app.duration_us, 150000);
-                    assert_eq!(app.status, AppStatus::Success);
-                }
-                _ => panic!("Expected AppOperation"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_app_parent_context() {
-    // Application Parent Context: context only
-    // context: application_len(4) + "mail"(4) + operation_len(4) + "send"(4) + attributes_len(4) + ""(0)
-    let record_data = [
-        // application = "mail"
-        0x00, 0x00, 0x00, 0x04, // length = 4
-        b'm', b'a', b'i', b'l', // "mail"
-        // operation = "send"
-        0x00, 0x00, 0x00, 0x04, // length = 4
-        b's', b'e', b'n', b'd', // "send"
-        // attributes = "" (empty)
-        0x00, 0x00, 0x00, 0x00, // length = 0
-    ];
-
-    let data = build_flow_sample_test(0x089B, &record_data); // record type = 2203
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::AppParentContext(parent) => {
-                    assert_eq!(parent.context.application, "mail");
-                    assert_eq!(parent.context.operation, "send");
-                    assert_eq!(parent.context.attributes, "");
-                }
-                _ => panic!("Expected AppParentContext"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_app_initiator() {
-    // Application Initiator: actor string
-    // actor = "customer123"
-    let record_data = [
-        0x00, 0x00, 0x00, 0x0B, // length = 11
-        b'c', b'u', b's', b't', b'o', b'm', b'e', b'r', b'1', b'2', b'3', // "customer123"
-        0x00, // padding to 4-byte boundary
-    ];
-
-    let data = build_flow_sample_test(0x089C, &record_data); // record type = 2204
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::AppInitiator(initiator) => {
-                    assert_eq!(initiator.actor, "customer123");
-                }
-                _ => panic!("Expected AppInitiator"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_app_target() {
-    // Application Target: actor string
-    // actor = "merchant456"
-    let record_data = [
-        0x00, 0x00, 0x00, 0x0B, // length = 11
-        b'm', b'e', b'r', b'c', b'h', b'a', b'n', b't', b'4', b'5', b'6', // "merchant456"
-        0x00, // padding to 4-byte boundary
-    ];
-
-    let data = build_flow_sample_test(0x089D, &record_data); // record type = 2205
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::AppTarget(target) => {
-                    assert_eq!(target.actor, "merchant456");
-                }
-                _ => panic!("Expected AppTarget"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-// ===== Tunnel Extension Tests (formats 1021-1030) =====
-
-#[test]
-fn test_parse_extended_l2_tunnel_egress() {
+fn test_flow_0_1021_extended_l2_tunnel_egress() {
     // Extended L2 Tunnel Egress: sampled_ethernet
     // length(4) + src_mac(6) + dst_mac(6) + eth_type(4) = 20 bytes
     let record_data = [
@@ -1144,7 +863,7 @@ fn test_parse_extended_l2_tunnel_egress() {
 }
 
 #[test]
-fn test_parse_extended_l2_tunnel_ingress() {
+fn test_flow_0_1022_extended_l2_tunnel_ingress() {
     // Extended L2 Tunnel Ingress: sampled_ethernet
     let record_data = [
         0x00, 0x00, 0x05, 0xDC, // length = 1500
@@ -1175,7 +894,7 @@ fn test_parse_extended_l2_tunnel_ingress() {
 }
 
 #[test]
-fn test_parse_extended_ipv4_tunnel_egress() {
+fn test_flow_0_1023_extended_ipv4_tunnel_egress() {
     // Extended IPv4 Tunnel Egress: sampled_ipv4
     let record_data = [
         0x00, 0x00, 0x00, 0x14, // length = 20
@@ -1211,7 +930,7 @@ fn test_parse_extended_ipv4_tunnel_egress() {
 }
 
 #[test]
-fn test_parse_extended_ipv4_tunnel_ingress() {
+fn test_flow_0_1024_extended_ipv4_tunnel_ingress() {
     // Extended IPv4 Tunnel Ingress: sampled_ipv4
     let record_data = [
         0x00, 0x00, 0x00, 0x14, // length = 20
@@ -1245,7 +964,7 @@ fn test_parse_extended_ipv4_tunnel_ingress() {
 }
 
 #[test]
-fn test_parse_extended_ipv6_tunnel_egress() {
+fn test_flow_0_1025_extended_ipv6_tunnel_egress() {
     // Extended IPv6 Tunnel Egress: sampled_ipv6
     let record_data = [
         0x00, 0x00, 0x00, 0x28, // length = 40
@@ -1283,7 +1002,7 @@ fn test_parse_extended_ipv6_tunnel_egress() {
 }
 
 #[test]
-fn test_parse_extended_ipv6_tunnel_ingress() {
+fn test_flow_0_1026_extended_ipv6_tunnel_ingress() {
     // Extended IPv6 Tunnel Ingress: sampled_ipv6
     let record_data = [
         0x00, 0x00, 0x00, 0x28, // length = 40
@@ -1319,7 +1038,7 @@ fn test_parse_extended_ipv6_tunnel_ingress() {
 }
 
 #[test]
-fn test_parse_extended_decapsulate_egress() {
+fn test_flow_0_1027_extended_decapsulate_egress() {
     // Extended Decapsulate Egress: inner_header_offset(4)
     let record_data = [
         0x00, 0x00, 0x00, 0x32, // inner_header_offset = 50 bytes
@@ -1346,7 +1065,7 @@ fn test_parse_extended_decapsulate_egress() {
 }
 
 #[test]
-fn test_parse_extended_decapsulate_ingress() {
+fn test_flow_0_1028_extended_decapsulate_ingress() {
     // Extended Decapsulate Ingress: inner_header_offset(4)
     let record_data = [
         0x00, 0x00, 0x00, 0x2A, // inner_header_offset = 42 bytes
@@ -1373,7 +1092,7 @@ fn test_parse_extended_decapsulate_ingress() {
 }
 
 #[test]
-fn test_parse_extended_vni_egress() {
+fn test_flow_0_1029_extended_vni_egress() {
     // Extended VNI Egress: vni(4)
     let record_data = [
         0x00, 0x00, 0x27, 0x10, // vni = 10000
@@ -1400,7 +1119,7 @@ fn test_parse_extended_vni_egress() {
 }
 
 #[test]
-fn test_parse_extended_vni_ingress() {
+fn test_flow_0_1030_extended_vni_ingress() {
     // Extended VNI Ingress: vni(4)
     let record_data = [
         0x00, 0x00, 0x4E, 0x20, // vni = 20000
@@ -1427,7 +1146,134 @@ fn test_parse_extended_vni_ingress() {
 }
 
 #[test]
-fn test_parse_extended_egress_queue() {
+fn test_flow_0_1031_extended_infiniband_lrh() {
+    // Extended InfiniBand LRH: 10 u32 = 40 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x01, // src_vl = 1
+        0x00, 0x00, 0x00, 0x02, // src_sl = 2
+        0x00, 0x00, 0x00, 0x64, // src_dlid = 100
+        0x00, 0x00, 0x00, 0x32, // src_slid = 50
+        0x00, 0x00, 0x00, 0x03, // src_lnh = 3
+        0x00, 0x00, 0x00, 0x02, // dst_vl = 2
+        0x00, 0x00, 0x00, 0x03, // dst_sl = 3
+        0x00, 0x00, 0x00, 0xC8, // dst_dlid = 200
+        0x00, 0x00, 0x00, 0x96, // dst_slid = 150
+        0x00, 0x00, 0x00, 0x04, // dst_lnh = 4
+    ];
+
+    let data = build_flow_sample_test(0x0407, &record_data); // record type = 1031
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedInfiniBandLrh(ib_lrh) => {
+                    assert_eq!(ib_lrh.src_vl, 1);
+                    assert_eq!(ib_lrh.src_sl, 2);
+                    assert_eq!(ib_lrh.src_dlid, 100);
+                    assert_eq!(ib_lrh.src_slid, 50);
+                    assert_eq!(ib_lrh.src_lnh, 3);
+                    assert_eq!(ib_lrh.dst_vl, 2);
+                    assert_eq!(ib_lrh.dst_sl, 3);
+                    assert_eq!(ib_lrh.dst_dlid, 200);
+                    assert_eq!(ib_lrh.dst_slid, 150);
+                    assert_eq!(ib_lrh.dst_lnh, 4);
+                }
+                _ => panic!("Expected ExtendedInfiniBandLrh"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_1032_extended_infiniband_grh() {
+    // Extended InfiniBand GRH: 2 u32 + 2 GID (16 bytes each) + 2 u32 = 40 bytes
+    let record_data = [
+        0x00, 0x01, 0x23, 0x45, // flow_label = 0x12345
+        0x00, 0x00, 0x00, 0x05, // tc = 5
+        // Source GID (16 bytes)
+        0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
+        0x77, // Destination GID (16 bytes)
+        0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF,
+        0x00, 0x00, 0x00, 0x00, 0x11, // next_header = 17 (UDP)
+        0x00, 0x00, 0x05, 0xDC, // length = 1500
+    ];
+
+    let data = build_flow_sample_test(0x0408, &record_data); // record type = 1032
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedInfiniBandGrh(ib_grh) => {
+                    assert_eq!(ib_grh.flow_label, 0x12345);
+                    assert_eq!(ib_grh.tc, 5);
+                    assert_eq!(
+                        ib_grh.s_gid,
+                        [
+                            0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x22, 0x33,
+                            0x44, 0x55, 0x66, 0x77
+                        ]
+                    );
+                    assert_eq!(
+                        ib_grh.d_gid,
+                        [
+                            0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xAA, 0xBB, 0xCC,
+                            0xDD, 0xEE, 0xFF, 0x00
+                        ]
+                    );
+                    assert_eq!(ib_grh.next_header, 17);
+                    assert_eq!(ib_grh.length, 1500);
+                }
+                _ => panic!("Expected ExtendedInfiniBandGrh"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_1033_extended_infiniband_bth() {
+    // Extended InfiniBand BTH: 3 u32 = 12 bytes
+    let record_data = [
+        0x00, 0x00, 0xFF, 0xFF, // pkey = 0xFFFF
+        0x00, 0x00, 0x00, 0x01, // dst_qp = 1
+        0x00, 0x00, 0x00, 0x64, // opcode = 100
+    ];
+
+    let data = build_flow_sample_test(0x0409, &record_data); // record type = 1033
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedInfiniBandBth(ib_bth) => {
+                    assert_eq!(ib_bth.pkey, 0xFFFF);
+                    assert_eq!(ib_bth.dst_qp, 1);
+                    assert_eq!(ib_bth.opcode, 100);
+                }
+                _ => panic!("Expected ExtendedInfiniBandBth"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_1036_extended_egress_queue() {
     // Extended Egress Queue: queue(4)
     let record_data = [
         0x00, 0x00, 0x00, 0x05, // queue = 5
@@ -1454,7 +1300,7 @@ fn test_parse_extended_egress_queue() {
 }
 
 #[test]
-fn test_parse_extended_acl() {
+fn test_flow_0_1037_extended_acl() {
     // Extended ACL: number(4) + name_len(4) + name + padding + direction(4)
     let record_data = [
         0x00, 0x00, 0x00, 0x64, // number = 100
@@ -1487,7 +1333,7 @@ fn test_parse_extended_acl() {
 }
 
 #[test]
-fn test_parse_extended_function() {
+fn test_flow_0_1038_extended_function() {
     // Extended Function: symbol_len(4) + symbol + padding
     let record_data = [
         0x00, 0x00, 0x00, 0x0D, // symbol length = 13
@@ -1517,7 +1363,7 @@ fn test_parse_extended_function() {
 }
 
 #[test]
-fn test_parse_extended_transit() {
+fn test_flow_0_1039_extended_transit() {
     // Extended Transit: delay(4)
     let record_data = [
         0x00, 0x00, 0x27, 0x10, // delay = 10000 nanoseconds
@@ -1544,7 +1390,7 @@ fn test_parse_extended_transit() {
 }
 
 #[test]
-fn test_parse_extended_queue() {
+fn test_flow_0_1040_extended_queue() {
     // Extended Queue: depth(4)
     let record_data = [
         0x00, 0x00, 0x04, 0x00, // depth = 1024 bytes
@@ -1583,7 +1429,298 @@ fn encode_string(s: &str) -> Vec<u8> {
 }
 
 #[test]
-fn test_parse_extended_proxy_socket_ipv4() {
+fn test_flow_0_1041_extended_hw_trap() {
+    // Extended HW Trap: group string + trap string
+    let mut record_data = Vec::new();
+
+    // group = "l2_drops"
+    record_data.extend(encode_string("l2_drops"));
+
+    // trap = "source_mac_is_multicast"
+    record_data.extend(encode_string("source_mac_is_multicast"));
+
+    let data = build_flow_sample_test(0x0411, &record_data); // record type = 1041
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedHwTrap(hw_trap) => {
+                    assert_eq!(hw_trap.group, "l2_drops");
+                    assert_eq!(hw_trap.trap, "source_mac_is_multicast");
+                }
+                _ => panic!("Expected ExtendedHwTrap"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_1042_extended_linux_drop_reason() {
+    // Extended Linux Drop Reason: reason string
+    let mut record_data = Vec::new();
+
+    // reason = "SKB_DROP_REASON_NOT_SPECIFIED"
+    record_data.extend(encode_string("SKB_DROP_REASON_NOT_SPECIFIED"));
+
+    let data = build_flow_sample_test(0x0412, &record_data); // record type = 1042
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedLinuxDropReason(drop_reason) => {
+                    assert_eq!(drop_reason.reason, "SKB_DROP_REASON_NOT_SPECIFIED");
+                }
+                _ => panic!("Expected ExtendedLinuxDropReason"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+// ===== Enterprise 0: Transaction Records (Formats 2000-2003) =====
+
+#[test]
+fn test_flow_0_2000_transaction() {
+    // Transaction data: direction(4) + wait(4) + duration(4) + status(4) + bytes_received(8) + bytes_sent(8) = 32 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x02, // direction = 2 (server)
+        0x00, 0x00, 0x00, 0x64, // wait = 100 microseconds
+        0x00, 0x00, 0x03, 0xE8, // duration = 1000 microseconds
+        0x00, 0x00, 0x00, 0x00, // status = 0 (succeeded)
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, // bytes_received = 1024
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00, // bytes_sent = 2048
+    ];
+
+    let data = build_flow_sample_test(0x07D0, &record_data); // record type = 2000
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::Transaction(txn) => {
+                    assert_eq!(txn.direction, 2); // server
+                    assert_eq!(txn.wait, 100);
+                    assert_eq!(txn.duration, 1000);
+                    assert_eq!(txn.status, 0); // succeeded
+                    assert_eq!(txn.bytes_received, 1024);
+                    assert_eq!(txn.bytes_sent, 2048);
+                }
+                _ => panic!("Expected Transaction"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_2001_extended_nfs_storage_transaction() {
+    let mut record_data = Vec::new();
+
+    // path = "/home/user/file.txt" (opaque)
+    let path = b"/home/user/file.txt";
+    record_data.extend(&(path.len() as u32).to_be_bytes());
+    record_data.extend_from_slice(path);
+    // Add padding to 4-byte boundary
+    let padding = (4 - (path.len() % 4)) % 4;
+    record_data.extend(vec![0u8; padding]);
+
+    // operation = 18 (NFS READ)
+    record_data.extend(&[0x00, 0x00, 0x00, 0x12]);
+
+    // status = 0 (NFS4_OK)
+    record_data.extend(&[0x00, 0x00, 0x00, 0x00]);
+
+    let data = build_flow_sample_test(0x07D1, &record_data); // record type = 2001
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedNfsStorageTransaction(nfs) => {
+                    assert_eq!(nfs.path, b"/home/user/file.txt");
+                    assert_eq!(nfs.operation, 18); // READ
+                    assert_eq!(nfs.status, 0); // NFS4_OK
+                }
+                _ => panic!("Expected ExtendedNfsStorageTransaction"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_2002_extended_scsi_storage_transaction() {
+    // SCSI transaction data: lun(4) + operation(4) + status(4) = 12 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x05, // lun = 5
+        0x00, 0x00, 0x00, 0x28, // operation = 0x28 (READ(10))
+        0x00, 0x00, 0x00, 0x00, // status = 0 (GOOD)
+    ];
+
+    let data = build_flow_sample_test(0x07D2, &record_data); // record type = 2002
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedScsiStorageTransaction(scsi) => {
+                    assert_eq!(scsi.lun, 5);
+                    assert_eq!(scsi.operation, 0x28); // READ(10)
+                    assert_eq!(scsi.status, 0); // GOOD
+                }
+                _ => panic!("Expected ExtendedScsiStorageTransaction"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_2003_extended_http_transaction() {
+    let mut record_data = Vec::new();
+
+    // url = "/api/v1/users"
+    record_data.extend(encode_string("/api/v1/users"));
+
+    // host = "example.com"
+    record_data.extend(encode_string("example.com"));
+
+    // referer = "https://google.com"
+    record_data.extend(encode_string("https://google.com"));
+
+    // useragent = "Mozilla/5.0"
+    record_data.extend(encode_string("Mozilla/5.0"));
+
+    // user = "john_doe"
+    record_data.extend(encode_string("john_doe"));
+
+    // status = 200
+    record_data.extend(&[0x00, 0x00, 0x00, 0xC8]);
+
+    let data = build_flow_sample_test(0x07D3, &record_data); // record type = 2003
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedHttpTransaction(http) => {
+                    assert_eq!(http.url, "/api/v1/users");
+                    assert_eq!(http.host, "example.com");
+                    assert_eq!(http.referer, "https://google.com");
+                    assert_eq!(http.user_agent, "Mozilla/5.0");
+                    assert_eq!(http.user, "john_doe");
+                    assert_eq!(http.status, 200);
+                }
+                _ => panic!("Expected ExtendedHttpTransaction"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+// ===== Enterprise 0: Application/Socket Records (Formats 2100-2207) =====
+
+#[test]
+fn test_flow_0_2100_extended_socket_ipv4() {
+    // Extended Socket IPv4: protocol(4) + local_ip(4) + remote_ip(4) + local_port(4) + remote_port(4) = 20 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x06, // protocol = 6 (TCP)
+        0xC0, 0xA8, 0x01, 0x64, // local_ip = 192.168.1.100
+        0x0A, 0x00, 0x00, 0x01, // remote_ip = 10.0.0.1
+        0x00, 0x00, 0x1F, 0x90, // local_port = 8080
+        0x00, 0x00, 0x01, 0xBB, // remote_port = 443
+    ];
+
+    let data = build_flow_sample_test(0x0834, &record_data); // record type = 2100
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedSocketIpv4(sock) => {
+                    assert_eq!(sock.protocol, 6);
+                    assert_eq!(sock.local_ip.to_string(), "192.168.1.100");
+                    assert_eq!(sock.remote_ip.to_string(), "10.0.0.1");
+                    assert_eq!(sock.local_port, 8080);
+                    assert_eq!(sock.remote_port, 443);
+                }
+                _ => panic!("Expected ExtendedSocketIpv4"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_2101_extended_socket_ipv6() {
+    // Extended Socket IPv6: protocol(4) + local_ip(16) + remote_ip(16) + local_port(4) + remote_port(4) = 44 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x11, // protocol = 17 (UDP)
+        // local_ip = 2001:db8::1
+        0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x01, // remote_ip = 2001:db8::2
+        0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x14, 0xE9, // local_port = 5353
+        0x00, 0x00, 0x00, 0x35, // remote_port = 53
+    ];
+
+    let data = build_flow_sample_test(0x0835, &record_data); // record type = 2101
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedSocketIpv6(sock) => {
+                    assert_eq!(sock.protocol, 17);
+                    assert_eq!(sock.local_ip.to_string(), "2001:db8::1");
+                    assert_eq!(sock.remote_ip.to_string(), "2001:db8::2");
+                    assert_eq!(sock.local_port, 5353);
+                    assert_eq!(sock.remote_port, 53);
+                }
+                _ => panic!("Expected ExtendedSocketIpv6"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_2102_extended_proxy_socket_ipv4() {
     // Extended Proxy Socket IPv4 wraps an extended_socket_ipv4
     // protocol(4) + local_ip(4) + remote_ip(4) + local_port(4) + remote_port(4) = 20 bytes
     let record_data = [
@@ -1619,7 +1756,7 @@ fn test_parse_extended_proxy_socket_ipv4() {
 }
 
 #[test]
-fn test_parse_extended_proxy_socket_ipv6() {
+fn test_flow_0_2103_extended_proxy_socket_ipv6() {
     // Extended Proxy Socket IPv6 wraps an extended_socket_ipv6
     // protocol(4) + local_ip(16) + remote_ip(16) + local_port(4) + remote_port(4) = 44 bytes
     let record_data = [
@@ -1657,102 +1794,7 @@ fn test_parse_extended_proxy_socket_ipv6() {
 }
 
 #[test]
-fn test_parse_http_request() {
-    // Build HTTP request record data
-    let mut record_data = Vec::new();
-
-    // method = 2 (GET)
-    record_data.extend_from_slice(&[0x00, 0x00, 0x00, 0x02]);
-    // protocol = 1001 (HTTP/1.1)
-    record_data.extend_from_slice(&[0x00, 0x00, 0x03, 0xE9]);
-    // uri = "/api/test"
-    record_data.extend_from_slice(&encode_string("/api/test"));
-    // host = "example.com"
-    record_data.extend_from_slice(&encode_string("example.com"));
-    // referer = "https://referrer.com"
-    record_data.extend_from_slice(&encode_string("https://referrer.com"));
-    // useragent = "Mozilla/5.0"
-    record_data.extend_from_slice(&encode_string("Mozilla/5.0"));
-    // xff = "203.0.113.1"
-    record_data.extend_from_slice(&encode_string("203.0.113.1"));
-    // authuser = "testuser"
-    record_data.extend_from_slice(&encode_string("testuser"));
-    // mime_type = "application/json"
-    record_data.extend_from_slice(&encode_string("application/json"));
-    // req_bytes = 1024
-    record_data.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00]);
-    // resp_bytes = 2048
-    record_data.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00]);
-    // duration_us = 50000 (50ms)
-    record_data.extend_from_slice(&[0x00, 0x00, 0xC3, 0x50]);
-    // status = 200
-    record_data.extend_from_slice(&[0x00, 0x00, 0x00, 0xC8]);
-
-    let data = build_flow_sample_test(0x089E, &record_data); // record type = 2206
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::HttpRequest(http) => {
-                    assert_eq!(http.method, HttpMethod::Get);
-                    assert_eq!(http.protocol, 1001);
-                    assert_eq!(http.uri, "/api/test");
-                    assert_eq!(http.host, "example.com");
-                    assert_eq!(http.referer, "https://referrer.com");
-                    assert_eq!(http.useragent, "Mozilla/5.0");
-                    assert_eq!(http.xff, "203.0.113.1");
-                    assert_eq!(http.authuser, "testuser");
-                    assert_eq!(http.mime_type, "application/json");
-                    assert_eq!(http.req_bytes, 1024);
-                    assert_eq!(http.resp_bytes, 2048);
-                    assert_eq!(http.duration_us, 50000);
-                    assert_eq!(http.status, 200);
-                }
-                _ => panic!("Expected HttpRequest"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_extended_proxy_request() {
-    // Build extended proxy request record data
-    let mut record_data = Vec::new();
-
-    // uri = "/backend/api"
-    record_data.extend_from_slice(&encode_string("/backend/api"));
-    // host = "backend.internal"
-    record_data.extend_from_slice(&encode_string("backend.internal"));
-
-    let data = build_flow_sample_test(0x089F, &record_data); // record type = 2207
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedProxyRequest(proxy) => {
-                    assert_eq!(proxy.uri, "/backend/api");
-                    assert_eq!(proxy.host, "backend.internal");
-                }
-                _ => panic!("Expected ExtendedProxyRequest"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_memcache_operation() {
+fn test_flow_0_2200_memcache_operation() {
     // Memcache Operation: protocol(4) + cmd(4) + key(string) + nkeys(4) + value_bytes(4) + duration_us(4) + status(4)
     // key = "user:12345" (10 chars) -> 4 (length) + 10 (data) + 2 (padding) = 16 bytes
     // Total: 4 + 4 + 16 + 4 + 4 + 4 + 4 = 40 bytes
@@ -1798,97 +1840,7 @@ fn test_parse_memcache_operation() {
 }
 
 #[test]
-fn test_extended_bst_egress_queue() {
-    // Extended BST Egress Queue: 1 u32 = 4 bytes
-    let record_data = [
-        0x00, 0x00, 0x00, 0x05, // queue = 5
-    ];
-
-    // Enterprise 4413, format 1: (4413 << 12) | 1 = 18079745
-    let record_type = 0x0113D001;
-
-    let data = build_flow_sample_test(record_type, &record_data);
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedBstEgressQueue(bst) => {
-                    assert_eq!(bst.queue, 5);
-                }
-                _ => panic!("Expected ExtendedBstEgressQueue"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_extended_hw_trap() {
-    // Extended HW Trap: group string + trap string
-    let mut record_data = Vec::new();
-
-    // group = "l2_drops"
-    record_data.extend(encode_string("l2_drops"));
-
-    // trap = "source_mac_is_multicast"
-    record_data.extend(encode_string("source_mac_is_multicast"));
-
-    let data = build_flow_sample_test(0x0411, &record_data); // record type = 1041
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedHwTrap(hw_trap) => {
-                    assert_eq!(hw_trap.group, "l2_drops");
-                    assert_eq!(hw_trap.trap, "source_mac_is_multicast");
-                }
-                _ => panic!("Expected ExtendedHwTrap"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_extended_linux_drop_reason() {
-    // Extended Linux Drop Reason: reason string
-    let mut record_data = Vec::new();
-
-    // reason = "SKB_DROP_REASON_NOT_SPECIFIED"
-    record_data.extend(encode_string("SKB_DROP_REASON_NOT_SPECIFIED"));
-
-    let data = build_flow_sample_test(0x0412, &record_data); // record type = 1042
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedLinuxDropReason(drop_reason) => {
-                    assert_eq!(drop_reason.reason, "SKB_DROP_REASON_NOT_SPECIFIED");
-                }
-                _ => panic!("Expected ExtendedLinuxDropReason"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_http_request_deprecated() {
+fn test_flow_0_2201_http_request_deprecated() {
     // HTTP Request (deprecated): method(4) + 8 strings + 2 u64 + 1 u32 + 1 i32
     let mut record_data = Vec::new();
 
@@ -1960,18 +1912,30 @@ fn test_parse_http_request_deprecated() {
 }
 
 #[test]
-fn test_parse_transaction() {
-    // Transaction data: direction(4) + wait(4) + duration(4) + status(4) + bytes_received(8) + bytes_sent(8) = 32 bytes
+fn test_flow_0_2202_app_operation() {
+    // Application Operation: context + status_descr + req_bytes(8) + resp_bytes(8) + duration_us(4) + status(4)
+    // context: application_len(4) + "payment"(7) + padding(1) + operation_len(4) + "process"(7) + padding(1) + attributes_len(4) + "cc=visa"(7) + padding(1)
     let record_data = [
-        0x00, 0x00, 0x00, 0x02, // direction = 2 (server)
-        0x00, 0x00, 0x00, 0x64, // wait = 100 microseconds
-        0x00, 0x00, 0x03, 0xE8, // duration = 1000 microseconds
-        0x00, 0x00, 0x00, 0x00, // status = 0 (succeeded)
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, // bytes_received = 1024
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00, // bytes_sent = 2048
+        // application = "payment"
+        0x00, 0x00, 0x00, 0x07, // length = 7
+        b'p', b'a', b'y', b'm', b'e', b'n', b't', 0x00, // "payment" + padding
+        // operation = "process"
+        0x00, 0x00, 0x00, 0x07, // length = 7
+        b'p', b'r', b'o', b'c', b'e', b's', b's', 0x00, // "process" + padding
+        // attributes = "cc=visa"
+        0x00, 0x00, 0x00, 0x07, // length = 7
+        b'c', b'c', b'=', b'v', b'i', b's', b'a', 0x00, // "cc=visa" + padding
+        // status_descr = "OK"
+        0x00, 0x00, 0x00, 0x02, // length = 2
+        b'O', b'K', 0x00, 0x00, // "OK" + padding
+        // req_bytes = 1024
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, // resp_bytes = 512
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, // duration_us = 150000
+        0x00, 0x02, 0x49, 0xF0, // status = 0 (SUCCESS)
+        0x00, 0x00, 0x00, 0x00,
     ];
 
-    let data = build_flow_sample_test(0x07D0, &record_data); // record type = 2000
+    let data = build_flow_sample_test(0x089A, &record_data); // record type = 2202
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -1981,15 +1945,17 @@ fn test_parse_transaction() {
         SampleData::FlowSample(flow) => {
             assert_eq!(flow.flow_records.len(), 1);
             match &flow.flow_records[0].flow_data {
-                FlowData::Transaction(txn) => {
-                    assert_eq!(txn.direction, 2); // server
-                    assert_eq!(txn.wait, 100);
-                    assert_eq!(txn.duration, 1000);
-                    assert_eq!(txn.status, 0); // succeeded
-                    assert_eq!(txn.bytes_received, 1024);
-                    assert_eq!(txn.bytes_sent, 2048);
+                FlowData::AppOperation(app) => {
+                    assert_eq!(app.context.application, "payment");
+                    assert_eq!(app.context.operation, "process");
+                    assert_eq!(app.context.attributes, "cc=visa");
+                    assert_eq!(app.status_descr, "OK");
+                    assert_eq!(app.req_bytes, 1024);
+                    assert_eq!(app.resp_bytes, 512);
+                    assert_eq!(app.duration_us, 150000);
+                    assert_eq!(app.status, AppStatus::Success);
                 }
-                _ => panic!("Expected Transaction"),
+                _ => panic!("Expected AppOperation"),
             }
         }
         _ => panic!("Expected FlowSample"),
@@ -1997,55 +1963,21 @@ fn test_parse_transaction() {
 }
 
 #[test]
-fn test_parse_extended_nfs_storage_transaction() {
-    let mut record_data = Vec::new();
-
-    // path = "/home/user/file.txt" (opaque)
-    let path = b"/home/user/file.txt";
-    record_data.extend(&(path.len() as u32).to_be_bytes());
-    record_data.extend_from_slice(path);
-    // Add padding to 4-byte boundary
-    let padding = (4 - (path.len() % 4)) % 4;
-    record_data.extend(vec![0u8; padding]);
-
-    // operation = 18 (NFS READ)
-    record_data.extend(&[0x00, 0x00, 0x00, 0x12]);
-
-    // status = 0 (NFS4_OK)
-    record_data.extend(&[0x00, 0x00, 0x00, 0x00]);
-
-    let data = build_flow_sample_test(0x07D1, &record_data); // record type = 2001
-
-    let result = parse_datagram(&data);
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.flow_records.len(), 1);
-            match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedNfsStorageTransaction(nfs) => {
-                    assert_eq!(nfs.path, b"/home/user/file.txt");
-                    assert_eq!(nfs.operation, 18); // READ
-                    assert_eq!(nfs.status, 0); // NFS4_OK
-                }
-                _ => panic!("Expected ExtendedNfsStorageTransaction"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_extended_scsi_storage_transaction() {
-    // SCSI transaction data: lun(4) + operation(4) + status(4) = 12 bytes
+fn test_flow_0_2203_app_parent_context() {
+    // Application Parent Context: context only
+    // context: application_len(4) + "mail"(4) + operation_len(4) + "send"(4) + attributes_len(4) + ""(0)
     let record_data = [
-        0x00, 0x00, 0x00, 0x05, // lun = 5
-        0x00, 0x00, 0x00, 0x28, // operation = 0x28 (READ(10))
-        0x00, 0x00, 0x00, 0x00, // status = 0 (GOOD)
+        // application = "mail"
+        0x00, 0x00, 0x00, 0x04, // length = 4
+        b'm', b'a', b'i', b'l', // "mail"
+        // operation = "send"
+        0x00, 0x00, 0x00, 0x04, // length = 4
+        b's', b'e', b'n', b'd', // "send"
+        // attributes = "" (empty)
+        0x00, 0x00, 0x00, 0x00, // length = 0
     ];
 
-    let data = build_flow_sample_test(0x07D2, &record_data); // record type = 2002
+    let data = build_flow_sample_test(0x089B, &record_data); // record type = 2203
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -2055,12 +1987,12 @@ fn test_parse_extended_scsi_storage_transaction() {
         SampleData::FlowSample(flow) => {
             assert_eq!(flow.flow_records.len(), 1);
             match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedScsiStorageTransaction(scsi) => {
-                    assert_eq!(scsi.lun, 5);
-                    assert_eq!(scsi.operation, 0x28); // READ(10)
-                    assert_eq!(scsi.status, 0); // GOOD
+                FlowData::AppParentContext(parent) => {
+                    assert_eq!(parent.context.application, "mail");
+                    assert_eq!(parent.context.operation, "send");
+                    assert_eq!(parent.context.attributes, "");
                 }
-                _ => panic!("Expected ExtendedScsiStorageTransaction"),
+                _ => panic!("Expected AppParentContext"),
             }
         }
         _ => panic!("Expected FlowSample"),
@@ -2068,28 +2000,98 @@ fn test_parse_extended_scsi_storage_transaction() {
 }
 
 #[test]
-fn test_parse_extended_http_transaction() {
+fn test_flow_0_2204_app_initiator() {
+    // Application Initiator: actor string
+    // actor = "customer123"
+    let record_data = [
+        0x00, 0x00, 0x00, 0x0B, // length = 11
+        b'c', b'u', b's', b't', b'o', b'm', b'e', b'r', b'1', b'2', b'3', // "customer123"
+        0x00, // padding to 4-byte boundary
+    ];
+
+    let data = build_flow_sample_test(0x089C, &record_data); // record type = 2204
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::AppInitiator(initiator) => {
+                    assert_eq!(initiator.actor, "customer123");
+                }
+                _ => panic!("Expected AppInitiator"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_2205_app_target() {
+    // Application Target: actor string
+    // actor = "merchant456"
+    let record_data = [
+        0x00, 0x00, 0x00, 0x0B, // length = 11
+        b'm', b'e', b'r', b'c', b'h', b'a', b'n', b't', b'4', b'5', b'6', // "merchant456"
+        0x00, // padding to 4-byte boundary
+    ];
+
+    let data = build_flow_sample_test(0x089D, &record_data); // record type = 2205
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::AppTarget(target) => {
+                    assert_eq!(target.actor, "merchant456");
+                }
+                _ => panic!("Expected AppTarget"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_2206_http_request() {
+    // Build HTTP request record data
     let mut record_data = Vec::new();
 
-    // url = "/api/v1/users"
-    record_data.extend(encode_string("/api/v1/users"));
-
+    // method = 2 (GET)
+    record_data.extend_from_slice(&[0x00, 0x00, 0x00, 0x02]);
+    // protocol = 1001 (HTTP/1.1)
+    record_data.extend_from_slice(&[0x00, 0x00, 0x03, 0xE9]);
+    // uri = "/api/test"
+    record_data.extend_from_slice(&encode_string("/api/test"));
     // host = "example.com"
-    record_data.extend(encode_string("example.com"));
-
-    // referer = "https://google.com"
-    record_data.extend(encode_string("https://google.com"));
-
+    record_data.extend_from_slice(&encode_string("example.com"));
+    // referer = "https://referrer.com"
+    record_data.extend_from_slice(&encode_string("https://referrer.com"));
     // useragent = "Mozilla/5.0"
-    record_data.extend(encode_string("Mozilla/5.0"));
-
-    // user = "john_doe"
-    record_data.extend(encode_string("john_doe"));
-
+    record_data.extend_from_slice(&encode_string("Mozilla/5.0"));
+    // xff = "203.0.113.1"
+    record_data.extend_from_slice(&encode_string("203.0.113.1"));
+    // authuser = "testuser"
+    record_data.extend_from_slice(&encode_string("testuser"));
+    // mime_type = "application/json"
+    record_data.extend_from_slice(&encode_string("application/json"));
+    // req_bytes = 1024
+    record_data.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00]);
+    // resp_bytes = 2048
+    record_data.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00]);
+    // duration_us = 50000 (50ms)
+    record_data.extend_from_slice(&[0x00, 0x00, 0xC3, 0x50]);
     // status = 200
-    record_data.extend(&[0x00, 0x00, 0x00, 0xC8]);
+    record_data.extend_from_slice(&[0x00, 0x00, 0x00, 0xC8]);
 
-    let data = build_flow_sample_test(0x07D3, &record_data); // record type = 2003
+    let data = build_flow_sample_test(0x089E, &record_data); // record type = 2206
 
     let result = parse_datagram(&data);
     assert!(result.is_ok());
@@ -2099,15 +2101,82 @@ fn test_parse_extended_http_transaction() {
         SampleData::FlowSample(flow) => {
             assert_eq!(flow.flow_records.len(), 1);
             match &flow.flow_records[0].flow_data {
-                FlowData::ExtendedHttpTransaction(http) => {
-                    assert_eq!(http.url, "/api/v1/users");
+                FlowData::HttpRequest(http) => {
+                    assert_eq!(http.method, HttpMethod::Get);
+                    assert_eq!(http.protocol, 1001);
+                    assert_eq!(http.uri, "/api/test");
                     assert_eq!(http.host, "example.com");
-                    assert_eq!(http.referer, "https://google.com");
-                    assert_eq!(http.user_agent, "Mozilla/5.0");
-                    assert_eq!(http.user, "john_doe");
+                    assert_eq!(http.referer, "https://referrer.com");
+                    assert_eq!(http.useragent, "Mozilla/5.0");
+                    assert_eq!(http.xff, "203.0.113.1");
+                    assert_eq!(http.authuser, "testuser");
+                    assert_eq!(http.mime_type, "application/json");
+                    assert_eq!(http.req_bytes, 1024);
+                    assert_eq!(http.resp_bytes, 2048);
+                    assert_eq!(http.duration_us, 50000);
                     assert_eq!(http.status, 200);
                 }
-                _ => panic!("Expected ExtendedHttpTransaction"),
+                _ => panic!("Expected HttpRequest"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_2207_extended_proxy_request() {
+    // Build extended proxy request record data
+    let mut record_data = Vec::new();
+
+    // uri = "/backend/api"
+    record_data.extend_from_slice(&encode_string("/backend/api"));
+    // host = "backend.internal"
+    record_data.extend_from_slice(&encode_string("backend.internal"));
+
+    let data = build_flow_sample_test(0x089F, &record_data); // record type = 2207
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedProxyRequest(proxy) => {
+                    assert_eq!(proxy.uri, "/backend/api");
+                    assert_eq!(proxy.host, "backend.internal");
+                }
+                _ => panic!("Expected ExtendedProxyRequest"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+// ===== Enterprise 4413: Broadcom Records =====
+
+#[test]
+fn test_flow_4413_1_bst_egress_queue() {
+    // BST Egress Queue: queue(4) = 4 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x05, // queue = 5
+    ];
+
+    let data = build_flow_sample_test(0x0113_D001, &record_data); // record type = (4413 << 12) | 1
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedBstEgressQueue(bst) => {
+                    assert_eq!(bst.queue, 5);
+                }
+                _ => panic!("Expected ExtendedBstEgressQueue"),
             }
         }
         _ => panic!("Expected FlowSample"),

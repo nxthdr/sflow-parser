@@ -1,110 +1,30 @@
 //! Sample-level parsing tests
 //!
-//! Tests for parsing different sample types: flow samples, counter samples,
-//! expanded samples, and handling of unknown sample types.
+//! Tests for parsing different **sample types** and sample-level functionality.
+//!
+//! ## Purpose
+//!
+//! This file tests the sample parsing layer, NOT individual flow/counter records.
+//! Individual record tests are in:
+//! - `flows.rs` - Tests individual flow record types (0,1 through 4413,1)
+//! - `counters.rs` - Tests individual counter record types (0,1 through 5703,1)
+//!
+//! ## What This File Tests
+//!
+//! 1. **Sample Types**: FlowSample, CountersSample, ExpandedFlowSample, ExpandedCountersSample
+//! 2. **Special Samples**: DiscardedPacket, RtMetric, RtFlow
+//! 3. **Sample-level Features**:
+//!    - Multiple samples in one datagram
+//!    - Unknown sample types
+//!    - Unknown record types within samples
+//!    - Interface format handling
+//!
+//! ## Test Organization
+//!
+//! Tests are organized by sample type and functionality, not by (enterprise, format).
 
 use super::helpers::*;
 use sflow_parser::parsers::parse_datagram;
-
-#[test]
-fn test_parse_flow_sample_with_sampled_header() {
-    // Sampled header: protocol(4) + frame_length(4) + stripped(4) + header_len(4) + header(14) + padding(2) = 32 bytes
-    let record_data = [
-        0x00, 0x00, 0x00, 0x01, // protocol = Ethernet
-        0x00, 0x00, 0x05, 0xDC, // frame length = 1500
-        0x00, 0x00, 0x00, 0x00, // stripped bytes = 0
-        0x00, 0x00, 0x00, 0x0E, // header length = 14 bytes
-        // Ethernet header (14 bytes + 2 padding)
-        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // dst MAC
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, // src MAC
-        0x08, 0x00, // EtherType = IPv4
-        0x00, 0x00, // padding
-    ];
-
-    let data = build_flow_sample_test(0x0001, &record_data); // record type = 1
-
-    let result = parse_datagram(&data);
-    if let Err(e) = &result {
-        panic!("Parse failed: {}", e);
-    }
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    assert_eq!(datagram.samples.len(), 1);
-
-    match &datagram.samples[0].sample_data {
-        SampleData::FlowSample(flow) => {
-            assert_eq!(flow.sampling_rate, 1024);
-            assert_eq!(flow.flow_records.len(), 1);
-
-            match &flow.flow_records[0].flow_data {
-                FlowData::SampledHeader(header) => {
-                    assert_eq!(header.frame_length, 1500);
-                    assert_eq!(header.header.len(), 14);
-                }
-                _ => panic!("Expected SampledHeader"),
-            }
-        }
-        _ => panic!("Expected FlowSample"),
-    }
-}
-
-#[test]
-fn test_parse_counter_sample_generic_interface() {
-    let mut data = create_datagram_header(1);
-    data.extend_from_slice(&[
-        // Counter sample
-        0x00, 0x00, 0x00, 0x02, // sample type = counter sample
-        0x00, 0x00, 0x00, 0x6C, // sample length = 108 bytes (12 + 96)
-        0x00, 0x00, 0x00, 0x03, // sequence number
-        0x00, 0x00, 0x00, 0x01, // source ID
-        0x00, 0x00, 0x00, 0x01, // number of counter records = 1
-        // Generic interface counters
-        0x00, 0x00, 0x00, 0x01, // record type = generic interface
-        0x00, 0x00, 0x00, 0x58, // record length = 88 bytes
-        0x00, 0x00, 0x00, 0x01, // if_index = 1
-        0x00, 0x00, 0x00, 0x06, // if_type = 6
-        0x00, 0x00, 0x00, 0x00, 0x3B, 0x9A, 0xCA, 0x00, // if_speed = 1 Gbps
-        0x00, 0x00, 0x00, 0x01, // if_direction = 1
-        0x00, 0x00, 0x00, 0x03, // if_status = 3
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x27, 0x10, // if_in_octets
-        0x00, 0x00, 0x00, 0x64, // if_in_ucast_pkts = 100
-        0x00, 0x00, 0x00, 0x0A, // if_in_multicast_pkts = 10
-        0x00, 0x00, 0x00, 0x05, // if_in_broadcast_pkts = 5
-        0x00, 0x00, 0x00, 0x00, // if_in_discards = 0
-        0x00, 0x00, 0x00, 0x00, // if_in_errors = 0
-        0x00, 0x00, 0x00, 0x00, // if_in_unknown_protos = 0
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4E, 0x20, // if_out_octets
-        0x00, 0x00, 0x00, 0xC8, // if_out_ucast_pkts = 200
-        0x00, 0x00, 0x00, 0x14, // if_out_multicast_pkts = 20
-        0x00, 0x00, 0x00, 0x0A, // if_out_broadcast_pkts = 10
-        0x00, 0x00, 0x00, 0x00, // if_out_discards = 0
-        0x00, 0x00, 0x00, 0x00, // if_out_errors = 0
-        0x00, 0x00, 0x00, 0x00, // if_promiscuous_mode = 0
-    ]);
-
-    let result = parse_datagram(&data);
-    if let Err(e) = &result {
-        eprintln!("Parse error: {}", e);
-    }
-    assert!(result.is_ok());
-
-    let datagram = result.unwrap();
-    match &datagram.samples[0].sample_data {
-        SampleData::CountersSample(counters) => {
-            assert_eq!(counters.counters.len(), 1);
-
-            match &counters.counters[0].counter_data {
-                CounterData::GenericInterface(iface) => {
-                    assert_eq!(iface.if_in_ucast_pkts, 100);
-                    assert_eq!(iface.if_out_ucast_pkts, 200);
-                }
-                _ => panic!("Expected GenericInterface"),
-            }
-        }
-        _ => panic!("Expected CountersSample"),
-    }
-}
 
 #[test]
 fn test_parse_expanded_flow_sample() {
