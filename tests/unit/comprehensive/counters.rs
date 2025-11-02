@@ -1712,6 +1712,132 @@ fn test_parse_memcache_counters() {
 }
 
 #[test]
+fn test_parse_energy() {
+    // Energy: voltage(4) + current(4) + real_power(4) + power_factor(4) + energy(4) + errors(4) = 24 bytes
+    let record_data = [
+        0x00, 0x00, 0x2E, 0xE0, // voltage = 12000 mV (12V)
+        0x00, 0x00, 0x03, 0xE8, // current = 1000 mA (1A)
+        0x00, 0x00, 0x2E, 0xE0, // real_power = 12000 mW (12W)
+        0x00, 0x00, 0x27, 0x10, // power_factor = 10000 (100.00%)
+        0x00, 0x00, 0x75, 0x30, // energy = 30000 millijoules
+        0x00, 0x00, 0x00, 0x00, // errors = 0
+    ];
+
+    let data = build_counter_sample_test(0x0BB8, &record_data); // record type = 3000
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::Energy(energy) => {
+                    assert_eq!(energy.voltage, 12000);
+                    assert_eq!(energy.current, 1000);
+                    assert_eq!(energy.real_power, 12000);
+                    assert_eq!(energy.power_factor, 10000);
+                    assert_eq!(energy.energy, 30000);
+                    assert_eq!(energy.errors, 0);
+                }
+                _ => panic!("Expected Energy"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_temperature() {
+    // Temperature: minimum(4) + maximum(4) + errors(4) = 12 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0xC8, // minimum = 200 (20.0°C)
+        0x00, 0x00, 0x01, 0xF4, // maximum = 500 (50.0°C)
+        0x00, 0x00, 0x00, 0x00, // errors = 0
+    ];
+
+    let data = build_counter_sample_test(0x0BB9, &record_data); // record type = 3001
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::Temperature(temp) => {
+                    assert_eq!(temp.minimum, 200);
+                    assert_eq!(temp.maximum, 500);
+                    assert_eq!(temp.errors, 0);
+                }
+                _ => panic!("Expected Temperature"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_humidity() {
+    // Humidity: relative(4) = 4 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x37, // relative = 55%
+    ];
+
+    let data = build_counter_sample_test(0x0BBA, &record_data); // record type = 3002
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::Humidity(humidity) => {
+                    assert_eq!(humidity.relative, 55);
+                }
+                _ => panic!("Expected Humidity"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_parse_fans() {
+    // Fans: total(4) + failed(4) + speed(4) = 12 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x04, // total = 4
+        0x00, 0x00, 0x00, 0x00, // failed = 0
+        0x00, 0x00, 0x00, 0x4B, // speed = 75%
+    ];
+
+    let data = build_counter_sample_test(0x0BBB, &record_data); // record type = 3003
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::Fans(fans) => {
+                    assert_eq!(fans.total, 4);
+                    assert_eq!(fans.failed, 0);
+                    assert_eq!(fans.speed, 75);
+                }
+                _ => panic!("Expected Fans"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
 fn test_parse_broadcom_device_buffers() {
     // Broadcom device buffers: 2 i32 = 8 bytes
     let record_data = [

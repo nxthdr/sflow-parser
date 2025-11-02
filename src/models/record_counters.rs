@@ -2255,6 +2255,151 @@ pub struct AppWorkers {
     pub req_dropped: u32,
 }
 
+/// Energy Consumption - Format (0,3000)
+///
+/// Power consumption and energy metrics
+///
+/// # XDR Definition ([sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs))
+///
+/// ```text
+/// /* Energy consumption */
+/// /* opaque = counter_data; enterprise = 0; format = 3000 */
+///
+/// struct energy {
+///     unsigned int voltage;      /* measured in mV
+///                                   unknown = 4,294,976,295 */
+///     unsigned int current;      /* measured in mA
+///                                   unknown = 4,294,976,295 */
+///     unsigned int real_power;   /* measured in mW
+///                                   unknown = 4,294,976,295 */
+///     int power_factor;          /* power factor
+///                                   (expressed in 100ths of a
+///                                   percent)
+///                                   -10000 to 10000 for AC power
+///                                   -2,147,483,647 for unknown AC
+///                                   power factor
+///                                   2,147,483,647 for DC power */
+///     unsigned int energy;       /* energy in millijoules
+///                                   unknown = 4,294,976,295 */
+///     unsigned int errors;       /* count of power exceptions,
+///                                   including:
+///                                   over/under voltage
+///                                   over current
+///                                   over power
+///                                   unknown = 4,294,976,295 */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct Energy {
+    /// Voltage measured in millivolts (unknown = 4,294,976,295)
+    pub voltage: u32,
+
+    /// Current measured in milliamps (unknown = 4,294,976,295)
+    pub current: u32,
+
+    /// Real power measured in milliwatts (unknown = 4,294,976,295)
+    pub real_power: u32,
+
+    /// Power factor expressed in 100ths of a percent
+    /// - Range: -10000 to 10000 for AC power
+    /// - -2,147,483,647 for unknown AC power factor
+    /// - 2,147,483,647 for DC power
+    pub power_factor: i32,
+
+    /// Energy in millijoules (unknown = 4,294,976,295)
+    pub energy: u32,
+
+    /// Count of power exceptions (over/under voltage, over current, over power)
+    /// (unknown = 4,294,976,295)
+    pub errors: u32,
+}
+
+/// Temperature - Format (0,3001)
+///
+/// Temperature sensor readings
+///
+/// # XDR Definition ([sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs))
+///
+/// ```text
+/// /* Temperature */
+/// /* opaque = counter_data; enterprise = 0; format = 3001 */
+///
+/// struct temperature {
+///     int minimum;        /* temperature reading from coolest
+///                            thermometer
+///                            expressed in tenths of a degree Celsius
+///                            */
+///     int maximum;        /* temperature reading from hottest
+///                            thermometer
+///                            expressed in tenths of a degree Celsius
+///                            */
+///     unsigned int errors; /* count of temperature exceptions */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct Temperature {
+    /// Temperature reading from coolest thermometer in tenths of a degree Celsius
+    pub minimum: i32,
+
+    /// Temperature reading from hottest thermometer in tenths of a degree Celsius
+    pub maximum: i32,
+
+    /// Count of temperature exceptions
+    pub errors: u32,
+}
+
+/// Humidity - Format (0,3002)
+///
+/// Relative humidity measurement
+///
+/// # XDR Definition ([sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs))
+///
+/// ```text
+/// /* Humidity */
+/// /* opaque = counter_data; enterprise = 0; format 3002 */
+///
+/// struct humidity {
+///     int relative; /* relative humidity expressed as a percentage */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct Humidity {
+    /// Relative humidity expressed as a percentage
+    pub relative: i32,
+}
+
+/// Fans - Format (0,3003)
+///
+/// Cooling fan statistics
+///
+/// # XDR Definition ([sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs))
+///
+/// ```text
+/// /* Cooling */
+/// /* opaque = counter_data; enterprise = 0; format=3003 */
+///
+/// struct fans {
+///     unsigned int total;  /* total fans */
+///     unsigned int failed; /* failed fans */
+///     unsigned int speed;  /* average fan speed expressed in percent */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct Fans {
+    /// Total number of fans
+    pub total: u32,
+
+    /// Number of failed fans
+    pub failed: u32,
+
+    /// Average fan speed expressed as a percentage
+    pub speed: u32,
+}
+
 /// Broadcom Device Buffer Utilization - Format (4413,1)
 ///
 /// Device level buffer utilization statistics from Broadcom switch ASICs

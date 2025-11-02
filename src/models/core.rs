@@ -458,6 +458,14 @@ pub enum CounterData {
     MemcacheCounters(crate::models::record_counters::MemcacheCounters),
     /// App Workers - Format (0,2206)
     AppWorkers(crate::models::record_counters::AppWorkers),
+    /// Energy Consumption - Format (0,3000)
+    Energy(crate::models::record_counters::Energy),
+    /// Temperature - Format (0,3001)
+    Temperature(crate::models::record_counters::Temperature),
+    /// Humidity - Format (0,3002)
+    Humidity(crate::models::record_counters::Humidity),
+    /// Fans - Format (0,3003)
+    Fans(crate::models::record_counters::Fans),
     /// Broadcom Device Buffer Utilization - Format (4413,1)
     BroadcomDeviceBuffers(crate::models::record_counters::BroadcomDeviceBuffers),
     /// Broadcom Port Buffer Utilization - Format (4413,2)

@@ -179,10 +179,10 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 2204 | Memcache Counters | [sFlow Memcache](https://sflow.org/sflow_memcache.txt) | ✅ |
 | 0 | 2206 | App Workers | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
 | 0 | 2207 | OVS DP Stats | [sFlow Discussion](http://blog.sflow.com/2015/01/open-vswitch-performance-monitoring.html) | ⬜ |
-| 0 | 3000 | Energy | [sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs) | ⬜ |
-| 0 | 3001 | Temperature | [sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs) | ⬜ |
-| 0 | 3002 | Humidity | [sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs) | ⬜ |
-| 0 | 3003 | Fans | [sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs) | ⬜ |
+| 0 | 3000 | Energy | [sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs) | ✅ |
+| 0 | 3001 | Temperature | [sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs) | ✅ |
+| 0 | 3002 | Humidity | [sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs) | ✅ |
+| 0 | 3003 | Fans | [sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs) | ✅ |
 | 4413 | 1 | Broadcom Device Buffer | [sFlow Broadcom](https://sflow.org/bv-sflow.txt) | ✅ |
 | 4413 | 2 | Broadcom Port Buffer | [sFlow Broadcom](https://sflow.org/bv-sflow.txt) | ✅ |
 | 4413 | 3 | Broadcom ASIC Tables | [sFlow Broadcom](https://sflow.org/sflow_broadcom_tables.txt) | ✅ |
