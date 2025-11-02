@@ -1733,6 +1733,159 @@ pub struct JvmStatistics {
     pub fd_max_count: u32,
 }
 
+/// Memcache Counters (Deprecated) - Format (0,2200) - **DEPRECATED**
+///
+/// Legacy memcache statistics counters
+///
+/// **Note:** This format was defined in an early sFlow Memcache discussion
+/// but was deprecated and replaced by format 2204. It is included here for
+/// backward compatibility with legacy implementations.
+///
+/// # XDR Definition ([sFlow Discussion](https://groups.google.com/g/sflow/c/KDk_QrxCSJI))
+///
+/// ```text
+/// /* Memcached counters */
+/// /* See memcached protocol.txt */
+/// /* opaque = counter_data; enterprise = 0; format = 2200 */
+/// struct memcached_counters {
+///   unsigned int uptime;                 /* in seconds */
+///   unsigned int rusage_user;            /* in milliseconds */
+///   unsigned int rusage_system;          /* in milliseconds */
+///   unsigned int curr_connections;
+///   unsigned int total_connections;
+///   unsigned int connection_structures;
+///   unsigned int cmd_get;
+///   unsigned int cmd_set;
+///   unsigned int cmd_flush;
+///   unsigned int get_hits;
+///   unsigned int get_misses;
+///   unsigned int delete_misses;
+///   unsigned int delete_hits;
+///   unsigned int incr_misses;
+///   unsigned int incr_hits;
+///   unsigned int decr_misses;
+///   unsigned int decr_hits;
+///   unsigned int cas_misses;
+///   unsigned int cas_hits;
+///   unsigned int cas_badval;
+///   unsigned int auth_cmds;
+///   unsigned int auth_errors;
+///   unsigned hyper bytes_read;
+///   unsigned hyper bytes_written;
+///   unsigned int limit_maxbytes;
+///   unsigned int accepting_conns;
+///   unsigned int listen_disabled_num;
+///   unsigned int threads;
+///   unsigned int conn_yields;
+///   unsigned hyper bytes;
+///   unsigned int curr_items;
+///   unsigned int total_items;
+///   unsigned int evictions;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct MemcacheCountersDeprecated {
+    /// Uptime in seconds
+    pub uptime: u32,
+
+    /// User CPU time in milliseconds
+    pub rusage_user: u32,
+
+    /// System CPU time in milliseconds
+    pub rusage_system: u32,
+
+    /// Current number of connections
+    pub curr_connections: u32,
+
+    /// Total number of connections
+    pub total_connections: u32,
+
+    /// Number of connection structures
+    pub connection_structures: u32,
+
+    /// Number of get commands
+    pub cmd_get: u32,
+
+    /// Number of set commands
+    pub cmd_set: u32,
+
+    /// Number of flush commands
+    pub cmd_flush: u32,
+
+    /// Number of get hits
+    pub get_hits: u32,
+
+    /// Number of get misses
+    pub get_misses: u32,
+
+    /// Number of delete misses
+    pub delete_misses: u32,
+
+    /// Number of delete hits
+    pub delete_hits: u32,
+
+    /// Number of increment misses
+    pub incr_misses: u32,
+
+    /// Number of increment hits
+    pub incr_hits: u32,
+
+    /// Number of decrement misses
+    pub decr_misses: u32,
+
+    /// Number of decrement hits
+    pub decr_hits: u32,
+
+    /// Number of CAS misses
+    pub cas_misses: u32,
+
+    /// Number of CAS hits
+    pub cas_hits: u32,
+
+    /// Number of CAS bad value errors
+    pub cas_badval: u32,
+
+    /// Number of authentication commands
+    pub auth_cmds: u32,
+
+    /// Number of authentication errors
+    pub auth_errors: u32,
+
+    /// Total bytes read
+    pub bytes_read: u64,
+
+    /// Total bytes written
+    pub bytes_written: u64,
+
+    /// Maximum bytes limit
+    pub limit_maxbytes: u32,
+
+    /// Whether accepting connections (1=yes, 0=no)
+    pub accepting_conns: u32,
+
+    /// Number of times listen was disabled
+    pub listen_disabled_num: u32,
+
+    /// Number of threads
+    pub threads: u32,
+
+    /// Number of connection yields
+    pub conn_yields: u32,
+
+    /// Current bytes used
+    pub bytes: u64,
+
+    /// Current number of items
+    pub curr_items: u32,
+
+    /// Total number of items
+    pub total_items: u32,
+
+    /// Number of evictions
+    pub evictions: u32,
+}
+
 /// HTTP Counters - Format (0,2201)
 ///
 /// HTTP performance counters

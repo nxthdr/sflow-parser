@@ -444,6 +444,8 @@ pub enum CounterData {
     JvmRuntime(crate::models::record_counters::JvmRuntime),
     /// JVM Statistics - Format (0,2106)
     JvmStatistics(crate::models::record_counters::JvmStatistics),
+    /// Memcache Counters - Format (0,2200) - DEPRECATED
+    MemcacheCountersDeprecated(crate::models::record_counters::MemcacheCountersDeprecated),
     /// HTTP Counters - Format (0,2201)
     HttpCounters(crate::models::record_counters::HttpCounters),
     /// App Operations - Format (0,2202)

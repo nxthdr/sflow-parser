@@ -170,7 +170,7 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 2104 | Virtual Network I/O | [sFlow Host](https://sflow.org/sflow_host.txt) | ✅ |
 | 0 | 2105 | JVM Runtime | [sFlow JVM](https://sflow.org/sflow_jvm.txt) | ✅ |
 | 0 | 2106 | JVM Statistics | [sFlow JVM](https://sflow.org/sflow_jvm.txt) | ✅ |
-| 0 | 2200 | Memcache Counters (deprecated) | [sFlow Discussion](https://groups.google.com/g/sflow/c/KDk_QrxCSJI) | ⬜ 🪦 |
+| 0 | 2200 | Memcache Counters (deprecated) | [sFlow Discussion](https://groups.google.com/g/sflow/c/KDk_QrxCSJI) | ✅ 🪦 |
 | 0 | 2201 | HTTP Counters | [sFlow HTTP](https://sflow.org/sflow_http.txt) | ✅ |
 | 0 | 2202 | App Operations | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
 | 0 | 2203 | App Resources | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |

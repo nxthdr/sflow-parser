@@ -648,6 +648,47 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Memcache Counters (Deprecated) - Format (0,2200) - DEPRECATED
+    pub(super) fn parse_memcache_counters_deprecated(
+        &mut self,
+    ) -> Result<crate::models::record_counters::MemcacheCountersDeprecated> {
+        Ok(crate::models::record_counters::MemcacheCountersDeprecated {
+            uptime: self.read_u32()?,
+            rusage_user: self.read_u32()?,
+            rusage_system: self.read_u32()?,
+            curr_connections: self.read_u32()?,
+            total_connections: self.read_u32()?,
+            connection_structures: self.read_u32()?,
+            cmd_get: self.read_u32()?,
+            cmd_set: self.read_u32()?,
+            cmd_flush: self.read_u32()?,
+            get_hits: self.read_u32()?,
+            get_misses: self.read_u32()?,
+            delete_misses: self.read_u32()?,
+            delete_hits: self.read_u32()?,
+            incr_misses: self.read_u32()?,
+            incr_hits: self.read_u32()?,
+            decr_misses: self.read_u32()?,
+            decr_hits: self.read_u32()?,
+            cas_misses: self.read_u32()?,
+            cas_hits: self.read_u32()?,
+            cas_badval: self.read_u32()?,
+            auth_cmds: self.read_u32()?,
+            auth_errors: self.read_u32()?,
+            bytes_read: self.read_u64()?,
+            bytes_written: self.read_u64()?,
+            limit_maxbytes: self.read_u32()?,
+            accepting_conns: self.read_u32()?,
+            listen_disabled_num: self.read_u32()?,
+            threads: self.read_u32()?,
+            conn_yields: self.read_u32()?,
+            bytes: self.read_u64()?,
+            curr_items: self.read_u32()?,
+            total_items: self.read_u32()?,
+            evictions: self.read_u32()?,
+        })
+    }
+
     /// Parse HTTP Counters - Format (0,2201)
     pub(super) fn parse_http_counters(
         &mut self,
@@ -920,6 +961,9 @@ impl<R: Read> Parser<R> {
                 2104 => Ok(CounterData::VirtualNetIo(parser.parse_virtual_net_io()?)),
                 2105 => Ok(CounterData::JvmRuntime(parser.parse_jvm_runtime()?)),
                 2106 => Ok(CounterData::JvmStatistics(parser.parse_jvm_statistics()?)),
+                2200 => Ok(CounterData::MemcacheCountersDeprecated(
+                    parser.parse_memcache_counters_deprecated()?,
+                )),
                 2201 => Ok(CounterData::HttpCounters(parser.parse_http_counters()?)),
                 2204 => Ok(CounterData::MemcacheCounters(
                     parser.parse_memcache_counters()?,

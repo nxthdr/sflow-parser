@@ -1328,6 +1328,97 @@ fn test_parse_app_operations() {
 }
 
 #[test]
+fn test_parse_memcache_counters_deprecated() {
+    // Memcache Counters (Deprecated): 32 u32 fields + 3 u64 fields = 128 + 24 = 152 bytes
+    let record_data = [
+        0x00, 0x00, 0x0E, 0x10, // uptime = 3600 seconds
+        0x00, 0x00, 0x03, 0xE8, // rusage_user = 1000 ms
+        0x00, 0x00, 0x01, 0xF4, // rusage_system = 500 ms
+        0x00, 0x00, 0x00, 0x0A, // curr_connections = 10
+        0x00, 0x00, 0x03, 0xE8, // total_connections = 1000
+        0x00, 0x00, 0x00, 0x0B, // connection_structures = 11
+        0x00, 0x00, 0x01, 0xF4, // cmd_get = 500
+        0x00, 0x00, 0x00, 0xC8, // cmd_set = 200
+        0x00, 0x00, 0x00, 0x05, // cmd_flush = 5
+        0x00, 0x00, 0x01, 0x90, // get_hits = 400
+        0x00, 0x00, 0x00, 0x64, // get_misses = 100
+        0x00, 0x00, 0x00, 0x0A, // delete_misses = 10
+        0x00, 0x00, 0x00, 0x14, // delete_hits = 20
+        0x00, 0x00, 0x00, 0x05, // incr_misses = 5
+        0x00, 0x00, 0x00, 0x0F, // incr_hits = 15
+        0x00, 0x00, 0x00, 0x03, // decr_misses = 3
+        0x00, 0x00, 0x00, 0x0C, // decr_hits = 12
+        0x00, 0x00, 0x00, 0x02, // cas_misses = 2
+        0x00, 0x00, 0x00, 0x08, // cas_hits = 8
+        0x00, 0x00, 0x00, 0x01, // cas_badval = 1
+        0x00, 0x00, 0x00, 0x32, // auth_cmds = 50
+        0x00, 0x00, 0x00, 0x02, // auth_errors = 2
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x42, 0x40, // bytes_read = 1000000
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x1E, 0x84, 0x80, // bytes_written = 2000000
+        0x04, 0x00, 0x00, 0x00, // limit_maxbytes = 67108864
+        0x00, 0x00, 0x00, 0x01, // accepting_conns = 1
+        0x00, 0x00, 0x00, 0x00, // listen_disabled_num = 0
+        0x00, 0x00, 0x00, 0x04, // threads = 4
+        0x00, 0x00, 0x00, 0x00, // conn_yields = 0
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x98, 0x96, 0x80, // bytes = 10000000
+        0x00, 0x00, 0x03, 0xE8, // curr_items = 1000
+        0x00, 0x00, 0x27, 0x10, // total_items = 10000
+        0x00, 0x00, 0x00, 0x0A, // evictions = 10
+    ];
+
+    let data = build_counter_sample_test(0x0898, &record_data); // record type = 2200
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::MemcacheCountersDeprecated(memcache) => {
+                    assert_eq!(memcache.uptime, 3600);
+                    assert_eq!(memcache.rusage_user, 1000);
+                    assert_eq!(memcache.rusage_system, 500);
+                    assert_eq!(memcache.curr_connections, 10);
+                    assert_eq!(memcache.total_connections, 1000);
+                    assert_eq!(memcache.connection_structures, 11);
+                    assert_eq!(memcache.cmd_get, 500);
+                    assert_eq!(memcache.cmd_set, 200);
+                    assert_eq!(memcache.cmd_flush, 5);
+                    assert_eq!(memcache.get_hits, 400);
+                    assert_eq!(memcache.get_misses, 100);
+                    assert_eq!(memcache.delete_misses, 10);
+                    assert_eq!(memcache.delete_hits, 20);
+                    assert_eq!(memcache.incr_misses, 5);
+                    assert_eq!(memcache.incr_hits, 15);
+                    assert_eq!(memcache.decr_misses, 3);
+                    assert_eq!(memcache.decr_hits, 12);
+                    assert_eq!(memcache.cas_misses, 2);
+                    assert_eq!(memcache.cas_hits, 8);
+                    assert_eq!(memcache.cas_badval, 1);
+                    assert_eq!(memcache.auth_cmds, 50);
+                    assert_eq!(memcache.auth_errors, 2);
+                    assert_eq!(memcache.bytes_read, 1000000);
+                    assert_eq!(memcache.bytes_written, 2000000);
+                    assert_eq!(memcache.limit_maxbytes, 67108864);
+                    assert_eq!(memcache.accepting_conns, 1);
+                    assert_eq!(memcache.listen_disabled_num, 0);
+                    assert_eq!(memcache.threads, 4);
+                    assert_eq!(memcache.conn_yields, 0);
+                    assert_eq!(memcache.bytes, 10000000);
+                    assert_eq!(memcache.curr_items, 1000);
+                    assert_eq!(memcache.total_items, 10000);
+                    assert_eq!(memcache.evictions, 10);
+                }
+                _ => panic!("Expected MemcacheCountersDeprecated"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
 fn test_parse_http_counters() {
     // HTTP Counters: 15 u32 fields = 60 bytes
     let record_data = [
