@@ -616,10 +616,13 @@ pub struct OpticalSfpQsfp {
 ///     percentage 5s_cpu;          /* 5 second average CPU utilization */
 ///     percentage 1m_cpu;          /* 1 minute average CPU utilization */
 ///     percentage 5m_cpu;          /* 5 minute average CPU utilization */
-///     unsigned hyper total_memory /* total memory (in bytes) */
-///     unsigned hyper free_memory  /* free memory (in bytes) */
+///     unsigned hyper total_memory; /* total memory (in bytes) */
+///     unsigned hyper free_memory;  /* free memory (in bytes) */
 /// }
 /// ```
+///
+/// **ERRATUM:** The specification is missing semicolons after `total_memory` and `free_memory`,
+/// violating RFC 4506 XDR syntax requirements. The corrected version is shown above.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ProcessorCounters {
@@ -2334,7 +2337,7 @@ pub struct BroadcomTables {
 ///
 /// ```text
 /// /* NVIDIA GPU statistics */
-/// /* opaque = counter_data; enterprise = 5703, format=1 */
+/// /* opaque = counter_data; enterprise = 5703; format = 1 */
 /// struct nvidia_gpu {
 ///   unsigned int device_count; /* see nvmlDeviceGetCount */
 ///   unsigned int processes;    /* see nvmlDeviceGetComputeRunningProcesses */
@@ -2359,6 +2362,10 @@ pub struct BroadcomTables {
 ///                                 see nvmlDeviceGetFanSpeed */
 /// }
 /// ```
+///
+/// **ERRATUM:** The specification uses a comma instead of a semicolon in the format comment
+/// (`enterprise = 5703, format=1` should be `enterprise = 5703; format = 1`), which is
+/// inconsistent with all other sFlow specifications. The corrected version is shown above.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct NvidiaGpu {

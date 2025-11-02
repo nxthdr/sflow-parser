@@ -545,7 +545,7 @@ pub struct ExtendedNatPort {
 ///    - Local Routing Header definition from InfiniBand Architecture
 ///      Specification */
 ///
-/// /* opaque = ib_lrh_data; enterprise = 0; format = 1031 */
+/// /* opaque = flow_data; enterprise = 0; format = 1031 */
 ///
 /// struct extended_ib_lrh {
 ///    unsigned int src_vl;       /* source virtual lane               */
@@ -560,6 +560,9 @@ pub struct ExtendedNatPort {
 ///    unsigned int dst_lnh;      /* Destination link next header      */
 /// }
 /// ```
+///
+/// **ERRATUM:** The specification uses non-standard data type `ib_lrh_data` instead of `flow_data`.
+/// The corrected version is shown above.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedInfiniBandLrh {
@@ -599,17 +602,21 @@ pub struct ExtendedInfiniBandLrh {
 ///    - Global Routing Header definition from InfiniBand Architecture
 ///      Specification */
 ///
-/// /* opaque = ib_grh_data; enterprise = 0; format = 1032 */
+/// /* opaque = flow_data; enterprise = 0; format = 1032 */
 ///
 /// struct extended_ib_grh {
 ///    unsigned int flow_label; /* flow label          */
 ///    unsigned int tc;         /* Traffic Class       */
 ///    gid s_gid;               /* source GID          */
 ///    gid d_gid;               /* destination GID     */
-///    unsigned int next_header /* next header type    */
-///    unsigned int length      /* payload length      */
+///    unsigned int next_header; /* next header type    */
+///    unsigned int length;      /* payload length      */
 /// }
 /// ```
+///
+/// **ERRATUM:** The specification is missing semicolons after `next_header` and `length`,
+/// violating RFC 4506 XDR syntax requirements. Additionally, the specification uses
+/// non-standard data type `ib_grh_data` instead of `flow_data`. The corrected version is shown above.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedInfiniBandGrh {
@@ -638,7 +645,7 @@ pub struct ExtendedInfiniBandGrh {
 ///    - Base Transport Header definition from InfiniBand Architecture
 ///      Specification */
 ///
-/// /* opaque = ib_bth_data; enterprise = 0; format = 1033 */
+/// /* opaque = flow_data; enterprise = 0; format = 1033 */
 ///
 /// struct extended_ib_bth {
 ///    unsigned int pkey;   /* Partition key                */
@@ -646,6 +653,9 @@ pub struct ExtendedInfiniBandGrh {
 ///    unsigned int opcode; /* IBA packet type              */
 /// }
 /// ```
+///
+/// **ERRATUM:** The specification uses non-standard data type `ib_bth_data` instead of `flow_data`.
+/// The corrected version is shown above.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtendedInfiniBandBth {
@@ -821,16 +831,19 @@ pub struct Extended80211Payload {
 /// /* opaque = flow_data; enterprise = 0; format = 1014 */
 ///
 /// struct extended_80211_rx {
-///     string ssid<32>;           /* SSID string */
-///     mac bssid;                 /* BSSID */
-///     ieee80211_version version; /* version */
-///     unsigned int channel;      /* channel number */
-///     unsigned hyper speed;      /* speed */
-///     unsigned int rsni;         /* received signal to noise ratio */
-///     unsigned int rcpi;         /* received channel power */
+///     string ssid<32>;             /* SSID string */
+///     mac bssid;                   /* BSSID */
+///     ieee80211_version version;   /* version */
+///     unsigned int channel;        /* channel number */
+///     unsigned hyper speed;        /* speed */
+///     unsigned int rsni;           /* received signal to noise ratio */
+///     unsigned int rcpi;           /* received channel power */
 ///     duration_us packet_duration; /* time packet occupied RF medium */
 /// }
 /// ```
+///
+/// **ERRATUM:** The specification is missing a semicolon after `packet_duration`,
+/// violating RFC 4506 XDR syntax requirements. The corrected version is shown above.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Extended80211Rx {
@@ -2063,10 +2076,13 @@ pub struct AppParentContext {
 /// /* e.g. customer sending a payment */
 /// /* opaque = flow_data; enterprise = 0; format = 2204 */
 ///
-/// app_initiator {
+/// struct app_initiator {
 ///    actor actor;
 /// }
 /// ```
+///
+/// **ERRATUM:** The specification is missing the `struct` keyword before the structure name,
+/// which is inconsistent with XDR syntax conventions. The corrected version is shown above.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AppInitiator {
@@ -2085,10 +2101,13 @@ pub struct AppInitiator {
 /// /* e.g. recipient of payment */
 /// /* opaque = flow_data; enterprise = 0; format = 2205 */
 ///
-/// app_target {
+/// struct app_target {
 ///    actor actor;
 /// }
 /// ```
+///
+/// **ERRATUM:** The specification is missing the `struct` keyword before the structure name,
+/// which is inconsistent with XDR syntax conventions. The corrected version is shown above.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AppTarget {
