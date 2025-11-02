@@ -2008,3 +2008,70 @@ pub struct AppWorkers {
     /// Number of dropped requests
     pub req_dropped: u32,
 }
+
+/// NVIDIA GPU Statistics - Format (5703,1)
+///
+/// GPU performance metrics from NVIDIA Management Library (NVML)
+///
+/// # XDR Definition ([sFlow NVML](https://sflow.org/sflow_nvml.txt))
+///
+/// ```text
+/// /* NVIDIA GPU statistics */
+/// /* opaque = counter_data; enterprise = 5703, format=1 */
+/// struct nvidia_gpu {
+///   unsigned int device_count; /* see nvmlDeviceGetCount */
+///   unsigned int processes;    /* see nvmlDeviceGetComputeRunningProcesses */
+///   unsigned int gpu_time;     /* total milliseconds in which one or more
+///                                 kernels was executing on GPU
+///                                 sum across all devices */
+///   unsigned int mem_time;     /* total milliseconds during which global device
+///                                 memory was being read/written
+///                                 sum across all devices */
+///   unsigned hyper mem_total;  /* sum of framebuffer memory across devices
+///                                 see nvmlDeviceGetMemoryInfo */
+///   unsigned hyper mem_free;   /* sum of free framebuffer memory across devices
+///                                 see nvmlDeviceGetMemoryInfo */
+///   unsigned int ecc_errors;   /* sum of volatile ECC errors across devices
+///                                 see nvmlDeviceGetTotalEccErrors */
+///   unsigned int energy;       /* sum of millijoules across devices
+///                                 see nvmlDeviceGetPowerUsage */
+///   unsigned int temperature;  /* maximum temperature in degrees Celsius
+///                                 across devices
+///                                 see nvmlDeviceGetTemperature */
+///   unsigned int fan_speed;    /* maximum fan speed in percent across devices
+///                                 see nvmlDeviceGetFanSpeed */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct NvidiaGpu {
+    /// Number of GPU devices
+    pub device_count: u32,
+
+    /// Number of running compute processes
+    pub processes: u32,
+
+    /// Total GPU time in milliseconds (sum across all devices)
+    pub gpu_time: u32,
+
+    /// Total memory access time in milliseconds (sum across all devices)
+    pub mem_time: u32,
+
+    /// Total framebuffer memory in bytes (sum across all devices)
+    pub mem_total: u64,
+
+    /// Free framebuffer memory in bytes (sum across all devices)
+    pub mem_free: u64,
+
+    /// Sum of volatile ECC errors across all devices
+    pub ecc_errors: u32,
+
+    /// Total energy consumption in millijoules (sum across all devices)
+    pub energy: u32,
+
+    /// Maximum temperature in degrees Celsius across all devices
+    pub temperature: u32,
+
+    /// Maximum fan speed in percent across all devices
+    pub fan_speed: u32,
+}

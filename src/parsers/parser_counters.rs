@@ -718,6 +718,22 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse NVIDIA GPU Statistics - Format (5703,1)
+    pub(super) fn parse_nvidia_gpu(&mut self) -> Result<crate::models::record_counters::NvidiaGpu> {
+        Ok(crate::models::record_counters::NvidiaGpu {
+            device_count: self.read_u32()?,
+            processes: self.read_u32()?,
+            gpu_time: self.read_u32()?,
+            mem_time: self.read_u32()?,
+            mem_total: self.read_u64()?,
+            mem_free: self.read_u64()?,
+            ecc_errors: self.read_u32()?,
+            energy: self.read_u32()?,
+            temperature: self.read_u32()?,
+            fan_speed: self.read_u32()?,
+        })
+    }
+
     /// Parse counter data based on format
     pub(super) fn parse_counter_data(
         &mut self,
@@ -783,8 +799,14 @@ impl<R: Read> Parser<R> {
                 2206 => Ok(CounterData::AppWorkers(parser.parse_app_workers()?)),
                 _ => Ok(CounterData::Unknown { format, data }),
             }
+        } else if format.enterprise() == 5703 {
+            // NVIDIA enterprise formats
+            match format.format() {
+                1 => Ok(CounterData::NvidiaGpu(parser.parse_nvidia_gpu()?)),
+                _ => Ok(CounterData::Unknown { format, data }),
+            }
         } else {
-            // Vendor-specific format
+            // Other vendor-specific formats
             Ok(CounterData::Unknown { format, data })
         }
     }

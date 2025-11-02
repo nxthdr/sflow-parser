@@ -129,6 +129,11 @@ pub const SFLOW_SPECS: &[SpecDocument] = &[
         url: "https://sflow.org/sflow_memcache.txt",
         year: 2011,
     },
+    SpecDocument {
+        name: "sflow_nvml",
+        url: "https://sflow.org/sflow_nvml.txt",
+        year: 2012,
+    },
 ];
 
 /// XDR structure definition parsed from spec
@@ -211,8 +216,9 @@ pub fn parse_xdr_structures(spec_content: &str, spec_name: &str) -> Vec<XdrStruc
     // Allow for up to 800 characters (including page headers) between format comment and struct
     // Use non-greedy matching to get the closest struct
     // The 'struct' keyword is optional (some specs like app_initiator don't use it)
+    // Accept both semicolons and commas as separators (NVIDIA spec uses comma)
     let format_comment_re = Regex::new(
-        r"(?s)/\*\s*opaque\s*=\s*(\w+)\s*;\s*enterprise\s*=\s*(\d+)\s*;\s*format\s*=\s*(\d+)\s*\*/.{0,800}?(?:struct\s+)?(\w+)\s*\{([^}]+)\}"
+        r"(?s)/\*\s*opaque\s*=\s*(\w+)\s*;\s*enterprise\s*=\s*(\d+)\s*[;,]\s*format\s*=\s*(\d+)\s*\*/.{0,800}?(?:struct\s+)?(\w+)\s*\{([^}]+)\}"
     ).unwrap();
 
     for cap in format_comment_re.captures_iter(spec_content) {
@@ -971,11 +977,14 @@ pub fn validate_against_specs(
             );
         }
 
+        // Normalize data_type for consistent sorting (InfiniBand uses custom types)
+        let normalized_data_type = normalize_data_type(&xdr_struct.data_type);
+
         let mut validation = StructureValidation {
             name: xdr_struct.name.clone(),
             enterprise: xdr_struct.enterprise,
             format: xdr_struct.format,
-            data_type: xdr_struct.data_type.clone(),
+            data_type: normalized_data_type.clone(),
             spec_source: xdr_struct.spec_source.clone(),
             implemented,
             docstring_correct: true,
@@ -986,8 +995,11 @@ pub fn validate_against_specs(
 
         if implemented {
             // Get Rust struct metadata from registry (use normalized data type)
-            let normalized_type = normalize_data_type(&xdr_struct.data_type);
-            let key = (xdr_struct.enterprise, xdr_struct.format, normalized_type);
+            let key = (
+                xdr_struct.enterprise,
+                xdr_struct.format,
+                normalized_data_type,
+            );
             if let Some(rust_metadata) = registry.get(&key) {
                 // Validate fields
                 let (fields_match, field_issues) =

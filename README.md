@@ -32,7 +32,7 @@ The main specification is [sFlow Version 5](https://sflow.org/sflow_version_5.tx
 | 2011 | [sFlow HTTP Structures](https://sflow.org/sflow_http.txt) | HTTP performance metrics | ✅ |
 | 2011 | [sFlow Java Virtual Machine Structures](https://sflow.org/sflow_jvm.txt) | JVM performance metrics | ✅ |
 | 2011 | [sFlow Memcache Structures](https://sflow.org/sflow_memcache.txt) | Memcache performance metrics | ✅ |
-| 2012 | [sFlow NVML GPU Structures](https://sflow.org/sflow_nvml.txt) | NVIDIA GPU performance, status, and health | ⬜ |
+| 2012 | [sFlow NVML GPU Structures](https://sflow.org/sflow_nvml.txt) | NVIDIA GPU performance, status, and health | ✅ |
 | 2012 | [sFlow Application Structures](https://sflow.org/sflow_application.txt) | Application resource monitoring | ✅ |
 | 2012 | [sFlow LAG Counters Structure](https://sflow.org/sflow_lag.txt) | IEEE 802.1AX Link Aggregation (LACP) | ✅ |
 | 2012 | [sFlow Tunnel Structures](https://sflow.org/sflow_tunnels.txt) | Encapsulation/decapsulation (VXLAN, GRE, etc.) | ✅ |
@@ -184,11 +184,11 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 4413 | 1 | Broadcom Device Buffer | [sFlow Broadcom](https://sflow.org/bv-sflow.txt) | ⬜ |
 | 4413 | 2 | Broadcom Port Buffer | [sFlow Broadcom](https://sflow.org/bv-sflow.txt) | ⬜ |
 | 4413 | 3 | Broadcom ASIC Tables | [sFlow Broadcom](https://sflow.org/sflow_broadcom_tables.txt) | ⬜ |
-| 5703 | 1 | NVIDIA GPU | [sFlow NVML](https://sflow.org/sflow_nvml.txt) | ⬜ |
+| 5703 | 1 | NVIDIA GPU | [sFlow NVML](https://sflow.org/sflow_nvml.txt) | ✅ |
 
 ## Serialization / Deserialization Support
 
-Enables serialization and deserialization support for all sFlow data structures using [serde](https://serde.rs/). This allows you to easily convert parsed sFlow data to and from JSON, YAML, or any other format supported by serde.
+Enables optional serialization and deserialization support for all sFlow data structures using [serde](https://serde.rs/). This allows you to easily convert parsed sFlow data to and from JSON, YAML, or any other format supported by serde.
 
 ```toml
 [dependencies]

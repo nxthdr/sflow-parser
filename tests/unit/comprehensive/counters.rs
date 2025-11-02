@@ -1535,3 +1535,51 @@ fn test_parse_memcache_counters() {
         _ => panic!("Expected CountersSample"),
     }
 }
+
+#[test]
+fn test_parse_nvidia_gpu() {
+    // NVIDIA GPU counters: 4 u32 + 2 u64 + 4 u32 = 40 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x04, // device_count = 4
+        0x00, 0x00, 0x00, 0x08, // processes = 8
+        0x00, 0x00, 0x03, 0xE8, // gpu_time = 1000 ms
+        0x00, 0x00, 0x01, 0xF4, // mem_time = 500 ms
+        0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, // mem_total = 68,719,476,736 (64GB)
+        0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, // mem_free = 34,359,738,368 (32GB)
+        0x00, 0x00, 0x00, 0x0A, // ecc_errors = 10
+        0x00, 0x00, 0x27, 0x10, // energy = 10000 mJ
+        0x00, 0x00, 0x00, 0x50, // temperature = 80°C
+        0x00, 0x00, 0x00, 0x46, // fan_speed = 70%
+    ];
+
+    // Enterprise 5703, format 1: (5703 << 12) | 1 = 23379969
+    let record_type = 0x01647001;
+
+    let data = build_counter_sample_test(record_type, &record_data);
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::NvidiaGpu(gpu) => {
+                    assert_eq!(gpu.device_count, 4);
+                    assert_eq!(gpu.processes, 8);
+                    assert_eq!(gpu.gpu_time, 1000);
+                    assert_eq!(gpu.mem_time, 500);
+                    assert_eq!(gpu.mem_total, 68_719_476_736); // 64GB
+                    assert_eq!(gpu.mem_free, 34_359_738_368); // 32GB
+                    assert_eq!(gpu.ecc_errors, 10);
+                    assert_eq!(gpu.energy, 10000);
+                    assert_eq!(gpu.temperature, 80);
+                    assert_eq!(gpu.fan_speed, 70);
+                }
+                _ => panic!("Expected NvidiaGpu"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}

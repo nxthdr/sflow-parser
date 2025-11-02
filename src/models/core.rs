@@ -447,6 +447,8 @@ pub enum CounterData {
     JvmStatistics(crate::models::record_counters::JvmStatistics),
     /// Memcache Counters - Format (0,2204)
     MemcacheCounters(crate::models::record_counters::MemcacheCounters),
+    /// NVIDIA GPU Statistics - Format (5703,1)
+    NvidiaGpu(crate::models::record_counters::NvidiaGpu),
     /// Unknown or unparsed format
     Unknown { format: DataFormat, data: Vec<u8> },
 }
