@@ -240,7 +240,7 @@ The project includes comprehensive [validation](tests/specs/README.md) against o
 make specs-validate
 ```
 
-This validation allowed to identify [additional specification issues](tests/specs/SPEC_ISSUES.md) that are not yet part of the official errata.
+This validation allowed us to identify [additional specification issues](tests/specs/SPEC_ISSUES.md) that are not yet part of the official errata.
 
 ### Benchmarks
 
