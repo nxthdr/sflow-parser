@@ -159,7 +159,7 @@ impl<R: Read> Parser<R> {
         let capacity_segments = num_segments.min(1024) as usize;
         let mut dst_as_path = Vec::with_capacity(capacity_segments);
         for _ in 0..num_segments {
-            let path_type = self.read_u32()?;
+            let path_type = self.read_u32()?.into();
             let path_length = self.read_u32()?;
             let capacity_path = path_length.min(1024) as usize;
             let mut path = Vec::with_capacity(capacity_path);
@@ -211,11 +211,11 @@ impl<R: Read> Parser<R> {
         })
     }
 
-    /// Parse Extended URL - Format (0,1005)
+    /// Parse Extended URL - Format (0,1005) - DEPRECATED
     pub(super) fn parse_extended_url(
         &mut self,
     ) -> Result<crate::models::record_flows::ExtendedUrl> {
-        let direction = self.read_u32()?;
+        let direction = self.read_u32()?.into();
         let url = self.read_string()?;
         let host = self.read_string()?;
 
@@ -733,10 +733,10 @@ impl<R: Read> Parser<R> {
 
     /// Parse Transaction - Format (0,2000)
     pub(super) fn parse_transaction(&mut self) -> Result<crate::models::record_flows::Transaction> {
-        let direction = self.read_u32()?;
+        let direction = self.read_u32()?.into();
         let wait = self.read_u32()?;
         let duration = self.read_u32()?;
-        let status = self.read_u32()?;
+        let status = self.read_u32()?.into();
         let bytes_received = self.read_u64()?;
         let bytes_sent = self.read_u64()?;
 
@@ -1069,8 +1069,9 @@ impl<R: Read> Parser<R> {
     pub(super) fn parse_extended_tcp_info(
         &mut self,
     ) -> Result<crate::models::record_flows::ExtendedTcpInfo> {
+        use crate::models::record_flows::PacketDirection;
         Ok(crate::models::record_flows::ExtendedTcpInfo {
-            dir: self.read_u32()?,
+            dir: PacketDirection::from_u32(self.read_u32()?),
             snd_mss: self.read_u32()?,
             rcv_mss: self.read_u32()?,
             unacked: self.read_u32()?,

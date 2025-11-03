@@ -122,8 +122,8 @@ impl<R: Read> Parser<R> {
 
         // Parse drop reason
         let reason_value = self.read_u32()?;
-        let reason = crate::models::record_flows::DropReason::from_u32(reason_value)
-            .unwrap_or(crate::models::record_flows::DropReason::Unknown);
+        let reason = crate::models::DropReason::from_u32(reason_value)
+            .unwrap_or(crate::models::DropReason::Unknown);
 
         // Parse flow records array
         let num_records = self.read_u32()?;

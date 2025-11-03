@@ -551,7 +551,7 @@ pub struct InfiniBandCounters {
     pub vl15_dropped: u32,
 }
 
-/// Optical Lane - Format (0,10)
+/// Optical Lane
 ///
 /// Optical lane statistics for a single lane within an optical module
 ///

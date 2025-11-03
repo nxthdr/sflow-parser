@@ -10,8 +10,9 @@ A dependency-free Rust library for parsing InMon sFlow version 5 datagrams.
 
 ## Implementation Status
 
-Main sFlow v5 specification and common extensions are implemented.
-Each implemented flow and counter record is covered by a unit test and programmatically validated against the official sFlow specification documents.
+Main sFlow v5 specification, extensions and discussions are implemented.
+
+Each implemented flow and counter record is covered by a unit test and validated against the official sFlow specification documents.
 
 The flows and counters types tables below list all sFlow structure numbers as defined in the [official sFlow structure registry](https://sflow.org/developers/structures.php).
 
@@ -252,7 +253,7 @@ Performance benchmarks using Criterion:
 make bench
 ```
 
-**Results:** ~300ns per datagram (~346 MiB/s throughput) on typical hardware. The parser is not zero-copy (at least for now) and does not use any unsafe code, but it is fast enough for most use cases.
+**Results:** ~150ns per datagram (~750.45 MiB/s throughput) on typical hardware. The parser is not zero-copy (at least for now) and does not use any unsafe code, but it is fast enough for most use cases.
 
 ## License
 

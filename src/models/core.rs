@@ -306,12 +306,6 @@ pub enum FlowData {
     ExtendedQueueLength(crate::models::record_flows::ExtendedQueueLength),
     /// Extended NAT Port - Format (0,1020)
     ExtendedNatPort(crate::models::record_flows::ExtendedNatPort),
-    /// Extended InfiniBand BTH - Format (0,1033)
-    ExtendedInfiniBandBth(crate::models::record_flows::ExtendedInfiniBandBth),
-    /// Extended VLAN In - Format (0,1034)
-    ExtendedVlanIn(crate::models::record_flows::ExtendedVlanIn),
-    /// Extended VLAN Out - Format (0,1035)
-    ExtendedVlanOut(crate::models::record_flows::ExtendedVlanOut),
     /// Extended L2 Tunnel Egress - Format (0,1021)
     ExtendedL2TunnelEgress(crate::models::record_flows::ExtendedL2TunnelEgress),
     /// Extended L2 Tunnel Ingress - Format (0,1022)
@@ -336,6 +330,12 @@ pub enum FlowData {
     ExtendedInfiniBandLrh(crate::models::record_flows::ExtendedInfiniBandLrh),
     /// Extended InfiniBand GRH - Format (0,1032)
     ExtendedInfiniBandGrh(crate::models::record_flows::ExtendedInfiniBandGrh),
+    /// Extended InfiniBand BTH - Format (0,1033)
+    ExtendedInfiniBandBth(crate::models::record_flows::ExtendedInfiniBandBth),
+    /// Extended VLAN In - Format (0,1034)
+    ExtendedVlanIn(crate::models::record_flows::ExtendedVlanIn),
+    /// Extended VLAN Out - Format (0,1035)
+    ExtendedVlanOut(crate::models::record_flows::ExtendedVlanOut),
     /// Extended Egress Queue - Format (0,1036)
     ExtendedEgressQueue(crate::models::record_flows::ExtendedEgressQueue),
     /// Extended ACL - Format (0,1037)
@@ -676,6 +676,248 @@ pub struct CountersSampleExpanded {
     pub counters: Vec<CounterRecord>,
 }
 
+/// Drop reason codes for discarded packets
+///
+/// # XDR Definition ([sFlow Drops](https://sflow.org/sflow_drops.txt))
+///
+/// ```text
+/// /* The drop_reason enumeration may be expanded over time.
+///    sFlow collectors must be prepared to receive discard_packet
+///    structures with unrecognized drop_reason values.
+///
+///    This document expands on the discard reason codes 0-262 defined
+///    in the sFlow Version 5 [1] interface typedef and this expanded list
+///    should be regarded as an expansion of the reason codes in the
+///    interface typdef and are valid anywhere the typedef is referenced.
+///
+///    Codes 263-288 are defined in Devlink Trap [2]. Drop reason / group
+///    names from the Devlink Trap document are preserved where they define
+///    new reason codes, or referenced as comments where they map to existing
+///    codes.
+///
+///    Codes 289-303 are reasons that have yet to be upstreamed to Devlink Trap,
+///    but the intent is that they will eventually be upstreamed and documented as
+///    part of the Linux API [2], and so they have been reserved.
+///
+///    The authoritative list of drop reasons will be maintained
+///    at sflow.org */
+///
+/// enum drop_reason {
+///    net_unreachable      = 0,
+///    host_unreachable     = 1,
+///    protocol_unreachable = 2,
+///    port_unreachable     = 3,
+///    frag_needed          = 4,
+///    src_route_failed     = 5,
+///    dst_net_unknown      = 6, /* ipv4_lpm_miss, ipv6_lpm_miss */
+///    dst_host_unknown     = 7,
+///    src_host_isolated    = 8,
+///    dst_net_prohibited   = 9, /* reject_route */
+///    dst_host_prohibited  = 10,
+///    dst_net_tos_unreachable  = 11,
+///    dst_host_tos_unreacheable = 12,
+///    comm_admin_prohibited = 13,
+///    host_precedence_violation = 14,
+///    precedence_cutoff    = 15,
+///    unknown              = 256,
+///    ttl_exceeded         = 257, /* ttl_value_is_too_small */
+///    acl                  = 258, /* ingress_flow_action_drop,
+///                                   egress_flow_action_drop
+///                                   group acl_drops */
+///    no_buffer_space      = 259, /* tail_drop */
+///    red                  = 260, /* early_drop */
+///    traffic_shaping      = 261,
+///    pkt_too_big          = 262, /* mtu_value_is_too_small */
+///    src_mac_is_multicast = 263,
+///    vlan_tag_mismatch    = 264,
+///    ingress_vlan_filter  = 265,
+///    ingress_spanning_tree_filter = 266,
+///    port_list_is_empty   = 267,
+///    port_loopback_filter = 268,
+///    blackhole_route      = 269,
+///    non_ip               = 270,
+///    uc_dip_over_mc_dmac  = 271,
+///    dip_is_loopback_address = 272,
+///    sip_is_mc            = 273,
+///    sip_is_loopback_address = 274,
+///    ip_header_corrupted  = 275,
+///    ipv4_sip_is_limited_bc = 276,
+///    ipv6_mc_dip_reserved_scope = 277,
+///    ipv6_mc_dip_interface_local_scope = 278,
+///    unresolved_neigh     = 279,
+///    mc_reverse_path_forwarding = 280,
+///    non_routable_packet  = 281,
+///    decap_error          = 282,
+///    overlay_smac_is_mc   = 283,
+///    unknown_l2           = 284, /* group l2_drops */
+///    unknown_l3           = 285, /* group l3_drops */
+///    unknown_l3_exception = 286, /* group l3_exceptions */
+///    unknown_buffer       = 287, /* group buffer_drops */
+///    unknown_tunnel       = 288, /* group tunnel_drops */
+///    unknown_l4           = 289,
+///    sip_is_unspecified   = 290,
+///    mlag_port_isolation  = 291,
+///    blackhole_arp_neigh  = 292,
+///    src_mac_is_dmac      = 293,
+///    dmac_is_reserved     = 294,
+///    sip_is_class_e       = 295,
+///    mc_dmac_mismatch     = 296,
+///    sip_is_dip           = 297,
+///    dip_is_local_network = 298,
+///    dip_is_link_local    = 299,
+///    overlay_smac_is_dmac = 300,
+///    egress_vlan_filter   = 301,
+///    uc_reverse_path_forwarding = 302,
+///    split_horizon        = 303
+/// }
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u32)]
+pub enum DropReason {
+    NetUnreachable = 0,
+    HostUnreachable = 1,
+    ProtocolUnreachable = 2,
+    PortUnreachable = 3,
+    FragNeeded = 4,
+    SrcRouteFailed = 5,
+    DstNetUnknown = 6,
+    DstHostUnknown = 7,
+    SrcHostIsolated = 8,
+    DstNetProhibited = 9,
+    DstHostProhibited = 10,
+    DstNetTosUnreachable = 11,
+    DstHostTosUnreachable = 12,
+    CommAdminProhibited = 13,
+    HostPrecedenceViolation = 14,
+    PrecedenceCutoff = 15,
+    Unknown = 256,
+    TtlExceeded = 257,
+    Acl = 258,
+    NoBufferSpace = 259,
+    Red = 260,
+    TrafficShaping = 261,
+    PktTooBig = 262,
+    SrcMacIsMulticast = 263,
+    VlanTagMismatch = 264,
+    IngressVlanFilter = 265,
+    IngressSpanningTreeFilter = 266,
+    PortListIsEmpty = 267,
+    PortLoopbackFilter = 268,
+    BlackholeRoute = 269,
+    NonIp = 270,
+    UcDipOverMcDmac = 271,
+    DipIsLoopbackAddress = 272,
+    SipIsMc = 273,
+    SipIsLoopbackAddress = 274,
+    IpHeaderCorrupted = 275,
+    Ipv4SipIsLimitedBc = 276,
+    Ipv6McDipReservedScope = 277,
+    Ipv6McDipInterfaceLocalScope = 278,
+    UnresolvedNeigh = 279,
+    McReversePathForwarding = 280,
+    NonRoutablePacket = 281,
+    DecapError = 282,
+    OverlaySmacIsMc = 283,
+    UnknownL2 = 284,
+    UnknownL3 = 285,
+    UnknownL3Exception = 286,
+    UnknownBuffer = 287,
+    UnknownTunnel = 288,
+    UnknownL4 = 289,
+    SipIsUnspecified = 290,
+    MlagPortIsolation = 291,
+    BlackholeArpNeigh = 292,
+    SrcMacIsDmac = 293,
+    DmacIsReserved = 294,
+    SipIsClassE = 295,
+    McDmacMismatch = 296,
+    SipIsDip = 297,
+    DipIsLocalNetwork = 298,
+    DipIsLinkLocal = 299,
+    OverlaySmacIsDmac = 300,
+    EgressVlanFilter = 301,
+    UcReversePathForwarding = 302,
+    SplitHorizon = 303,
+}
+
+impl DropReason {
+    /// Convert from u32 value to DropReason enum
+    ///
+    /// This is a mechanical mapping of u32 values to enum variants
+    /// defined in the sFlow specification. The function is tested
+    /// with representative samples rather than exhaustively.
+    pub fn from_u32(value: u32) -> Option<Self> {
+        match value {
+            0 => Some(DropReason::NetUnreachable),
+            1 => Some(DropReason::HostUnreachable),
+            2 => Some(DropReason::ProtocolUnreachable),
+            3 => Some(DropReason::PortUnreachable),
+            4 => Some(DropReason::FragNeeded),
+            5 => Some(DropReason::SrcRouteFailed),
+            6 => Some(DropReason::DstNetUnknown),
+            7 => Some(DropReason::DstHostUnknown),
+            8 => Some(DropReason::SrcHostIsolated),
+            9 => Some(DropReason::DstNetProhibited),
+            10 => Some(DropReason::DstHostProhibited),
+            11 => Some(DropReason::DstNetTosUnreachable),
+            12 => Some(DropReason::DstHostTosUnreachable),
+            13 => Some(DropReason::CommAdminProhibited),
+            14 => Some(DropReason::HostPrecedenceViolation),
+            15 => Some(DropReason::PrecedenceCutoff),
+            256 => Some(DropReason::Unknown),
+            257 => Some(DropReason::TtlExceeded),
+            258 => Some(DropReason::Acl),
+            259 => Some(DropReason::NoBufferSpace),
+            260 => Some(DropReason::Red),
+            261 => Some(DropReason::TrafficShaping),
+            262 => Some(DropReason::PktTooBig),
+            263 => Some(DropReason::SrcMacIsMulticast),
+            264 => Some(DropReason::VlanTagMismatch),
+            265 => Some(DropReason::IngressVlanFilter),
+            266 => Some(DropReason::IngressSpanningTreeFilter),
+            267 => Some(DropReason::PortListIsEmpty),
+            268 => Some(DropReason::PortLoopbackFilter),
+            269 => Some(DropReason::BlackholeRoute),
+            270 => Some(DropReason::NonIp),
+            271 => Some(DropReason::UcDipOverMcDmac),
+            272 => Some(DropReason::DipIsLoopbackAddress),
+            273 => Some(DropReason::SipIsMc),
+            274 => Some(DropReason::SipIsLoopbackAddress),
+            275 => Some(DropReason::IpHeaderCorrupted),
+            276 => Some(DropReason::Ipv4SipIsLimitedBc),
+            277 => Some(DropReason::Ipv6McDipReservedScope),
+            278 => Some(DropReason::Ipv6McDipInterfaceLocalScope),
+            279 => Some(DropReason::UnresolvedNeigh),
+            280 => Some(DropReason::McReversePathForwarding),
+            281 => Some(DropReason::NonRoutablePacket),
+            282 => Some(DropReason::DecapError),
+            283 => Some(DropReason::OverlaySmacIsMc),
+            284 => Some(DropReason::UnknownL2),
+            285 => Some(DropReason::UnknownL3),
+            286 => Some(DropReason::UnknownL3Exception),
+            287 => Some(DropReason::UnknownBuffer),
+            288 => Some(DropReason::UnknownTunnel),
+            289 => Some(DropReason::UnknownL4),
+            290 => Some(DropReason::SipIsUnspecified),
+            291 => Some(DropReason::MlagPortIsolation),
+            292 => Some(DropReason::BlackholeArpNeigh),
+            293 => Some(DropReason::SrcMacIsDmac),
+            294 => Some(DropReason::DmacIsReserved),
+            295 => Some(DropReason::SipIsClassE),
+            296 => Some(DropReason::McDmacMismatch),
+            297 => Some(DropReason::SipIsDip),
+            298 => Some(DropReason::DipIsLocalNetwork),
+            299 => Some(DropReason::DipIsLinkLocal),
+            300 => Some(DropReason::OverlaySmacIsDmac),
+            301 => Some(DropReason::EgressVlanFilter),
+            302 => Some(DropReason::UcReversePathForwarding),
+            303 => Some(DropReason::SplitHorizon),
+            _ => None,
+        }
+    }
+}
+
 /// Discarded packet sample - Format (0,5)
 ///
 /// # XDR Definition ([sFlow Drops](https://sflow.org/sflow_drops.txt))
@@ -726,7 +968,7 @@ pub struct DiscardedPacket {
     pub output_ifindex: u32,
 
     /// Reason for dropping the packet
-    pub reason: crate::models::record_flows::DropReason,
+    pub reason: DropReason,
 
     /// Flow records describing the discarded packet
     pub flow_records: Vec<FlowRecord>,

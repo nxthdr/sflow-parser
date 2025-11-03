@@ -228,12 +228,12 @@ fn test_extended_gateway_with_as_path() {
         src_peer_as: 200,
         dst_as_path: vec![
             AsPathSegment {
-                path_type: 2, // AS_SEQUENCE
+                path_type: AsPathType::AsSequence,
                 path_length: 3,
                 path: vec![100, 200, 300],
             },
             AsPathSegment {
-                path_type: 1, // AS_SET
+                path_type: AsPathType::AsSet,
                 path_length: 2,
                 path: vec![400, 500],
             },
@@ -244,7 +244,7 @@ fn test_extended_gateway_with_as_path() {
 
     assert_eq!(gateway.dst_as_path.len(), 2);
     assert_eq!(gateway.dst_as_path[0].path.len(), 3);
-    assert_eq!(gateway.dst_as_path[1].path_type, 1);
+    assert_eq!(gateway.dst_as_path[1].path_type, AsPathType::AsSet);
     assert_eq!(gateway.communities.len(), 3);
 }
 
@@ -265,12 +265,12 @@ fn test_extended_user() {
 #[test]
 fn test_extended_url() {
     let url = ExtendedUrl {
-        direction: 1, // Source
+        direction: UrlDirection::Source,
         url: "https://example.com/path".to_string(),
         host: "example.com".to_string(),
     };
 
-    assert_eq!(url.direction, 1);
+    assert_eq!(url.direction, UrlDirection::Source);
     assert_eq!(url.url, "https://example.com/path");
     assert_eq!(url.host, "example.com");
 }
@@ -576,7 +576,7 @@ fn test_extended_gateway_max_as_path() {
         src_as: 65534,
         src_peer_as: 65533,
         dst_as_path: vec![AsPathSegment {
-            path_type: 2,
+            path_type: AsPathType::AsSequence,
             path_length: 255,
             path,
         }],

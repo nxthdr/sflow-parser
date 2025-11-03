@@ -360,7 +360,10 @@ fn test_flow_0_1005_extended_url() {
                 FlowData::ExtendedUrl(url) => {
                     assert_eq!(url.url, "https://example.com");
                     assert_eq!(url.host, "example.com");
-                    assert_eq!(url.direction, 1);
+                    assert_eq!(
+                        url.direction,
+                        sflow_parser::models::record_flows::UrlDirection::Source
+                    );
                 }
                 _ => panic!("Expected ExtendedUrl"),
             }
@@ -1635,10 +1638,16 @@ fn test_flow_0_2000_transaction() {
             assert_eq!(flow.flow_records.len(), 1);
             match &flow.flow_records[0].flow_data {
                 FlowData::Transaction(txn) => {
-                    assert_eq!(txn.direction, 2); // server
+                    assert_eq!(
+                        txn.direction,
+                        sflow_parser::models::record_flows::ServiceDirection::Server
+                    );
                     assert_eq!(txn.wait, 100);
                     assert_eq!(txn.duration, 1000);
-                    assert_eq!(txn.status, 0); // succeeded
+                    assert_eq!(
+                        txn.status,
+                        sflow_parser::models::record_flows::TransactionStatus::Succeeded
+                    );
                     assert_eq!(txn.bytes_received, 1024);
                     assert_eq!(txn.bytes_sent, 2048);
                 }
@@ -2376,7 +2385,10 @@ fn test_flow_0_2209_extended_tcp_info() {
             assert_eq!(flow.flow_records.len(), 1);
             match &flow.flow_records[0].flow_data {
                 FlowData::ExtendedTcpInfo(tcp) => {
-                    assert_eq!(tcp.dir, 1);
+                    assert_eq!(
+                        tcp.dir,
+                        sflow_parser::models::record_flows::PacketDirection::Received
+                    );
                     assert_eq!(tcp.snd_mss, 1460);
                     assert_eq!(tcp.rcv_mss, 1460);
                     assert_eq!(tcp.unacked, 10);

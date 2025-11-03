@@ -83,11 +83,11 @@ fn test_extended_router() {
 #[test]
 fn test_as_path_segment() {
     let segment = AsPathSegment {
-        path_type: 2, // AS_SEQUENCE
+        path_type: AsPathType::AsSequence,
         path_length: 3,
         path: vec![100, 200, 300],
     };
-    assert_eq!(segment.path_type, 2);
+    assert_eq!(segment.path_type, AsPathType::AsSequence);
     assert_eq!(segment.path_length, 3);
     assert_eq!(segment.path.len(), 3);
     assert_eq!(segment.path[0], 100);
@@ -103,7 +103,7 @@ fn test_extended_gateway() {
         src_as: 100,
         src_peer_as: 200,
         dst_as_path: vec![AsPathSegment {
-            path_type: 2,
+            path_type: AsPathType::AsSequence,
             path_length: 2,
             path: vec![100, 200],
         }],
