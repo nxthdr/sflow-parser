@@ -266,7 +266,8 @@ impl<R: Read> Parser<R> {
 
         // Parse variable-length array of lanes
         let num_lanes = self.read_u32()?;
-        let mut lanes = Vec::with_capacity(num_lanes as usize);
+        let capacity_lanes = num_lanes.min(1024) as usize;
+        let mut lanes = Vec::with_capacity(capacity_lanes);
         for _ in 0..num_lanes {
             lanes.push(self.parse_lane()?);
         }
@@ -908,14 +909,16 @@ impl<R: Read> Parser<R> {
         let egress_mc_pc = self.read_i32()?;
 
         // Read variable-length arrays for egress queue percentages
-        let uc_count = self.read_u32()? as usize;
-        let mut egress_queue_uc_pc = Vec::with_capacity(uc_count);
+        let uc_count = self.read_u32()?;
+        let capacity_uc = uc_count.min(1024) as usize;
+        let mut egress_queue_uc_pc = Vec::with_capacity(capacity_uc);
         for _ in 0..uc_count {
             egress_queue_uc_pc.push(self.read_i32()?);
         }
 
-        let mc_count = self.read_u32()? as usize;
-        let mut egress_queue_mc_pc = Vec::with_capacity(mc_count);
+        let mc_count = self.read_u32()?;
+        let capacity_mc = mc_count.min(1024) as usize;
+        let mut egress_queue_mc_pc = Vec::with_capacity(capacity_mc);
         for _ in 0..mc_count {
             egress_queue_mc_pc.push(self.read_i32()?);
         }
