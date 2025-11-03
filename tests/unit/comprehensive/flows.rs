@@ -2276,6 +2276,161 @@ fn test_flow_0_2207_extended_proxy_request() {
     }
 }
 
+#[test]
+fn test_flow_0_2208_extended_nav_timing() {
+    // Build extended nav timing record data (23 u32 fields = 92 bytes)
+    let record_data = [
+        0x00, 0x00, 0x00, 0x01, // type = 1
+        0x00, 0x00, 0x00, 0x02, // redirect_count = 2
+        0x00, 0x00, 0x00, 0x64, // navigation_start = 100
+        0x00, 0x00, 0x00, 0x6E, // unload_event_start = 110
+        0x00, 0x00, 0x00, 0x78, // unload_event_end = 120
+        0x00, 0x00, 0x00, 0x82, // redirect_start = 130
+        0x00, 0x00, 0x00, 0x8C, // redirect_end = 140
+        0x00, 0x00, 0x00, 0x96, // fetch_start = 150
+        0x00, 0x00, 0x00, 0xA0, // domain_lookup_start = 160
+        0x00, 0x00, 0x00, 0xAA, // domain_lookup_end = 170
+        0x00, 0x00, 0x00, 0xB4, // connect_start = 180
+        0x00, 0x00, 0x00, 0xBE, // connect_end = 190
+        0x00, 0x00, 0x00, 0xC8, // secure_connection_start = 200
+        0x00, 0x00, 0x00, 0xD2, // request_start = 210
+        0x00, 0x00, 0x00, 0xDC, // response_start = 220
+        0x00, 0x00, 0x00, 0xE6, // response_end = 230
+        0x00, 0x00, 0x00, 0xF0, // dom_loading = 240
+        0x00, 0x00, 0x00, 0xFA, // dom_interactive = 250
+        0x00, 0x00, 0x01, 0x04, // dom_content_loaded_event_start = 260
+        0x00, 0x00, 0x01, 0x0E, // dom_content_loaded_event_end = 270
+        0x00, 0x00, 0x01, 0x18, // dom_complete = 280
+        0x00, 0x00, 0x01, 0x22, // load_event_start = 290
+        0x00, 0x00, 0x01, 0x2C, // load_event_end = 300
+    ];
+
+    let data = build_flow_sample_test(0x08A0, &record_data); // record type = 2208
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedNavTiming(nav) => {
+                    assert_eq!(nav.nav_type, 1);
+                    assert_eq!(nav.redirect_count, 2);
+                    assert_eq!(nav.navigation_start, 100);
+                    assert_eq!(nav.unload_event_start, 110);
+                    assert_eq!(nav.unload_event_end, 120);
+                    assert_eq!(nav.redirect_start, 130);
+                    assert_eq!(nav.redirect_end, 140);
+                    assert_eq!(nav.fetch_start, 150);
+                    assert_eq!(nav.domain_lookup_start, 160);
+                    assert_eq!(nav.domain_lookup_end, 170);
+                    assert_eq!(nav.connect_start, 180);
+                    assert_eq!(nav.connect_end, 190);
+                    assert_eq!(nav.secure_connection_start, 200);
+                    assert_eq!(nav.request_start, 210);
+                    assert_eq!(nav.response_start, 220);
+                    assert_eq!(nav.response_end, 230);
+                    assert_eq!(nav.dom_loading, 240);
+                    assert_eq!(nav.dom_interactive, 250);
+                    assert_eq!(nav.dom_content_loaded_event_start, 260);
+                    assert_eq!(nav.dom_content_loaded_event_end, 270);
+                    assert_eq!(nav.dom_complete, 280);
+                    assert_eq!(nav.load_event_start, 290);
+                    assert_eq!(nav.load_event_end, 300);
+                }
+                _ => panic!("Expected ExtendedNavTiming"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_2209_extended_tcp_info() {
+    // Build extended TCP info record data (12 u32 fields = 48 bytes)
+    let record_data = [
+        0x00, 0x00, 0x00, 0x01, // dir = 1 (received)
+        0x00, 0x00, 0x05, 0xB4, // snd_mss = 1460
+        0x00, 0x00, 0x05, 0xB4, // rcv_mss = 1460
+        0x00, 0x00, 0x00, 0x0A, // unacked = 10
+        0x00, 0x00, 0x00, 0x02, // lost = 2
+        0x00, 0x00, 0x00, 0x05, // retrans = 5
+        0x00, 0x00, 0x05, 0xDC, // pmtu = 1500
+        0x00, 0x00, 0x27, 0x10, // rtt = 10000 microseconds
+        0x00, 0x00, 0x03, 0xE8, // rttvar = 1000 microseconds
+        0x00, 0x00, 0x00, 0x14, // snd_cwnd = 20
+        0x00, 0x00, 0x00, 0x03, // reordering = 3
+        0x00, 0x00, 0x13, 0x88, // min_rtt = 5000 microseconds
+    ];
+
+    let data = build_flow_sample_test(0x08A1, &record_data); // record type = 2209
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedTcpInfo(tcp) => {
+                    assert_eq!(tcp.dir, 1);
+                    assert_eq!(tcp.snd_mss, 1460);
+                    assert_eq!(tcp.rcv_mss, 1460);
+                    assert_eq!(tcp.unacked, 10);
+                    assert_eq!(tcp.lost, 2);
+                    assert_eq!(tcp.retrans, 5);
+                    assert_eq!(tcp.pmtu, 1500);
+                    assert_eq!(tcp.rtt, 10000);
+                    assert_eq!(tcp.rttvar, 1000);
+                    assert_eq!(tcp.snd_cwnd, 20);
+                    assert_eq!(tcp.reordering, 3);
+                    assert_eq!(tcp.min_rtt, 5000);
+                }
+                _ => panic!("Expected ExtendedTcpInfo"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
+fn test_flow_0_2210_extended_entities() {
+    // Build extended entities record data (2 DataSourceExpanded = 16 bytes)
+    let record_data = [
+        // src_ds
+        0x00, 0x00, 0x00, 0x00, // source_id_type = 0 (ifIndex)
+        0x00, 0x00, 0x00, 0x0A, // source_id_index = 10
+        // dst_ds
+        0x00, 0x00, 0x00, 0x00, // source_id_type = 0 (ifIndex)
+        0x00, 0x00, 0x00, 0x14, // source_id_index = 20
+    ];
+
+    let data = build_flow_sample_test(0x08A2, &record_data); // record type = 2210
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedEntities(entities) => {
+                    assert_eq!(entities.src_ds.source_id_type, 0);
+                    assert_eq!(entities.src_ds.source_id_index, 10);
+                    assert_eq!(entities.dst_ds.source_id_type, 0);
+                    assert_eq!(entities.dst_ds.source_id_index, 20);
+                }
+                _ => panic!("Expected ExtendedEntities"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
 // ===== Enterprise 4413: Broadcom Records =====
 
 #[test]

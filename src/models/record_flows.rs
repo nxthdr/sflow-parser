@@ -2669,6 +2669,197 @@ pub struct ExtendedProxyRequest {
     pub host: String,
 }
 
+/// Extended Nav Timing - Format (0,2208)
+///
+/// Navigation timing information from web browsers
+///
+/// # XDR Definition ([sFlow Discussion](https://groups.google.com/g/sflow/c/FKzkvig32Tk))
+///
+/// ```text
+/// /* Navigation Timing */
+/// /* reference http://www.w3.org/TR/navigation-timing/ */
+/// /* To allow times to fit into 32 bits, normalize so that smallest time
+/// value is 1, times are expressed in milliseconds and 0 is used to indicate
+/// that event is not fired, or not complete */
+/// /* opaque = flow_data; enterprise = 0; format = 2208 */
+///
+/// struct extended_nav_timing {
+///     unsigned int type; /* PerformanceNavigation */
+///     unsigned int redirectCount;
+///     unsigned int navigationStart; /* PerformanceTiming */
+///     unsigned int unloadEventStart;
+///     unsigned int unloadEventEnd;
+///     unsigned int redirectStart;
+///     unsigned int redirectEnd;
+///     unsigned int fetchStart;
+///     unsigned int domainLookupStart;
+///     unsigned int domainLookupEnd;
+///     unsigned int connectStart;
+///     unsigned int connectEnd;
+///     unsigned int secureConnectionStart;
+///     unsigned int requestStart;
+///     unsigned int responseStart;
+///     unsigned int responseEnd;
+///     unsigned int domLoading;
+///     unsigned int domInteractive;
+///     unsigned int domContentLoadedEventStart;
+///     unsigned int domContentLoadedEventEnd;
+///     unsigned int domComplete;
+///     unsigned int loadEventStart;
+///     unsigned int loadEventEnd;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedNavTiming {
+    /// Navigation type (PerformanceNavigation)
+    pub nav_type: u32,
+    /// Redirect count
+    pub redirect_count: u32,
+    /// Navigation start time (PerformanceTiming)
+    pub navigation_start: u32,
+    /// Unload event start time
+    pub unload_event_start: u32,
+    /// Unload event end time
+    pub unload_event_end: u32,
+    /// Redirect start time
+    pub redirect_start: u32,
+    /// Redirect end time
+    pub redirect_end: u32,
+    /// Fetch start time
+    pub fetch_start: u32,
+    /// Domain lookup start time
+    pub domain_lookup_start: u32,
+    /// Domain lookup end time
+    pub domain_lookup_end: u32,
+    /// Connect start time
+    pub connect_start: u32,
+    /// Connect end time
+    pub connect_end: u32,
+    /// Secure connection start time
+    pub secure_connection_start: u32,
+    /// Request start time
+    pub request_start: u32,
+    /// Response start time
+    pub response_start: u32,
+    /// Response end time
+    pub response_end: u32,
+    /// DOM loading time
+    pub dom_loading: u32,
+    /// DOM interactive time
+    pub dom_interactive: u32,
+    /// DOM content loaded event start time
+    pub dom_content_loaded_event_start: u32,
+    /// DOM content loaded event end time
+    pub dom_content_loaded_event_end: u32,
+    /// DOM complete time
+    pub dom_complete: u32,
+    /// Load event start time
+    pub load_event_start: u32,
+    /// Load event end time
+    pub load_event_end: u32,
+}
+
+/// Packet direction for TCP info
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum PacketDirection {
+    Unknown = 0,
+    Received = 1,
+    Sent = 2,
+}
+
+impl PacketDirection {
+    /// Convert from u32 value to PacketDirection enum
+    pub fn from_u32(value: u32) -> Self {
+        match value {
+            1 => PacketDirection::Received,
+            2 => PacketDirection::Sent,
+            _ => PacketDirection::Unknown,
+        }
+    }
+}
+
+/// Extended TCP Info - Format (0,2209)
+///
+/// TCP connection state information based on Linux struct tcp_info
+///
+/// # XDR Definition ([sFlow Discussion](https://groups.google.com/g/sflow/c/JCG9iwacLZA))
+///
+/// ```text
+/// /* TCP connection state */
+/// /* Based on Linux struct tcp_info */
+/// /* opaque = flow_data; enterprise=0; format=2209 */
+/// struct extended_tcp_info {
+///   packet_direction dir;     /* Sampled packet direction */
+///   unsigned int snd_mss;     /* Cached effective mss, not including SACKS */
+///   unsigned int rcv_mss;     /* Max. recv. segment size */
+///   unsigned int unacked;     /* Packets which are "in flight" */
+///   unsigned int lost;        /* Lost packets */
+///   unsigned int retrans;     /* Retransmitted packets */
+///   unsigned int pmtu;        /* Last pmtu seen by socket */
+///   unsigned int rtt;         /* smoothed RTT (microseconds) */
+///   unsigned int rttvar;      /* RTT variance (microseconds) */
+///   unsigned int snd_cwnd;    /* Sending congestion window */
+///   unsigned int reordering;  /* Reordering */
+///   unsigned int min_rtt;     /* Minimum RTT (microseconds) */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedTcpInfo {
+    /// Sampled packet direction
+    pub dir: u32,
+    /// Cached effective MSS, not including SACKS
+    pub snd_mss: u32,
+    /// Maximum receive segment size
+    pub rcv_mss: u32,
+    /// Packets which are "in flight"
+    pub unacked: u32,
+    /// Lost packets
+    pub lost: u32,
+    /// Retransmitted packets
+    pub retrans: u32,
+    /// Last PMTU seen by socket
+    pub pmtu: u32,
+    /// Smoothed RTT (microseconds)
+    pub rtt: u32,
+    /// RTT variance (microseconds)
+    pub rttvar: u32,
+    /// Sending congestion window
+    pub snd_cwnd: u32,
+    /// Reordering
+    pub reordering: u32,
+    /// Minimum RTT (microseconds)
+    pub min_rtt: u32,
+}
+
+/// Extended Entities - Format (0,2210)
+///
+/// Traffic source/sink entity reference
+///
+/// # XDR Definition ([sFlow Discussion](https://blog.sflow.com/2018/10/systemd-traffic-marking.html))
+///
+/// ```text
+/// /* Traffic source/sink entity reference */
+/// /* opaque = flow_data; enterprise = 0; format = 2210 */
+/// /* Set Data source to all zeroes if unknown */
+/// struct extended_entities {
+///  sflow_data_source_expanded src_ds;    /* Data Source associated with
+///                                           packet source */
+///  sflow_data_source_expanded dst_ds;    /* Data Source associated with
+///                                           packet destination */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedEntities {
+    /// Data source associated with packet source
+    pub src_ds: crate::models::core::DataSourceExpanded,
+    /// Data source associated with packet destination
+    pub dst_ds: crate::models::core::DataSourceExpanded,
+}
+
 /// Extended BST Egress Queue - Format (4413,1)
 ///
 /// Selected egress queue for sampled packet from Broadcom switch ASIC

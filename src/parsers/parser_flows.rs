@@ -1034,6 +1034,67 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Extended Nav Timing - Format (0,2208)
+    pub(super) fn parse_extended_nav_timing(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedNavTiming> {
+        Ok(crate::models::record_flows::ExtendedNavTiming {
+            nav_type: self.read_u32()?,
+            redirect_count: self.read_u32()?,
+            navigation_start: self.read_u32()?,
+            unload_event_start: self.read_u32()?,
+            unload_event_end: self.read_u32()?,
+            redirect_start: self.read_u32()?,
+            redirect_end: self.read_u32()?,
+            fetch_start: self.read_u32()?,
+            domain_lookup_start: self.read_u32()?,
+            domain_lookup_end: self.read_u32()?,
+            connect_start: self.read_u32()?,
+            connect_end: self.read_u32()?,
+            secure_connection_start: self.read_u32()?,
+            request_start: self.read_u32()?,
+            response_start: self.read_u32()?,
+            response_end: self.read_u32()?,
+            dom_loading: self.read_u32()?,
+            dom_interactive: self.read_u32()?,
+            dom_content_loaded_event_start: self.read_u32()?,
+            dom_content_loaded_event_end: self.read_u32()?,
+            dom_complete: self.read_u32()?,
+            load_event_start: self.read_u32()?,
+            load_event_end: self.read_u32()?,
+        })
+    }
+
+    /// Parse Extended TCP Info - Format (0,2209)
+    pub(super) fn parse_extended_tcp_info(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedTcpInfo> {
+        Ok(crate::models::record_flows::ExtendedTcpInfo {
+            dir: self.read_u32()?,
+            snd_mss: self.read_u32()?,
+            rcv_mss: self.read_u32()?,
+            unacked: self.read_u32()?,
+            lost: self.read_u32()?,
+            retrans: self.read_u32()?,
+            pmtu: self.read_u32()?,
+            rtt: self.read_u32()?,
+            rttvar: self.read_u32()?,
+            snd_cwnd: self.read_u32()?,
+            reordering: self.read_u32()?,
+            min_rtt: self.read_u32()?,
+        })
+    }
+
+    /// Parse Extended Entities - Format (0,2210)
+    pub(super) fn parse_extended_entities(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedEntities> {
+        let src_ds = self.parse_data_source_expanded()?;
+        let dst_ds = self.parse_data_source_expanded()?;
+
+        Ok(crate::models::record_flows::ExtendedEntities { src_ds, dst_ds })
+    }
+
     /// Parse Extended BST Egress Queue - Format (4413,1)
     pub(super) fn parse_extended_bst_egress_queue(
         &mut self,
@@ -1187,6 +1248,13 @@ impl<R: Read> Parser<R> {
                 2206 => Ok(FlowData::HttpRequest(parser.parse_http_request()?)),
                 2207 => Ok(FlowData::ExtendedProxyRequest(
                     parser.parse_extended_proxy_request()?,
+                )),
+                2208 => Ok(FlowData::ExtendedNavTiming(
+                    parser.parse_extended_nav_timing()?,
+                )),
+                2209 => Ok(FlowData::ExtendedTcpInfo(parser.parse_extended_tcp_info()?)),
+                2210 => Ok(FlowData::ExtendedEntities(
+                    parser.parse_extended_entities()?,
                 )),
                 _ => Ok(FlowData::Unknown { format, data }),
             }

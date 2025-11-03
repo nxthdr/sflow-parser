@@ -382,6 +382,12 @@ pub enum FlowData {
     HttpRequest(crate::models::record_flows::HttpRequest),
     /// Extended Proxy Request - Format (0,2207)
     ExtendedProxyRequest(crate::models::record_flows::ExtendedProxyRequest),
+    /// Extended Nav Timing - Format (0,2208)
+    ExtendedNavTiming(crate::models::record_flows::ExtendedNavTiming),
+    /// Extended TCP Info - Format (0,2209)
+    ExtendedTcpInfo(crate::models::record_flows::ExtendedTcpInfo),
+    /// Extended Entities - Format (0,2210)
+    ExtendedEntities(crate::models::record_flows::ExtendedEntities),
     /// Extended BST Egress Queue - Format (4413,1)
     ExtendedBstEgressQueue(crate::models::record_flows::ExtendedBstEgressQueue),
     /// Unknown or unparsed format
