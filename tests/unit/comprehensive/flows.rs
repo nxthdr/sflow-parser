@@ -802,6 +802,39 @@ fn test_flow_0_1017_extended_openflow_v1() {
 }
 
 #[test]
+fn test_flow_0_1018_extended_fc() {
+    // Extended Fiber Channel: src_mask_len(4) + dst_mask_len(4) + next_hop(4) + metric(4) = 16 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x18, // src_mask_len = 24 bits
+        0x00, 0x00, 0x00, 0x10, // dst_mask_len = 16 bits
+        0x00, 0x12, 0x34, 0x56, // next_hop = 0x00123456 (24-bit FC address)
+        0x81, 0x02, 0x00, 0x64, // metric = 0x81020064 (type=1, proto=2, metric=100)
+    ];
+
+    let data = build_flow_sample_test(0x03FA, &record_data); // record type = 1018
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedFc(fc) => {
+                    assert_eq!(fc.src_mask_len, 24);
+                    assert_eq!(fc.dst_mask_len, 16);
+                    assert_eq!(fc.next_hop, 0x00123456);
+                    assert_eq!(fc.metric, 0x81020064);
+                }
+                _ => panic!("Expected ExtendedFc"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
 fn test_flow_0_1020_extended_nat_port() {
     // Extended NAT Port data: src_port(4) + dst_port(4) = 8 bytes
     let record_data = [

@@ -89,7 +89,7 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 1015 | Extended 802.11 TX | [sFlow 802.11](https://sflow.org/sflow_80211.txt) | ✅ |
 | 0 | 1016 | Extended 802.11 Aggregation | [sFlow 802.11](https://sflow.org/sflow_80211.txt) | ✅ |
 | 0 | 1017 | Extended OpenFlow v1 (deprecated) | [sFlow OpenFlow Draft](https://sflow.org/draft-sflow-openflow.txt) | ✅ 🪦 |
-| 0 | 1018 | Extended Fibre Channel | [sFlow Discussion](https://sflow.org/discussion/sflow-discussion/0244.html) | ⬜ |
+| 0 | 1018 | Extended Fibre Channel | [RFC 4625](https://datatracker.ietf.org/doc/html/rfc4625) | ✅ |
 | 0 | 1019 | Extended Queue Length | [sFlow Discussion](http://groups.google.com/group/sflow/browse_thread/thread/773d27b17a81600c) | ⬜ |
 | 0 | 1020 | Extended NAT Port | [sFlow Port NAT](https://sflow.org/sflow_pnat.txt) | ✅ |
 | 0 | 1021 | Extended L2 Tunnel Egress | [sFlow Tunnel](https://sflow.org/sflow_tunnels.txt) | ✅ |

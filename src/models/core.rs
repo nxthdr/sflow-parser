@@ -300,6 +300,8 @@ pub enum FlowData {
     Extended80211Aggregation(crate::models::record_flows::Extended80211Aggregation),
     /// Extended OpenFlow v1 - Format (0,1017) - DEPRECATED
     ExtendedOpenFlowV1(crate::models::record_flows::ExtendedOpenFlowV1),
+    /// Extended Fiber Channel - Format (0,1018)
+    ExtendedFc(crate::models::record_flows::ExtendedFc),
     /// Extended NAT Port - Format (0,1020)
     ExtendedNatPort(crate::models::record_flows::ExtendedNatPort),
     /// Extended InfiniBand BTH - Format (0,1033)

@@ -539,6 +539,21 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Extended Fiber Channel - Format (0,1018)
+    pub(super) fn parse_extended_fc(&mut self) -> Result<crate::models::record_flows::ExtendedFc> {
+        let src_mask_len = self.read_u32()?;
+        let dst_mask_len = self.read_u32()?;
+        let next_hop = self.read_u32()?;
+        let metric = self.read_u32()?;
+
+        Ok(crate::models::record_flows::ExtendedFc {
+            src_mask_len,
+            dst_mask_len,
+            next_hop,
+            metric,
+        })
+    }
+
     /// Parse Extended L2 Tunnel Egress - Format (0,1021)
     pub(super) fn parse_extended_l2_tunnel_egress(
         &mut self,
@@ -1062,6 +1077,7 @@ impl<R: Read> Parser<R> {
                 1017 => Ok(FlowData::ExtendedOpenFlowV1(
                     parser.parse_extended_openflow_v1()?,
                 )),
+                1018 => Ok(FlowData::ExtendedFc(parser.parse_extended_fc()?)),
                 1020 => Ok(FlowData::ExtendedNatPort(parser.parse_extended_nat_port()?)),
                 1031 => Ok(FlowData::ExtendedInfiniBandLrh(
                     parser.parse_extended_infiniband_lrh()?,

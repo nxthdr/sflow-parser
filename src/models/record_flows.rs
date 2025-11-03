@@ -1045,6 +1045,53 @@ pub struct ExtendedOpenFlowV1 {
     pub flow_actions: u32,
 }
 
+/// Extended Fiber Channel Routing Entry - Format (0,1018)
+///
+/// Fiber Channel routing information
+///
+/// # XDR Definition (RFC 4625)
+///
+/// ```text
+/// /* Extended Fiber Channel Routing Entry */
+/// /* opaque = flow_data; enterprise = 0; format = 1018 */
+/// /* See RFC 4625 */
+/// typedef unsigned int fc_address; /* 24 bit fiber channel address,
+///                                     most significant byte = 0 */
+/// struct extended_fc {
+///  unsigned int src_mask_len; /* Source FC address mask,
+///                                 see t11FcRouteSrcMask
+///                                (expressed in number of bits) */
+///  unsigned int dst_mask_len; /* Destination FC address mask,
+///                                 see t11FcRouteDestMask
+///                                (expressed in number of bits) */
+///   fc_address next_hop; /* Next hop FC switch
+///                                 see t11FcRouteDomainId */
+///   unsigned int metric; /* most significant byte,
+///                                 most significant bit = t11FcRouteType
+///                                 least significant 7 bits = t11FcRouteProto,
+///                                 least significant 3 bytes = t11FcRouteMetric
+///                              */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedFc {
+    /// Source FC address mask (number of bits)
+    pub src_mask_len: u32,
+
+    /// Destination FC address mask (number of bits)
+    pub dst_mask_len: u32,
+
+    /// Next hop FC switch (24-bit fiber channel address)
+    pub next_hop: u32,
+
+    /// Metric containing route type, protocol, and metric value
+    /// - Most significant byte, most significant bit: t11FcRouteType
+    /// - Most significant byte, least significant 7 bits: t11FcRouteProto
+    /// - Least significant 3 bytes: t11FcRouteMetric
+    pub metric: u32,
+}
+
 /// Extended L2 Tunnel Egress - Format (0,1021)
 ///
 /// Layer 2 tunnel egress information - reports outer Ethernet headers
