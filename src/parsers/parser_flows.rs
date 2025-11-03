@@ -266,96 +266,6 @@ impl<R: Read> Parser<R> {
         })
     }
 
-    /// Parse Extended NAT Port - Format (0,1020)
-    pub(super) fn parse_extended_nat_port(
-        &mut self,
-    ) -> Result<crate::models::record_flows::ExtendedNatPort> {
-        Ok(crate::models::record_flows::ExtendedNatPort {
-            src_port: self.read_u32()?,
-            dst_port: self.read_u32()?,
-        })
-    }
-
-    /// Parse Extended InfiniBand LRH - Format (0,1031)
-    pub(super) fn parse_extended_infiniband_lrh(
-        &mut self,
-    ) -> Result<crate::models::record_flows::ExtendedInfiniBandLrh> {
-        Ok(crate::models::record_flows::ExtendedInfiniBandLrh {
-            src_vl: self.read_u32()?,
-            src_sl: self.read_u32()?,
-            src_dlid: self.read_u32()?,
-            src_slid: self.read_u32()?,
-            src_lnh: self.read_u32()?,
-            dst_vl: self.read_u32()?,
-            dst_sl: self.read_u32()?,
-            dst_dlid: self.read_u32()?,
-            dst_slid: self.read_u32()?,
-            dst_lnh: self.read_u32()?,
-        })
-    }
-
-    /// Parse Extended InfiniBand GRH - Format (0,1032)
-    pub(super) fn parse_extended_infiniband_grh(
-        &mut self,
-    ) -> Result<crate::models::record_flows::ExtendedInfiniBandGrh> {
-        let flow_label = self.read_u32()?;
-        let tc = self.read_u32()?;
-
-        // Read source GID (16 bytes)
-        let mut s_gid = [0u8; 16];
-        self.reader.read_exact(&mut s_gid)?;
-
-        // Read destination GID (16 bytes)
-        let mut d_gid = [0u8; 16];
-        self.reader.read_exact(&mut d_gid)?;
-
-        Ok(crate::models::record_flows::ExtendedInfiniBandGrh {
-            flow_label,
-            tc,
-            s_gid,
-            d_gid,
-            next_header: self.read_u32()?,
-            length: self.read_u32()?,
-        })
-    }
-
-    /// Parse Extended InfiniBand BTH - Format (0,1033)
-    pub(super) fn parse_extended_infiniband_bth(
-        &mut self,
-    ) -> Result<crate::models::record_flows::ExtendedInfiniBandBth> {
-        Ok(crate::models::record_flows::ExtendedInfiniBandBth {
-            pkey: self.read_u32()?,
-            dst_qp: self.read_u32()?,
-            opcode: self.read_u32()?,
-        })
-    }
-
-    /// Parse Extended VLAN In - Format (0,1034)
-    pub(super) fn parse_extended_vlan_in(
-        &mut self,
-    ) -> Result<crate::models::record_flows::ExtendedVlanIn> {
-        let num_vlans = self.read_u32()?;
-        let capacity = num_vlans.min(1024) as usize;
-        let mut stack = Vec::with_capacity(capacity);
-        for _ in 0..num_vlans {
-            stack.push(self.read_u32()?);
-        }
-        Ok(crate::models::record_flows::ExtendedVlanIn { stack })
-    }
-
-    /// Parse Extended VLAN Out - Format (0,1035)
-    pub(super) fn parse_extended_vlan_out(
-        &mut self,
-    ) -> Result<crate::models::record_flows::ExtendedVlanOut> {
-        let num_vlans = self.read_u32()?;
-        let capacity = num_vlans.min(1024) as usize;
-        let mut stack = Vec::with_capacity(capacity);
-        for _ in 0..num_vlans {
-            stack.push(self.read_u32()?);
-        }
-        Ok(crate::models::record_flows::ExtendedVlanOut { stack })
-    }
-
     /// Parse Extended MPLS Tunnel - Format (0,1008)
     pub(super) fn parse_extended_mpls_tunnel(
         &mut self,
@@ -554,6 +464,29 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Extended Queue Length - Format (0,1019)
+    pub(super) fn parse_extended_queue_length(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedQueueLength> {
+        let queue_index = self.read_u32()?;
+        let queue_length = self.read_u32()?;
+
+        Ok(crate::models::record_flows::ExtendedQueueLength {
+            queue_index,
+            queue_length,
+        })
+    }
+
+    /// Parse Extended NAT Port - Format (0,1020)
+    pub(super) fn parse_extended_nat_port(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedNatPort> {
+        Ok(crate::models::record_flows::ExtendedNatPort {
+            src_port: self.read_u32()?,
+            dst_port: self.read_u32()?,
+        })
+    }
+
     /// Parse Extended L2 Tunnel Egress - Format (0,1021)
     pub(super) fn parse_extended_l2_tunnel_egress(
         &mut self,
@@ -646,6 +579,86 @@ impl<R: Read> Parser<R> {
         let vni = self.read_u32()?;
 
         Ok(crate::models::record_flows::ExtendedVniIngress { vni })
+    }
+
+    /// Parse Extended InfiniBand LRH - Format (0,1031)
+    pub(super) fn parse_extended_infiniband_lrh(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedInfiniBandLrh> {
+        Ok(crate::models::record_flows::ExtendedInfiniBandLrh {
+            src_vl: self.read_u32()?,
+            src_sl: self.read_u32()?,
+            src_dlid: self.read_u32()?,
+            src_slid: self.read_u32()?,
+            src_lnh: self.read_u32()?,
+            dst_vl: self.read_u32()?,
+            dst_sl: self.read_u32()?,
+            dst_dlid: self.read_u32()?,
+            dst_slid: self.read_u32()?,
+            dst_lnh: self.read_u32()?,
+        })
+    }
+
+    /// Parse Extended InfiniBand GRH - Format (0,1032)
+    pub(super) fn parse_extended_infiniband_grh(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedInfiniBandGrh> {
+        let flow_label = self.read_u32()?;
+        let tc = self.read_u32()?;
+
+        // Read source GID (16 bytes)
+        let mut s_gid = [0u8; 16];
+        self.reader.read_exact(&mut s_gid)?;
+
+        // Read destination GID (16 bytes)
+        let mut d_gid = [0u8; 16];
+        self.reader.read_exact(&mut d_gid)?;
+
+        Ok(crate::models::record_flows::ExtendedInfiniBandGrh {
+            flow_label,
+            tc,
+            s_gid,
+            d_gid,
+            next_header: self.read_u32()?,
+            length: self.read_u32()?,
+        })
+    }
+
+    /// Parse Extended InfiniBand BTH - Format (0,1033)
+    pub(super) fn parse_extended_infiniband_bth(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedInfiniBandBth> {
+        Ok(crate::models::record_flows::ExtendedInfiniBandBth {
+            pkey: self.read_u32()?,
+            dst_qp: self.read_u32()?,
+            opcode: self.read_u32()?,
+        })
+    }
+
+    /// Parse Extended VLAN In - Format (0,1034)
+    pub(super) fn parse_extended_vlan_in(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedVlanIn> {
+        let num_vlans = self.read_u32()?;
+        let capacity = num_vlans.min(1024) as usize;
+        let mut stack = Vec::with_capacity(capacity);
+        for _ in 0..num_vlans {
+            stack.push(self.read_u32()?);
+        }
+        Ok(crate::models::record_flows::ExtendedVlanIn { stack })
+    }
+
+    /// Parse Extended VLAN Out - Format (0,1035)
+    pub(super) fn parse_extended_vlan_out(
+        &mut self,
+    ) -> Result<crate::models::record_flows::ExtendedVlanOut> {
+        let num_vlans = self.read_u32()?;
+        let capacity = num_vlans.min(1024) as usize;
+        let mut stack = Vec::with_capacity(capacity);
+        for _ in 0..num_vlans {
+            stack.push(self.read_u32()?);
+        }
+        Ok(crate::models::record_flows::ExtendedVlanOut { stack })
     }
 
     /// Parse Extended Egress Queue - Format (0,1036)
@@ -1073,23 +1086,15 @@ impl<R: Read> Parser<R> {
                 1016 => Ok(FlowData::Extended80211Aggregation(
                     parser.parse_extended_80211_aggregation()?,
                 )),
-                // Note: Format 1017 is deprecated but kept for backward compatibility
+                // DEPRECATED
                 1017 => Ok(FlowData::ExtendedOpenFlowV1(
                     parser.parse_extended_openflow_v1()?,
                 )),
                 1018 => Ok(FlowData::ExtendedFc(parser.parse_extended_fc()?)),
+                1019 => Ok(FlowData::ExtendedQueueLength(
+                    parser.parse_extended_queue_length()?,
+                )),
                 1020 => Ok(FlowData::ExtendedNatPort(parser.parse_extended_nat_port()?)),
-                1031 => Ok(FlowData::ExtendedInfiniBandLrh(
-                    parser.parse_extended_infiniband_lrh()?,
-                )),
-                1032 => Ok(FlowData::ExtendedInfiniBandGrh(
-                    parser.parse_extended_infiniband_grh()?,
-                )),
-                1033 => Ok(FlowData::ExtendedInfiniBandBth(
-                    parser.parse_extended_infiniband_bth()?,
-                )),
-                1034 => Ok(FlowData::ExtendedVlanIn(parser.parse_extended_vlan_in()?)),
-                1035 => Ok(FlowData::ExtendedVlanOut(parser.parse_extended_vlan_out()?)),
                 1021 => Ok(FlowData::ExtendedL2TunnelEgress(
                     parser.parse_extended_l2_tunnel_egress()?,
                 )),
@@ -1120,6 +1125,17 @@ impl<R: Read> Parser<R> {
                 1030 => Ok(FlowData::ExtendedVniIngress(
                     parser.parse_extended_vni_ingress()?,
                 )),
+                1031 => Ok(FlowData::ExtendedInfiniBandLrh(
+                    parser.parse_extended_infiniband_lrh()?,
+                )),
+                1032 => Ok(FlowData::ExtendedInfiniBandGrh(
+                    parser.parse_extended_infiniband_grh()?,
+                )),
+                1033 => Ok(FlowData::ExtendedInfiniBandBth(
+                    parser.parse_extended_infiniband_bth()?,
+                )),
+                1034 => Ok(FlowData::ExtendedVlanIn(parser.parse_extended_vlan_in()?)),
+                1035 => Ok(FlowData::ExtendedVlanOut(parser.parse_extended_vlan_out()?)),
                 1036 => Ok(FlowData::ExtendedEgressQueue(
                     parser.parse_extended_egress_queue()?,
                 )),
@@ -1158,6 +1174,7 @@ impl<R: Read> Parser<R> {
                 2200 => Ok(FlowData::MemcacheOperation(
                     parser.parse_memcache_operation()?,
                 )),
+                // DEPRECATED
                 2201 => Ok(FlowData::HttpRequestDeprecated(
                     parser.parse_http_request_deprecated()?,
                 )),

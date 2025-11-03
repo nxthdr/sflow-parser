@@ -835,6 +835,35 @@ fn test_flow_0_1018_extended_fc() {
 }
 
 #[test]
+fn test_flow_0_1019_extended_queue_length() {
+    // Extended Queue Length: queue_index(4) + queue_length(4) = 8 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x03, // queue_index = 3
+        0x00, 0x00, 0x00, 0x0A, // queue_length = 10 segments
+    ];
+
+    let data = build_flow_sample_test(0x03FB, &record_data); // record type = 1019
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::FlowSample(flow) => {
+            assert_eq!(flow.flow_records.len(), 1);
+            match &flow.flow_records[0].flow_data {
+                FlowData::ExtendedQueueLength(queue) => {
+                    assert_eq!(queue.queue_index, 3);
+                    assert_eq!(queue.queue_length, 10);
+                }
+                _ => panic!("Expected ExtendedQueueLength"),
+            }
+        }
+        _ => panic!("Expected FlowSample"),
+    }
+}
+
+#[test]
 fn test_flow_0_1020_extended_nat_port() {
     // Extended NAT Port data: src_port(4) + dst_port(4) = 8 bytes
     let record_data = [

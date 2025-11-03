@@ -671,6 +671,96 @@ pub struct RadioUtilization {
     pub on_channel_busy_time: u32,
 }
 
+/// Queue Length - Format (0,1003)
+///
+/// Histogram of queue lengths experienced by packets when they are enqueued
+///
+/// # XDR Definition ([sFlow Discussion](http://groups.google.com/group/sflow/browse_thread/thread/773d27b17a81600c))
+///
+/// ```text
+/// /* Queue length counters
+///    Histogram of queue lengths experienced by packets when they are
+///    enqueued (ie queue length immediately before packet is enqueued)
+///    thus giving the queue lengths experienced by each packet.
+///    Queue length is measured in segments occupied by the enqueued
+///    packets.
+///    Queue length counter records for each of the queues for a
+///    port must be exported with the generic interface counters
+///    record, if_counters, for the port.*/
+///
+/// /* Queue length histogram counters
+///    opaque = counter_data; enterprise = 0; format = 1003 */
+///
+/// struct queue_length {
+///     unsigned int queueIndex; /* persistent index of queue within port */
+///     unsigned int segmentSize; /* size of queue segment in bytes */
+///     unsigned int queueSegments; /* total number of segments allocated
+///                                    (ie available) to this queue. */
+///     unsigned int queueLength0; /* queue is empty when a packet is
+///                                   enqueued. */
+///     unsigned int queueLength1; /* queue length == 1 segment when a
+///                                   packet is enqueued. */
+///     unsigned int queueLength2; /* queue length == 2 segments when a
+///                                   packet is enqueued. */
+///     unsigned int queueLength4; /* 2 segments > queue length <= 4
+///                                   segments when a packet is enqueued. */
+///     unsigned int queueLength8; /* 4 segments > queue length <= 8
+///                                   segments when packet is enqueued. */
+///     unsigned int queueLength32; /* 8 segments > queue length <= 32
+///                                    segments when packet is enqueued. */
+///     unsigned int queueLength128; /* 32 segments > queue length <= 128
+///                                     segments when packet is enqueued. */
+///     unsigned int queueLength1024; /* 128 segments > queue length <= 1024
+///                                      segments when packet is enqueued. */
+///     unsigned int queueLengthMore; /* queue length > 1024 segments when
+///                                      packet is enqueued. */
+///     unsigned int dropped; /* count of packets intended for this queue
+///                              that are dropped on enqueuing. */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct QueueLength {
+    /// Persistent index of queue within port
+    pub queue_index: u32,
+
+    /// Size of queue segment in bytes
+    pub segment_size: u32,
+
+    /// Total number of segments allocated (available) to this queue
+    pub queue_segments: u32,
+
+    /// Queue is empty when a packet is enqueued
+    pub queue_length_0: u32,
+
+    /// Queue length == 1 segment when a packet is enqueued
+    pub queue_length_1: u32,
+
+    /// Queue length == 2 segments when a packet is enqueued
+    pub queue_length_2: u32,
+
+    /// 2 segments > queue length <= 4 segments when a packet is enqueued
+    pub queue_length_4: u32,
+
+    /// 4 segments > queue length <= 8 segments when packet is enqueued
+    pub queue_length_8: u32,
+
+    /// 8 segments > queue length <= 32 segments when packet is enqueued
+    pub queue_length_32: u32,
+
+    /// 32 segments > queue length <= 128 segments when packet is enqueued
+    pub queue_length_128: u32,
+
+    /// 128 segments > queue length <= 1024 segments when packet is enqueued
+    pub queue_length_1024: u32,
+
+    /// Queue length > 1024 segments when packet is enqueued
+    pub queue_length_more: u32,
+
+    /// Count of packets intended for this queue that are dropped on enqueuing
+    pub dropped: u32,
+}
+
 /// OpenFlow Port - Format (0,1004)
 ///
 /// OpenFlow port statistics

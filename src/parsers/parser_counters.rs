@@ -290,6 +290,27 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Queue Length - Format (0,1003)
+    pub(super) fn parse_queue_length(
+        &mut self,
+    ) -> Result<crate::models::record_counters::QueueLength> {
+        Ok(crate::models::record_counters::QueueLength {
+            queue_index: self.read_u32()?,
+            segment_size: self.read_u32()?,
+            queue_segments: self.read_u32()?,
+            queue_length_0: self.read_u32()?,
+            queue_length_1: self.read_u32()?,
+            queue_length_2: self.read_u32()?,
+            queue_length_4: self.read_u32()?,
+            queue_length_8: self.read_u32()?,
+            queue_length_32: self.read_u32()?,
+            queue_length_128: self.read_u32()?,
+            queue_length_1024: self.read_u32()?,
+            queue_length_more: self.read_u32()?,
+            dropped: self.read_u32()?,
+        })
+    }
+
     /// Parse OpenFlow Port - Format (0,1004)
     pub(super) fn parse_openflow_port(
         &mut self,
@@ -556,33 +577,6 @@ impl<R: Read> Parser<R> {
         })
     }
 
-    /// Parse Temperature - Format (0,3001)
-    pub(super) fn parse_temperature(
-        &mut self,
-    ) -> Result<crate::models::record_counters::Temperature> {
-        Ok(crate::models::record_counters::Temperature {
-            minimum: self.read_i32()?,
-            maximum: self.read_i32()?,
-            errors: self.read_u32()?,
-        })
-    }
-
-    /// Parse Humidity - Format (0,3002)
-    pub(super) fn parse_humidity(&mut self) -> Result<crate::models::record_counters::Humidity> {
-        Ok(crate::models::record_counters::Humidity {
-            relative: self.read_i32()?,
-        })
-    }
-
-    /// Parse Fans - Format (0,3003)
-    pub(super) fn parse_fans(&mut self) -> Result<crate::models::record_counters::Fans> {
-        Ok(crate::models::record_counters::Fans {
-            total: self.read_u32()?,
-            failed: self.read_u32()?,
-            speed: self.read_u32()?,
-        })
-    }
-
     /// Parse Virtual Node - Format (0,2100)
     pub(super) fn parse_virtual_node(
         &mut self,
@@ -839,6 +833,33 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Temperature - Format (0,3001)
+    pub(super) fn parse_temperature(
+        &mut self,
+    ) -> Result<crate::models::record_counters::Temperature> {
+        Ok(crate::models::record_counters::Temperature {
+            minimum: self.read_i32()?,
+            maximum: self.read_i32()?,
+            errors: self.read_u32()?,
+        })
+    }
+
+    /// Parse Humidity - Format (0,3002)
+    pub(super) fn parse_humidity(&mut self) -> Result<crate::models::record_counters::Humidity> {
+        Ok(crate::models::record_counters::Humidity {
+            relative: self.read_i32()?,
+        })
+    }
+
+    /// Parse Fans - Format (0,3003)
+    pub(super) fn parse_fans(&mut self) -> Result<crate::models::record_counters::Fans> {
+        Ok(crate::models::record_counters::Fans {
+            total: self.read_u32()?,
+            failed: self.read_u32()?,
+            speed: self.read_u32()?,
+        })
+    }
+
     /// Parse Broadcom Device Buffer Utilization - Format (4413,1)
     pub(super) fn parse_broadcom_device_buffers(
         &mut self,
@@ -976,6 +997,7 @@ impl<R: Read> Parser<R> {
                 1002 => Ok(CounterData::RadioUtilization(
                     parser.parse_radio_utilization()?,
                 )),
+                1003 => Ok(CounterData::QueueLength(parser.parse_queue_length()?)),
                 1004 => Ok(CounterData::OpenFlowPort(parser.parse_openflow_port()?)),
                 1005 => Ok(CounterData::OpenFlowPortName(
                     parser.parse_openflow_port_name()?,
@@ -993,10 +1015,6 @@ impl<R: Read> Parser<R> {
                 2008 => Ok(CounterData::Mib2IcmpGroup(parser.parse_mib2_icmp_group()?)),
                 2009 => Ok(CounterData::Mib2TcpGroup(parser.parse_mib2_tcp_group()?)),
                 2010 => Ok(CounterData::Mib2UdpGroup(parser.parse_mib2_udp_group()?)),
-                3000 => Ok(CounterData::Energy(parser.parse_energy()?)),
-                3001 => Ok(CounterData::Temperature(parser.parse_temperature()?)),
-                3002 => Ok(CounterData::Humidity(parser.parse_humidity()?)),
-                3003 => Ok(CounterData::Fans(parser.parse_fans()?)),
                 2100 => Ok(CounterData::VirtualNode(parser.parse_virtual_node()?)),
                 2101 => Ok(CounterData::VirtualCpu(parser.parse_virtual_cpu()?)),
                 2102 => Ok(CounterData::VirtualMemory(parser.parse_virtual_memory()?)),
@@ -1004,16 +1022,21 @@ impl<R: Read> Parser<R> {
                 2104 => Ok(CounterData::VirtualNetIo(parser.parse_virtual_net_io()?)),
                 2105 => Ok(CounterData::JvmRuntime(parser.parse_jvm_runtime()?)),
                 2106 => Ok(CounterData::JvmStatistics(parser.parse_jvm_statistics()?)),
+                // DEPRECATED
                 2200 => Ok(CounterData::MemcacheCountersDeprecated(
                     parser.parse_memcache_counters_deprecated()?,
                 )),
                 2201 => Ok(CounterData::HttpCounters(parser.parse_http_counters()?)),
+                2202 => Ok(CounterData::AppOperations(parser.parse_app_operations()?)),
+                2203 => Ok(CounterData::AppResources(parser.parse_app_resources()?)),
                 2204 => Ok(CounterData::MemcacheCounters(
                     parser.parse_memcache_counters()?,
                 )),
-                2202 => Ok(CounterData::AppOperations(parser.parse_app_operations()?)),
-                2203 => Ok(CounterData::AppResources(parser.parse_app_resources()?)),
                 2206 => Ok(CounterData::AppWorkers(parser.parse_app_workers()?)),
+                3000 => Ok(CounterData::Energy(parser.parse_energy()?)),
+                3001 => Ok(CounterData::Temperature(parser.parse_temperature()?)),
+                3002 => Ok(CounterData::Humidity(parser.parse_humidity()?)),
+                3003 => Ok(CounterData::Fans(parser.parse_fans()?)),
                 _ => Ok(CounterData::Unknown { format, data }),
             }
         } else if format.enterprise() == 4413 {

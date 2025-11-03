@@ -594,6 +594,61 @@ fn test_counter_0_1002_radio_utilization() {
 }
 
 #[test]
+fn test_counter_0_1003_queue_length() {
+    // Queue Length: queue_index(4) + segment_size(4) + queue_segments(4) +
+    //               queue_length_0(4) + queue_length_1(4) + queue_length_2(4) +
+    //               queue_length_4(4) + queue_length_8(4) + queue_length_32(4) +
+    //               queue_length_128(4) + queue_length_1024(4) + queue_length_more(4) +
+    //               dropped(4) = 52 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x02, // queue_index = 2
+        0x00, 0x00, 0x04, 0x00, // segment_size = 1024 bytes
+        0x00, 0x00, 0x00, 0x40, // queue_segments = 64 segments
+        0x00, 0x00, 0x27, 0x10, // queue_length_0 = 10000 packets
+        0x00, 0x00, 0x13, 0x88, // queue_length_1 = 5000 packets
+        0x00, 0x00, 0x07, 0xD0, // queue_length_2 = 2000 packets
+        0x00, 0x00, 0x03, 0xE8, // queue_length_4 = 1000 packets
+        0x00, 0x00, 0x01, 0xF4, // queue_length_8 = 500 packets
+        0x00, 0x00, 0x00, 0xC8, // queue_length_32 = 200 packets
+        0x00, 0x00, 0x00, 0x32, // queue_length_128 = 50 packets
+        0x00, 0x00, 0x00, 0x0A, // queue_length_1024 = 10 packets
+        0x00, 0x00, 0x00, 0x02, // queue_length_more = 2 packets
+        0x00, 0x00, 0x00, 0x05, // dropped = 5 packets
+    ];
+
+    let data = build_counter_sample_test(0x03EB, &record_data); // record type = 1003
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::QueueLength(queue) => {
+                    assert_eq!(queue.queue_index, 2);
+                    assert_eq!(queue.segment_size, 1024);
+                    assert_eq!(queue.queue_segments, 64);
+                    assert_eq!(queue.queue_length_0, 10000);
+                    assert_eq!(queue.queue_length_1, 5000);
+                    assert_eq!(queue.queue_length_2, 2000);
+                    assert_eq!(queue.queue_length_4, 1000);
+                    assert_eq!(queue.queue_length_8, 500);
+                    assert_eq!(queue.queue_length_32, 200);
+                    assert_eq!(queue.queue_length_128, 50);
+                    assert_eq!(queue.queue_length_1024, 10);
+                    assert_eq!(queue.queue_length_more, 2);
+                    assert_eq!(queue.dropped, 5);
+                }
+                _ => panic!("Expected QueueLength"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
 fn test_counter_0_1004_openflow_port() {
     // OpenFlow Port: datapath_id(8) + port_no(4) = 12 bytes
     let record_data = [

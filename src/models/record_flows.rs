@@ -1092,6 +1092,43 @@ pub struct ExtendedFc {
     pub metric: u32,
 }
 
+/// Extended Queue Length - Format (0,1019)
+///
+/// Queue length experienced by the sampled packet
+///
+/// # XDR Definition ([sFlow Discussion](http://groups.google.com/group/sflow/browse_thread/thread/773d27b17a81600c))
+///
+/// ```text
+/// /* Extended queue length data
+///    Used to indicate the queue length experienced by the sampled packet.
+///    If the extended_queue_length record is exported, queue_length counter
+///    records must also be exported with the if_counter record.*/
+///
+/// /* opaque = flow_data; enterprise = 0; format = 1019 */
+///
+/// struct extended_queue_length
+/// {
+///     unsigned int queueIndex; /* persistent index within port of queue
+///                                 used to enqueue sampled packet.
+///                                 The ifIndex of the port can be inferred
+///                                 from the data source. */
+///     unsigned int queueLength; /* length of queue, in segments,
+///                                  experienced by the packet (ie queue length
+///                                  immediately before the sampled packet is
+///                                  enqueued). */
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ExtendedQueueLength {
+    /// Persistent index within port of queue used to enqueue sampled packet
+    pub queue_index: u32,
+
+    /// Length of queue, in segments, experienced by the packet
+    /// (queue length immediately before the sampled packet is enqueued)
+    pub queue_length: u32,
+}
+
 /// Extended L2 Tunnel Egress - Format (0,1021)
 ///
 /// Layer 2 tunnel egress information - reports outer Ethernet headers

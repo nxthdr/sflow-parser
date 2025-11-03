@@ -302,6 +302,8 @@ pub enum FlowData {
     ExtendedOpenFlowV1(crate::models::record_flows::ExtendedOpenFlowV1),
     /// Extended Fiber Channel - Format (0,1018)
     ExtendedFc(crate::models::record_flows::ExtendedFc),
+    /// Extended Queue Length - Format (0,1019)
+    ExtendedQueueLength(crate::models::record_flows::ExtendedQueueLength),
     /// Extended NAT Port - Format (0,1020)
     ExtendedNatPort(crate::models::record_flows::ExtendedNatPort),
     /// Extended InfiniBand BTH - Format (0,1033)
@@ -420,6 +422,8 @@ pub enum CounterData {
     Processor(crate::models::record_counters::ProcessorCounters),
     /// Radio Utilization - Format (0,1002)
     RadioUtilization(crate::models::record_counters::RadioUtilization),
+    /// Queue Length - Format (0,1003)
+    QueueLength(crate::models::record_counters::QueueLength),
     /// OpenFlow Port - Format (0,1004)
     OpenFlowPort(crate::models::record_counters::OpenFlowPort),
     /// OpenFlow Port Name - Format (0,1005)
