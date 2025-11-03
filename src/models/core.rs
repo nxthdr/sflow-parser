@@ -414,6 +414,8 @@ pub enum CounterData {
     Ieee80211(crate::models::record_counters::Ieee80211Counters),
     /// LAG Port Statistics - Format (0,7)
     LagPortStats(crate::models::record_counters::LagPortStats),
+    /// Slow Path Counts - Format (0,8)
+    SlowPathCounts(crate::models::record_counters::SlowPathCounts),
     /// InfiniBand Counters - Format (0,9)
     InfiniBandCounters(crate::models::record_counters::InfiniBandCounters),
     /// Optical SFP/QSFP Counters - Format (0,10)
@@ -476,6 +478,8 @@ pub enum CounterData {
     MemcacheCounters(crate::models::record_counters::MemcacheCounters),
     /// App Workers - Format (0,2206)
     AppWorkers(crate::models::record_counters::AppWorkers),
+    /// OVS DP Stats - Format (0,2207)
+    OvsDpStats(crate::models::record_counters::OvsDpStats),
     /// Energy Consumption - Format (0,3000)
     Energy(crate::models::record_counters::Energy),
     /// Temperature - Format (0,3001)

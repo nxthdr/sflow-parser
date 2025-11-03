@@ -386,6 +386,43 @@ fn test_counter_0_7_lag_port_stats() {
 }
 
 #[test]
+fn test_counter_0_8_slow_path_counts() {
+    // Slow Path Counts: 6 u32 = 24 bytes
+    let record_data = [
+        0x00, 0x00, 0x00, 0x0A, // unknown = 10
+        0x00, 0x00, 0x00, 0x14, // other = 20
+        0x00, 0x00, 0x00, 0x32, // cam_miss = 50
+        0x00, 0x00, 0x00, 0x05, // cam_full = 5
+        0x00, 0x00, 0x00, 0x0F, // no_hw_support = 15
+        0x00, 0x00, 0x00, 0x64, // cntrl = 100
+    ];
+
+    let data = build_counter_sample_test(0x0008, &record_data); // record type = 8
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::SlowPathCounts(slow_path) => {
+                    assert_eq!(slow_path.unknown, 10);
+                    assert_eq!(slow_path.other, 20);
+                    assert_eq!(slow_path.cam_miss, 50);
+                    assert_eq!(slow_path.cam_full, 5);
+                    assert_eq!(slow_path.no_hw_support, 15);
+                    assert_eq!(slow_path.cntrl, 100);
+                }
+                _ => panic!("Expected SlowPathCounts"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
 fn test_counter_0_9_infiniband_counters() {
     // InfiniBand Counters: 2 u64 + 12 u32 = 64 bytes
     let record_data = [
@@ -1847,6 +1884,43 @@ fn test_counter_0_2206_app_workers() {
                     assert_eq!(workers.req_dropped, 2);
                 }
                 _ => panic!("Expected AppWorkers"),
+            }
+        }
+        _ => panic!("Expected CountersSample"),
+    }
+}
+
+#[test]
+fn test_counter_0_2207_ovs_dp_stats() {
+    // OVS DP Stats: 6 u32 = 24 bytes
+    let record_data = [
+        0x00, 0x00, 0x27, 0x10, // hits = 10000
+        0x00, 0x00, 0x03, 0xE8, // misses = 1000
+        0x00, 0x00, 0x00, 0x0A, // lost = 10
+        0x00, 0x00, 0x1F, 0x40, // mask_hits = 8000
+        0x00, 0x00, 0x00, 0x64, // flows = 100
+        0x00, 0x00, 0x00, 0x32, // masks = 50
+    ];
+
+    let data = build_counter_sample_test(0x089F, &record_data); // record type = 2207
+
+    let result = parse_datagram(&data);
+    assert!(result.is_ok());
+
+    let datagram = result.unwrap();
+    match &datagram.samples[0].sample_data {
+        SampleData::CountersSample(counters) => {
+            assert_eq!(counters.counters.len(), 1);
+            match &counters.counters[0].counter_data {
+                CounterData::OvsDpStats(ovs) => {
+                    assert_eq!(ovs.hits, 10000);
+                    assert_eq!(ovs.misses, 1000);
+                    assert_eq!(ovs.lost, 10);
+                    assert_eq!(ovs.mask_hits, 8000);
+                    assert_eq!(ovs.flows, 100);
+                    assert_eq!(ovs.masks, 50);
+                }
+                _ => panic!("Expected OvsDpStats"),
             }
         }
         _ => panic!("Expected CountersSample"),

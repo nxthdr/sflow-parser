@@ -435,8 +435,47 @@ pub struct LagPortStats {
     /// Marker PDUs transmitted
     pub dot3ad_agg_port_stats_marker_pdus_tx: u32,
 
-    /// Marker response PDUs transmitted
+    /// Marker Response PDUs transmitted
     pub dot3ad_agg_port_stats_marker_response_pdus_tx: u32,
+}
+
+/// Slow Path Counts - Format (0,8)
+///
+/// Counts of packets processed via slow path (software) rather than fast path (hardware)
+///
+/// # XDR Definition ([sFlow Discussion](https://groups.google.com/g/sflow/c/4JM1_Mmoz7w))
+///
+/// ```text
+/// /* opaque = counter_data; enterprise = 0; format = 8 */
+/// struct slow_path_counts {
+///     unsigned int unknown;
+///     unsigned int other;
+///     unsigned int cam_miss;
+///     unsigned int cam_full;
+///     unsigned int no_hw_support;
+///     unsigned int cntrl;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct SlowPathCounts {
+    /// Unknown reason
+    pub unknown: u32,
+
+    /// Other reason
+    pub other: u32,
+
+    /// CAM (Content Addressable Memory) miss
+    pub cam_miss: u32,
+
+    /// CAM full
+    pub cam_full: u32,
+
+    /// No hardware support
+    pub no_hw_support: u32,
+
+    /// Control packets (spec: cntrl)
+    pub cntrl: u32,
 }
 
 /// InfiniBand Counters - Format (0,9)
@@ -2343,6 +2382,47 @@ pub struct AppWorkers {
 
     /// Number of dropped requests
     pub req_dropped: u32,
+}
+
+/// OVS DP Stats - Format (0,2207)
+///
+/// Open vSwitch data path statistics
+///
+/// # XDR Definition ([sFlow Discussion](http://blog.sflow.com/2015/01/open-vswitch-performance-monitoring.html))
+///
+/// ```text
+/// /* Open vSwitch data path statistics */
+/// /* see datapath/datapath.h */
+/// /* opaque = counter_data; enterprise = 0; format = 2207 */
+/// struct ovs_dp_stats {
+///     unsigned int hits;
+///     unsigned int misses;
+///     unsigned int lost;
+///     unsigned int mask_hits;
+///     unsigned int flows;
+///     unsigned int masks;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct OvsDpStats {
+    /// Number of flow table hits
+    pub hits: u32,
+
+    /// Number of flow table misses
+    pub misses: u32,
+
+    /// Number of lost packets
+    pub lost: u32,
+
+    /// Number of mask cache hits
+    pub mask_hits: u32,
+
+    /// Number of flows in the data path
+    pub flows: u32,
+
+    /// Number of masks in the data path
+    pub masks: u32,
 }
 
 /// Energy Consumption - Format (0,3000)

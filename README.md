@@ -146,7 +146,7 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 5 | VLAN | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
 | 0 | 6 | IEEE 802.11 Counters | [sFlow 802.11](https://sflow.org/sflow_80211.txt) | ✅ |
 | 0 | 7 | LAG Port Stats | [sFlow LAG](https://sflow.org/sflow_lag.txt) | ✅ |
-| 0 | 8 | Slow Path Counts | [sFlow Discussion](https://groups.google.com/g/sflow/c/4JM1_Mmoz7w) | ⬜ |
+| 0 | 8 | Slow Path Counts | [sFlow Discussion](https://groups.google.com/g/sflow/c/4JM1_Mmoz7w) | ✅ |
 | 0 | 9 | InfiniBand Counters | [sFlow InfiniBand](https://sflow.org/draft_sflow_infiniband_2.txt) | ✅ |
 | 0 | 10 | Optical SFP/QSFP | [sFlow Optics](https://sflow.org/sflow_optics.txt) | ✅ |
 | 0 | 1001 | Processor | [sFlow v5](https://sflow.org/sflow_version_5.txt) | ✅ |
@@ -178,7 +178,7 @@ Each sample contains one or more flow records (for flow samples) or counter reco
 | 0 | 2203 | App Resources | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
 | 0 | 2204 | Memcache Counters | [sFlow Memcache](https://sflow.org/sflow_memcache.txt) | ✅ |
 | 0 | 2206 | App Workers | [sFlow Application](https://sflow.org/sflow_application.txt) | ✅ |
-| 0 | 2207 | OVS DP Stats | [sFlow Discussion](http://blog.sflow.com/2015/01/open-vswitch-performance-monitoring.html) | ⬜ |
+| 0 | 2207 | OVS DP Stats | [sFlow Discussion](http://blog.sflow.com/2015/01/open-vswitch-performance-monitoring.html) | ✅ |
 | 0 | 3000 | Energy | [sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs) | ✅ |
 | 0 | 3001 | Temperature | [sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs) | ✅ |
 | 0 | 3002 | Humidity | [sFlow Discussion](https://groups.google.com/g/sflow/c/gN3nxSi2SBs) | ✅ |

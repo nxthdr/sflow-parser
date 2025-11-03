@@ -203,6 +203,20 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse Slow Path Counts - Format (0,8)
+    pub(super) fn parse_slow_path_counts(
+        &mut self,
+    ) -> Result<crate::models::record_counters::SlowPathCounts> {
+        Ok(crate::models::record_counters::SlowPathCounts {
+            unknown: self.read_u32()?,
+            other: self.read_u32()?,
+            cam_miss: self.read_u32()?,
+            cam_full: self.read_u32()?,
+            no_hw_support: self.read_u32()?,
+            cntrl: self.read_u32()?,
+        })
+    }
+
     /// Parse InfiniBand Counters - Format (0,9)
     pub(super) fn parse_infiniband_counters(
         &mut self,
@@ -833,6 +847,20 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    /// Parse OVS DP Stats - Format (0,2207)
+    pub(super) fn parse_ovs_dp_stats(
+        &mut self,
+    ) -> Result<crate::models::record_counters::OvsDpStats> {
+        Ok(crate::models::record_counters::OvsDpStats {
+            hits: self.read_u32()?,
+            misses: self.read_u32()?,
+            lost: self.read_u32()?,
+            mask_hits: self.read_u32()?,
+            flows: self.read_u32()?,
+            masks: self.read_u32()?,
+        })
+    }
+
     /// Parse Temperature - Format (0,3001)
     pub(super) fn parse_temperature(
         &mut self,
@@ -987,6 +1015,9 @@ impl<R: Read> Parser<R> {
                 5 => Ok(CounterData::Vlan(parser.parse_vlan_counters()?)),
                 6 => Ok(CounterData::Ieee80211(parser.parse_ieee80211_counters()?)),
                 7 => Ok(CounterData::LagPortStats(parser.parse_lag_port_stats()?)),
+                8 => Ok(CounterData::SlowPathCounts(
+                    parser.parse_slow_path_counts()?,
+                )),
                 9 => Ok(CounterData::InfiniBandCounters(
                     parser.parse_infiniband_counters()?,
                 )),
@@ -1033,6 +1064,7 @@ impl<R: Read> Parser<R> {
                     parser.parse_memcache_counters()?,
                 )),
                 2206 => Ok(CounterData::AppWorkers(parser.parse_app_workers()?)),
+                2207 => Ok(CounterData::OvsDpStats(parser.parse_ovs_dp_stats()?)),
                 3000 => Ok(CounterData::Energy(parser.parse_energy()?)),
                 3001 => Ok(CounterData::Temperature(parser.parse_temperature()?)),
                 3002 => Ok(CounterData::Humidity(parser.parse_humidity()?)),
