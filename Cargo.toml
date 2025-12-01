@@ -24,7 +24,7 @@ default = []
 serde = ["dep:serde"]
 
 [dev-dependencies]
-criterion = "0.7"
+criterion = "0.8"
 regex = "1"
 syn = { version = "2", features = ["full", "parsing"] }
 ureq = "3"
