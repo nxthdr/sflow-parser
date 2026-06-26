@@ -162,6 +162,45 @@ fn test_unknown_agent_address() {
 }
 
 #[test]
+fn test_optical_sfp_qsfp_oom_regression() {
+    // Regression test for https://github.com/nxthdr/sflow-parser/issues/45
+    //
+    // This 114-byte datagram declares an expanded counters sample whose optical
+    // SFP/QSFP record (format 0,10) advertises num_lanes = 0x23600800
+    // (593,496,064). With a 40-byte `Lane`, an unbounded `Vec::with_capacity`
+    // would attempt to reserve 593_496_064 * 40 = 23,739,842,560 bytes (~22 GiB)
+    // and OOM-kill the process before reading a single lane.
+    //
+    // The parser must instead reject the datagram (the record's opaque data is
+    // far too short to hold that many lanes) without attempting a giant
+    // allocation. This must complete near-instantly with negligible memory.
+    let data: [u8; 114] = [
+        0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, // version=5, addr type=unknown
+        0x06, 0x23, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, // sub_agent_id, sequence_number
+        0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, // uptime, num_samples=3
+        0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00,
+        0x4f, // sample type=4 (counters expanded), len=79
+        0x03, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, // seq, source_id_type
+        0x4f, 0x4f, 0x4f, 0x4f, 0x00, 0x00, 0x00, 0x05, // source_id_index, num_records=5
+        0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00, 0x27, // counter format=10 (optical), len=39
+        0x00, 0x24, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, // module_id, module_num_lanes
+        0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00,
+        0x04, // module_supply_voltage, module_temperature
+        0x23, 0x60, 0x08, 0x00, 0x00, 0xf9, 0xff,
+        0x00, // num_lanes=0x23600800 (~22 GiB if unbounded)
+        0x03, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, //
+        0x4f, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, //
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x23, 0x28, //
+        0x0d, 0xf3, 0x26, 0x00, 0x62, 0x01, 0x00, 0x00, //
+        0x00, 0x00,
+    ];
+
+    // Must return Err (truncated lane array) rather than OOM.
+    let result = parse_datagram(&data);
+    assert!(result.is_err());
+}
+
+#[test]
 fn test_unknown_header_protocol() {
     // Test that HeaderProtocol::from_u32 rejects invalid values
     use sflow_parser::models::record_flows::HeaderProtocol;
