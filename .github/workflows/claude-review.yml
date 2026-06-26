@@ -1,0 +1,49 @@
+name: Claude Review
+
+# Runs once, when the PR is opened. To re-review after changes,
+# mention @claude in a PR comment (handled by claude.yml).
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  review:
+    # Skip bot-authored PRs (Renovate, Dependabot, etc.):
+    #  - user.type != 'Bot' catches app-based bots (renovate[bot], dependabot[bot])
+    #  - the head_ref prefixes catch self-hosted bots running under a normal account
+    if: >-
+      github.event.pull_request.user.type != 'Bot' &&
+      !startsWith(github.head_ref, 'renovate/') &&
+      !startsWith(github.head_ref, 'dependabot/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.CLAUDE_GITHUB_PAT }}
+
+      - name: Run Claude Review
+        uses: anthropics/claude-code-action@v1
+        # The review is advisory: it posts findings but must never block a PR.
+        # claude-code-action exits non-zero when it hits --max-turns, so without
+        # this the job goes red even though the review ran. Keep CI green and let
+        # the posted review speak for itself.
+        continue-on-error: true
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.CLAUDE_GITHUB_PAT }}
+          track_progress: true
+          prompt: |
+            Review PR #${{ github.event.pull_request.number }} in ${{ github.repository }}.
+            Focus on logic bugs, security issues, and violations of our CLAUDE.md
+            conventions. Report important findings only; skip nits. Use inline
+            comments on the relevant lines where it helps.
+          claude_args: |
+            --max-turns 20
