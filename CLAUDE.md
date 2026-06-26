@@ -18,3 +18,28 @@ To check that the implementation is correct, please run:
 4. `make coverage` to validate the coverage of the implementation.
 
 Finally, run `make fmt` and `make clippy` and `make build` to validate the code quality and build the project.
+
+## Releasing
+
+Releases are cut with [`cargo-release`](https://github.com/crate-ci/cargo-release) and published to crates.io as the `sflow-parser` crate. There is **no CI publish workflow** — publishing happens locally, so you need crates.io credentials (`cargo login` once; the API token is stored in `~/.cargo/credentials.toml`).
+
+`main` is ruleset-protected (PRs required), but the `OrganizationAdmin` role has `bypass: always`, so an org owner's local `cargo release` push to `main` is allowed — which is why release commits land directly on `main` rather than via a PR.
+
+To cut a release X.Y.Z (semver — the library is pre-1.0, so a behavioural/robustness change such as the #45 OOM fix warrants a minor bump):
+
+1. Make sure `main` is checked out, clean, up to date, and green: `make test && make fmt && make clippy && make build` (CI additionally runs `cargo doc` with `-D warnings` and the specs validation).
+2. Run the release. One command bumps `Cargo.toml`, commits `chore: Release sflow-parser version X.Y.Z`, runs `cargo publish`, tags `vX.Y.Z`, and pushes `main` + the tag to `origin`:
+   ```bash
+   cargo release X.Y.Z --execute
+   ```
+   Omit `--execute` for a dry run that prints every step without publishing or pushing.
+3. Create the GitHub Release. `cargo-release` does **not** do this, but every prior version has one:
+   ```bash
+   gh release create vX.Y.Z --generate-notes --latest --verify-tag
+   ```
+4. Confirm crates.io shows the new version and the GitHub release/tag exist.
+
+Gotchas:
+- crates.io is publish-once: the `Cargo.toml` version must not already be published. `cargo publish` hard-fails on a duplicate, and you can only *yank*, never unpublish.
+- `cargo publish` runs **before** the git push, so if the push to `main` is rejected the crate is already live — re-run only the tag/push steps, do not re-publish.
+- The published package excludes `.github/`, `benches/`, and `tests/` (see `exclude` in `Cargo.toml`), so CI, workflow, and test-only changes never affect crate contents.
