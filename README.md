@@ -195,7 +195,7 @@ Enables optional serialization and deserialization support for all sFlow data st
 
 ```toml
 [dependencies]
-sflow-parser = { version = "0.3", features = ["serde"] }
+sflow-parser = { version = "0.7", features = ["serde"] }
 serde_json = "1.0"
 ```
 
