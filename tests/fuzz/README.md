@@ -26,6 +26,14 @@ Crashes are saved in `tests/fuzz/artifacts/<target>/`.
 cargo +nightly fuzz run --fuzz-dir tests/fuzz fuzz_single artifacts/fuzz_single/crash-<hash>
 ```
 
+## macOS
+
+The nightly AddressSanitizer runtime hangs at startup on recent macOS, before any input is run (libFuzzer prints nothing and the process spins at 100% CPU). The Makefile targets therefore pass `--sanitizer none` on macOS; when running `cargo fuzz` directly, add it yourself:
+
+```bash
+cargo +nightly fuzz run --sanitizer none --fuzz-dir tests/fuzz fuzz_single
+```
+
 ## Expected Behavior
 
 The parser should **never panic**. All invalid inputs must return `Result::Err`.

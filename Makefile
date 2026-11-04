@@ -149,6 +149,13 @@ outdated:
 	cargo outdated
 
 # Fuzzing targets
+# The nightly AddressSanitizer runtime hangs at startup on recent macOS (in
+# __asan::InitializeShadowMemory, before any input is run), so fuzz without a
+# sanitizer there. The crate has no unsafe code.
+ifeq ($(shell uname -s),Darwin)
+FUZZ_FLAGS ?= --sanitizer none
+endif
+
 fuzz-install:
 	@echo "Installing cargo-fuzz and nightly toolchain..."
 	rustup toolchain install nightly
@@ -157,24 +164,24 @@ fuzz-install:
 fuzz-single:
 	@echo "Running single datagram fuzzer..."
 	@command -v cargo-fuzz >/dev/null 2>&1 || { echo "cargo-fuzz not found. Run 'make fuzz-install' first."; exit 1; }
-	cargo +nightly fuzz run --fuzz-dir tests/fuzz fuzz_single -- -max_total_time=60 -rss_limit_mb=2048
+	cargo +nightly fuzz run $(FUZZ_FLAGS) --fuzz-dir tests/fuzz fuzz_single -- -max_total_time=60 -rss_limit_mb=2048
 
 fuzz-multiple:
 	@echo "Running multiple datagrams fuzzer..."
 	@command -v cargo-fuzz >/dev/null 2>&1 || { echo "cargo-fuzz not found. Run 'make fuzz-install' first."; exit 1; }
-	cargo +nightly fuzz run --fuzz-dir tests/fuzz fuzz_multiple -- -max_total_time=60 -rss_limit_mb=2048
+	cargo +nightly fuzz run $(FUZZ_FLAGS) --fuzz-dir tests/fuzz fuzz_multiple -- -max_total_time=60 -rss_limit_mb=2048
 
 fuzz-structured:
 	@echo "Running structured fuzzer..."
 	@command -v cargo-fuzz >/dev/null 2>&1 || { echo "cargo-fuzz not found. Run 'make fuzz-install' first."; exit 1; }
-	cargo +nightly fuzz run --fuzz-dir tests/fuzz fuzz_structured -- -max_total_time=60 -rss_limit_mb=2048
+	cargo +nightly fuzz run $(FUZZ_FLAGS) --fuzz-dir tests/fuzz fuzz_structured -- -max_total_time=60 -rss_limit_mb=2048
 
 fuzz-all:
 	@echo "Running all fuzzers (5 minutes each)..."
 	@command -v cargo-fuzz >/dev/null 2>&1 || { echo "cargo-fuzz not found. Run 'make fuzz-install' first."; exit 1; }
-	cargo +nightly fuzz run --fuzz-dir tests/fuzz fuzz_single -- -max_total_time=300 -rss_limit_mb=2048
-	cargo +nightly fuzz run --fuzz-dir tests/fuzz fuzz_multiple -- -max_total_time=300 -rss_limit_mb=2048
-	cargo +nightly fuzz run --fuzz-dir tests/fuzz fuzz_structured -- -max_total_time=300 -rss_limit_mb=2048
+	cargo +nightly fuzz run $(FUZZ_FLAGS) --fuzz-dir tests/fuzz fuzz_single -- -max_total_time=300 -rss_limit_mb=2048
+	cargo +nightly fuzz run $(FUZZ_FLAGS) --fuzz-dir tests/fuzz fuzz_multiple -- -max_total_time=300 -rss_limit_mb=2048
+	cargo +nightly fuzz run $(FUZZ_FLAGS) --fuzz-dir tests/fuzz fuzz_structured -- -max_total_time=300 -rss_limit_mb=2048
 
 fuzz-list:
 	@echo "Available fuzz targets:"
@@ -184,7 +191,7 @@ fuzz-list:
 fuzz-coverage:
 	@echo "Generating coverage for fuzz corpus..."
 	@command -v cargo-fuzz >/dev/null 2>&1 || { echo "cargo-fuzz not found. Run 'make fuzz-install' first."; exit 1; }
-	cargo +nightly fuzz coverage --fuzz-dir tests/fuzz fuzz_single
+	cargo +nightly fuzz coverage $(FUZZ_FLAGS) --fuzz-dir tests/fuzz fuzz_single
 
 fuzz-clean:
 	@echo "Cleaning fuzz artifacts..."
